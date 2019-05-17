@@ -9,15 +9,15 @@ lastversion
 
 from setuptools import find_packages, setup
 
-install_requires = ["requests", "packaging", "beautifulsoup4"]
-tests_requires = ["pytest", "flake8", "packaging"]
+install_requires = ["requests", "packaging", "beautifulsoup4", "lxml"]
+tests_requires = ["pytest", "flake8"]
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
     name="lastversion",
-    version="0.0.6",
+    version="0.0.7",
     author="Danila Vershinin",
     author_email="info@getpagespeed.com",
     url="https://github.com/dvershinin/lastversion",

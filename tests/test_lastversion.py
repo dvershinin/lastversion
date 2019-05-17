@@ -13,3 +13,19 @@ def test_ngx_pagespeed():
     output = lastversion.latest(repo)
 
     assert version.parse(output) >= version.parse("1.13.35.2")
+
+
+def test_wp_cli():
+    repo = "wp-cli/wp-cli"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) >= version.parse("2.2.0")
+
+
+def test_libvmod_xcounter():
+    repo = "https://github.com/xcir/libvmod-xcounter"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) >= version.parse("62.3")

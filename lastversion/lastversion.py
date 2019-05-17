@@ -11,9 +11,17 @@ from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
 
 
+def sanitize_version(version):
+    """strip some common prefixes and suffixes of non-beta packages to get clean version"""
+    return version.strip().lstrip("v").replace("RELEASE.", "").replace("-stable", "")
+
+
 def latest(repo, sniff=True, validate=True):
 
     version = None
+
+    if repo.startswith('https://github.com/'):
+        repo = "/".join(repo.split('/')[3:5])
 
     if sniff:
 
@@ -23,13 +31,27 @@ def latest(repo, sniff=True, validate=True):
             headers={'Connection': 'close'})
         html = response.text
 
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, 'lxml')
 
         # this tag is known to hold collection of releases not exposed through API
         taggedReleases = soup.find(class_='release-timeline-tags')
         if taggedReleases:
-            latest = taggedReleases.find(class_='release-entry')
-            version = latest.find("a").text.strip()
+            for release in taggedReleases.find_all(class_='release-entry'):
+                the_version = release.find("a").text
+                the_version = sanitize_version(the_version)
+                # check if version is parseable non prerelease, and move on to next tag otherwise
+                if validate:
+                    try:
+                        v = Version(the_version)
+                        if not v.is_prerelease:
+                            version = the_version
+                            break
+                    except InvalidVersion:
+                        # move on to next thing to parse it
+                        continue
+                else:
+                    version = the_version
+                    break
 
     if not version:
 
@@ -38,12 +60,10 @@ def latest(repo, sniff=True, validate=True):
             headers={'Connection': 'close'})
         if r.status_code == 200:
             version = r.json()['tag_name']
+            version = sanitize_version(version)
         else:
             sys.stderr.write(r.text)
             return None
-
-    # sanitize version tag:
-    version = version.lstrip("v").rstrip("-beta").rstrip("-stable")
 
     if validate:
         try:
