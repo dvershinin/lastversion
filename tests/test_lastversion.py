@@ -7,6 +7,14 @@ from packaging import version
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
+def test_symfony():
+    repo = "https://github.com/symfony/symfony/releases"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) >= version.parse("4.2.8")
+
+
 def test_ngx_pagespeed():
     repo = "apache/incubator-pagespeed-ngx"
 
