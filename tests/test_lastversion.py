@@ -7,6 +7,14 @@ from packaging import version
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
+def test_gperftools():
+    repo = "https://github.com/gperftools/gperftools/releases"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) >= version.parse("2.7")
+
+
 def test_symfony():
     repo = "https://github.com/symfony/symfony/releases"
 

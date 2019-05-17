@@ -8,13 +8,18 @@ import requests
 import argparse
 import sys
 import os
+import re
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
 
 
 def sanitize_version(version):
-    """strip some common prefixes and suffixes of non-beta packages to get clean version"""
-    return version.strip().lstrip("v").replace("RELEASE.", "").replace("-stable", "")
+    """extract what appears to be the version information"""
+    s = re.search(r'([0-9]+([.][0-9]+)+)', version)
+    if s:
+        return s.group(1)
+    else:
+        return version.strip()
 
 
 def latest(repo, sniff=True, validate=True):
@@ -34,28 +39,38 @@ def latest(repo, sniff=True, validate=True):
 
         soup = BeautifulSoup(html, 'lxml')
 
-        # this tag is known to hold collection of releases not exposed through API
-        taggedReleases = soup.find(class_='release-timeline-tags')
-        if taggedReleases:
-            for release in taggedReleases.find_all(class_='release-entry'):
-                the_version = release.find("a").text
-                the_version = sanitize_version(the_version)
-                # check if version is parseable non prerelease, and move on to next tag otherwise
-                if validate:
-                    try:
-                        v = Version(the_version)
-                        if not v.is_prerelease:
-                            version = the_version
-                            break
-                    except InvalidVersion:
-                        # move on to next thing to parse it
-                        continue
-                else:
+        r = soup.find(class_='release-entry')
+        while r:
+            # this tag is known to hold collection of releases not exposed through API
+            if 'release-timeline-tags' in r['class']:
+                for release in r.find_all(class_='release-entry', recursive=False):
+                    the_version = release.find("a").text
+                    the_version = sanitize_version(the_version)
+                    # check if version is ok and not a prerelease; move on to next tag otherwise
+                    if validate:
+                        try:
+                            v = Version(the_version)
+                            if not v.is_prerelease:
+                                version = the_version
+                                break
+                        except InvalidVersion:
+                            # move on to next thing to parse it
+                            continue
+                    else:
+                        version = the_version
+                        break
+            else:
+                # formal release
+                label_latest = r.find(class_='label-latest', recursive=False)
+                if label_latest:
+                    the_version = r.find(class_='css-truncate-target').text
+                    the_version = sanitize_version(the_version)
+                    # trust this to be the release and validate below
                     version = the_version
                     break
+            r = r.find_next_sibling(class_='release-entry', recursive=False)
 
     if not version:
-
         headers = {'Connection': 'close'}
         api_token = os.getenv("GITHUB_API_TOKEN")
         if api_token:
