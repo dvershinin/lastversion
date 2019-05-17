@@ -48,6 +48,7 @@ def latest(repo, sniff = True, validate = True):
     # return the version if we've reached far enough:
     return version
 
+
 def main():
 
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.')
