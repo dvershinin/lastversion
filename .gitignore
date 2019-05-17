@@ -3,3 +3,4 @@
 /venv
 /*.egg-info
 /.pytest_cache
+*.pyc
