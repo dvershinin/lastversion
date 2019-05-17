@@ -59,6 +59,10 @@ The script requires Python 2.7 and few dependencies. Pip should take of those:
 
     pip install lastversion
 
-## TODO
+## Tips
 
-* Use GitHub API token from environment variable to increase rate limit (fix Travis tests)
+If you're planning to fetch versions for a whole lot of projects, setup your GitHub API token in `~/.bashrc` like this:
+
+    export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
+
+So `lastversion` will use it to get larger API calls allowance from GitHub.
