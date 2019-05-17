@@ -58,3 +58,7 @@ The `--novalidate` will disable validation of fetched version.
 The script requires Python 2.7 and few dependencies. Pip should take of those:
 
     pip install lastversion
+
+## TODO
+
+* Use GitHub API token from environment variable to increase rate limit (fix Travis tests)
