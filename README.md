@@ -13,13 +13,13 @@ But we want to get last version on the command line, without looking at Releases
 
 ## Synopsys
 
-    ./lastversion.py apache/incubator-pagespeed-ngx
+    lastversion apache/incubator-pagespeed-ngx
     
  > 1.13.35.2
  
  That repository specifically, is a good example. Because using only API on it will yield an ancient release.
  
-     ./lastversion.py --nosniff apache/incubator-pagespeed-ngx
+     lastversion --nosniff apache/incubator-pagespeed-ngx
  
  > 1.9.32.10
  
@@ -29,7 +29,7 @@ But we want to get last version on the command line, without looking at Releases
  ## Usage
  
  ```
- usage: lastversion.py [-h] [--nosniff] [--novalidate] R
+ usage: lastversion [-h] [--nosniff] [--novalidate] R
  
  Get latest release from GitHub.
  
@@ -48,9 +48,7 @@ The `--novalidate` will disable validation of fetched version.
 
 ### Installation for CentOS 7
 
-    yum install python-beautifulsoup4 python2-packaging
-    
-    yum install ... <I'll package this stuff later> :)
+    yum install python2-lastversion
     
 ## Installation for other systems
 
