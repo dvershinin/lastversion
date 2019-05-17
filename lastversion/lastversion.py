@@ -4,18 +4,23 @@ lastversion
 License: BSD, see LICENSE for more details.
 """
 
-import requests, argparse, sys
+import requests
+import argparse
+import sys
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
 
-def latest(repo, sniff = True, validate = True):
+
+def latest(repo, sniff=True, validate=True):
 
     version = None
 
     if sniff:
 
         # Start by fetching HTML of releases page (screw you, Github!)
-        response = requests.get("https://github.com/{}/releases".format(repo), headers={'Connection': 'close'})
+        response = requests.get(
+            "https://github.com/{}/releases".format(repo),
+            headers={'Connection': 'close'})
         html = response.text
 
         soup = BeautifulSoup(html, 'html.parser')
@@ -28,19 +33,21 @@ def latest(repo, sniff = True, validate = True):
 
     if not version:
 
-        r = requests.get('https://api.github.com/repos/{}/releases/latest'.format(repo), headers={'Connection': 'close'})
+        r = requests.get(
+            'https://api.github.com/repos/{}/releases/latest'.format(repo),
+            headers={'Connection': 'close'})
         if r.status_code == 200:
             version = r.json()['tag_name']
         else:
             sys.stderr.write(r.text)
-            return None;
+            return None
 
     # sanitize version tag:
-    version = version.lstrip("v").rstrip("-beta").rstrip("-stable");
+    version = version.lstrip("v").rstrip("-beta").rstrip("-stable")
 
     if validate:
         try:
-            v = Version(version)
+            Version(version)
         except InvalidVersion:
             sys.stderr.write('Got invalid version: {}'.format(version))
             return None
