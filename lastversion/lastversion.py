@@ -7,6 +7,7 @@ License: BSD, see LICENSE for more details.
 import requests
 import argparse
 import sys
+import os
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
 
@@ -55,9 +56,14 @@ def latest(repo, sniff=True, validate=True):
 
     if not version:
 
+        headers = {'Connection': 'close'}
+        api_token = os.getenv("GITHUB_API_TOKEN")
+        if api_token:
+            headers['Authorization'] = "token {}".format(api_token)
+
         r = requests.get(
             'https://api.github.com/repos/{}/releases/latest'.format(repo),
-            headers={'Connection': 'close'})
+            headers=headers)
         if r.status_code == 200:
             version = r.json()['tag_name']
             version = sanitize_version(version)
