@@ -29,11 +29,11 @@ def latest(repo, sniff = True, validate = True):
     if not version:
 
         r = requests.get('https://api.github.com/repos/{}/releases/latest'.format(repo), headers={'Connection': 'close'})
-            if r.status_code == 200:
-                version = r.json()['tag_name']
-            else:
-                sys.stderr.write(r.text)
-                return None;
+        if r.status_code == 200:
+            version = r.json()['tag_name']
+        else:
+            sys.stderr.write(r.text)
+            return None;
 
     # sanitize version tag:
     version = version.lstrip("v").rstrip("-beta").rstrip("-stable");
@@ -61,9 +61,9 @@ def main():
     version = latest(args.repo, args.sniff, args.validate)
 
     if version:
-      print(version)
+        print(version)
     else:
-      sys.exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
