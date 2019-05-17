@@ -48,9 +48,7 @@ The `--novalidate` will disable validation of fetched version.
 
 ### Installation for CentOS 7
 
-    yum install python-beautifulsoup4 python2-packaging
-    
-    yum install ... <I'll package this stuff later> :)
+    yum install python2-lastversion
     
 ## Installation for other systems
 
