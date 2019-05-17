@@ -14,36 +14,36 @@ def latest(repo, sniff = True, validate = True):
 
     if sniff:
 
-      # Start by fetching HTML of releases page (screw you, Github!)
-      response = requests.get("https://github.com/{}/releases".format(repo), headers={'Connection': 'close'})
-      html = response.text
+        # Start by fetching HTML of releases page (screw you, Github!)
+        response = requests.get("https://github.com/{}/releases".format(repo), headers={'Connection': 'close'})
+        html = response.text
 
-      soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, 'html.parser')
 
-      # this tag is known to hold collection of releases not exposed through API
-      taggedReleases = soup.find(class_='release-timeline-tags')
-      if taggedReleases:
-        latest = taggedReleases.find(class_='release-entry')
-        version = latest.find("a").text.strip()
+        # this tag is known to hold collection of releases not exposed through API
+        taggedReleases = soup.find(class_='release-timeline-tags')
+        if taggedReleases:
+            latest = taggedReleases.find(class_='release-entry')
+            version = latest.find("a").text.strip()
 
     if not version:
 
-      r = requests.get('https://api.github.com/repos/{}/releases/latest'.format(repo), headers={'Connection': 'close'})
-      if r.status_code == 200:
-        version = r.json()['tag_name']
-      else:
-        sys.stderr.write(r.text)
-        return None;
+        r = requests.get('https://api.github.com/repos/{}/releases/latest'.format(repo), headers={'Connection': 'close'})
+            if r.status_code == 200:
+                version = r.json()['tag_name']
+            else:
+                sys.stderr.write(r.text)
+                return None;
 
     # sanitize version tag:
     version = version.lstrip("v").rstrip("-beta").rstrip("-stable");
 
     if validate:
-      try:
-        v = Version(version)
-      except InvalidVersion:
-        sys.stderr.write('Got invalid version: {}'.format(version))
-        return None
+        try:
+            v = Version(version)
+        except InvalidVersion:
+            sys.stderr.write('Got invalid version: {}'.format(version))
+            return None
 
     # return the version if we've reached far enough:
     return version
