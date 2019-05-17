@@ -1,4 +1,6 @@
-# lastversion
+# lastversion 
+
+[![Build Status](https://travis-ci.org/dvershinin/lastversion.svg?branch=master)](https://travis-ci.org/dvershinin/lastversion)
 
 A tiny command line utility that helps to answer one simple question:
 
