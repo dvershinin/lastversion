@@ -52,6 +52,6 @@ The `--novalidate` will disable validation of fetched version.
     
 ## Installation for other systems
 
-The script requires Python 2.7 and few dependencies. 
+The script requires Python 2.7 and few dependencies. Pip should take of those:
 
-Review the source file, install dependencies and download `lastversion.py` for running on your system.    
+    pip install lastversion
