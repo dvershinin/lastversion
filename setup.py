@@ -17,7 +17,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="lastversion",
-    version="0.0.8",
+    version="0.0.9",
     author="Danila Vershinin",
     author_email="info@getpagespeed.com",
     url="https://github.com/dvershinin/lastversion",
