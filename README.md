@@ -1,6 +1,7 @@
 # lastversion 
 
 [![Build Status](https://travis-ci.org/dvershinin/lastversion.svg?branch=master)](https://travis-ci.org/dvershinin/lastversion)
+[![PyPI version](https://badge.fury.io/py/lastversion.svg)](https://badge.fury.io/py/lastversion)
 
 A tiny command line utility that helps to answer one simple question:
 
