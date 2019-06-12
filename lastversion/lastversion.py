@@ -12,8 +12,8 @@ import re
 import json
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
-import pkg_resources  # for fetching version info
 import logging as log  # for verbose output
+from __about__ import __version__
 
 
 def sanitize_version(version):
@@ -156,8 +156,7 @@ def main():
                         choices=['json', 'version'],
                         help='Output format')
     parser.add_argument('--version', action='version',
-                        version='%(prog)s {version}'.format(
-                            version=pkg_resources.require("lastversion")[0].version))
+                        version='%(prog)s {version}'.format(version=__version__))
     parser.set_defaults(sniff=True, validate=True, verbose=False, format='version', pre=False)
     args = parser.parse_args()
 

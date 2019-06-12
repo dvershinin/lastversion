@@ -19,8 +19,8 @@ with open("README.md", "r") as fh:
 base_dir = os.path.dirname(__file__)
 
 version = {}
-with open(os.path.join(base_dir, "lastversion", "__init__.py")) as f:
-    exec(f.read(), version)
+with open(os.path.join(base_dir, "lastversion", "__about__.py")) as fp:
+    exec(fp.read(), version)
 
 setup(
     name="lastversion",
