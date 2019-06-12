@@ -12,7 +12,8 @@ import re
 import json
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
-import pkg_resources  # part of setuptools
+import pkg_resources  # for fetching version info
+import logging as log  # for verbose output
 
 
 def sanitize_version(version):
@@ -56,13 +57,13 @@ def latest(repo, sniff=True, validate=True, format='version'):
             repo = "/".join(repo.split('/')[3:5])
 
         if sniff:
-
             # Start by fetching HTML of releases page (screw you, Github!)
             response = requests.get(
                 "https://github.com/{}/releases".format(repo),
                 headers={'Connection': 'close'})
             html = response.text
 
+            log.info("Parsing HTML of releases page...")
             soup = BeautifulSoup(html, 'lxml')
 
             r = soup.find(class_='release-entry')
@@ -139,17 +140,25 @@ def latest(repo, sniff=True, validate=True, format='version'):
 
 def main():
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.')
-    parser.add_argument('repo', metavar='REPOSITORY2',
+    parser.add_argument('repo', metavar='REPO',
                         help='GitHub repository in format owner/name')
     parser.add_argument('--nosniff', dest='sniff', action='store_false')
     parser.add_argument('--novalidate', dest='validate', action='store_false')
+    parser.add_argument('--verbose', dest='verbose', action='store_true')
     parser.add_argument('--format',
                         choices=['json', 'version'],
                         help='Output format')
     parser.add_argument('--version', action='version',
-                        version='%(prog)s {version}'.format(version=pkg_resources.require("lastversion")[0].version))
-    parser.set_defaults(sniff=True, validate=True, format='version')
+                        version='%(prog)s {version}'.format(
+                            version=pkg_resources.require("lastversion")[0].version))
+    parser.set_defaults(sniff=True, validate=True, verbose=False, format='version')
     args = parser.parse_args()
+
+    if args.verbose:
+        log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
+        log.info("Verbose output.")
+    else:
+        log.basicConfig(format="%(levelname)s: %(message)s")
 
     version = latest(args.repo, args.sniff, args.validate, args.format)
 
