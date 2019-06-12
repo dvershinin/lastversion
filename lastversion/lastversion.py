@@ -102,7 +102,12 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
                             the_version = sanitize_version(the_version)
                         # trust this to be the release and validate below
                         version = the_version
-                        description = r.find(class_='markdown-body').text
+                        if format == 'json':
+                            description = r.find(class_='markdown-body')
+                            if not description:
+                                description = r.find(class_='commit-desc')
+                            if description:
+                                description = description.text
                         break
                 r = r.find_next_sibling(class_='release-entry', recursive=False)
 

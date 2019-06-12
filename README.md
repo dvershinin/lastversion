@@ -25,7 +25,7 @@ Or otherwise require getting latest version in your automation scripts.
  
  That repository specifically, is a good example. Because using only API on it will yield an ancient release:
  
-     lastversion --nosniff apache/incubator-pagespeed-ngx #> 1.9.32.10
+    lastversion --nosniff apache/incubator-pagespeed-ngx #> 1.9.32.10
  
  Why is because at some point the maintainers of the repository did a formal UI release, but later used the standard approach.
  
@@ -35,18 +35,35 @@ Or otherwise require getting latest version in your automation scripts.
  
  ## Usage
  
+ Typically, you would just pass the repository URL (or repo owner/name to it) as the only argument, e.g.:
+ 
+    lastversion https://github.com/gperftools/gperftools
+     
+Equivalently accepted invocation with same output is:
+
+    lastversion gperftools/gperftools    
+     
+For more options to control output or behavior, see `--help` output:    
+ 
  ```
- usage: lastversion [-h] [--nosniff] [--novalidate] R
- 
- Get latest release from GitHub.
- 
- positional arguments:
-   R             GitHub repository in format owner/name
- 
- optional arguments:
-   -h, --help    show this help message and exit
-   --nosniff
-   --novalidate
+usage: lastversion [-h] [--nosniff] [--novalidate] [--pre] [--verbose]
+                   [--format {json,version}] [--version]
+                   REPO
+
+Get latest release from GitHub.
+
+positional arguments:
+  REPO                  GitHub repository in format owner/name
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --nosniff             Only use GitHub API, no HTML parsing (worse)
+  --novalidate
+  --pre                 Include pre-releases in potential versions
+  --verbose
+  --format {json,version}
+                        Output format
+  --version             show program's version number and exit
 ```
 
 The `--nosniff` will disable the magic and only API will be used (yuck).

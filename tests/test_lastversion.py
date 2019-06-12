@@ -61,3 +61,11 @@ def test_grafana():
     output = lastversion.latest(repo)
 
     assert version.parse(output) >= version.parse("6.2.2")
+
+
+def test_roer():
+    repo = "spinnaker/roer"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) >= version.parse("0.11.3")
