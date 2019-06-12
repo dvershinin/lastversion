@@ -25,7 +25,7 @@ def sanitize_version(version):
         return version.strip()
 
 
-def latest(repo, sniff=True, validate=True, format='version'):
+def latest(repo, sniff=True, validate=True, format='version', pre=False):
 
     # data that we may collect further
     version = None
@@ -81,7 +81,7 @@ def latest(repo, sniff=True, validate=True, format='version'):
                         if validate:
                             try:
                                 v = Version(the_version)
-                                if not v.is_prerelease:
+                                if not v.is_prerelease or pre:
                                     version = the_version
                                     break
                             except InvalidVersion:
@@ -92,10 +92,14 @@ def latest(repo, sniff=True, validate=True, format='version'):
                             break
                 else:
                     # formal release
-                    label_latest = r.find(class_='label-latest', recursive=False)
+                    if pre:
+                        label_latest = r.find(class_='label-prerelease', recursive=False)
+                    else:
+                        label_latest = r.find(class_='label-latest', recursive=False)
                     if label_latest:
                         the_version = r.find(class_='css-truncate-target').text
-                        the_version = sanitize_version(the_version)
+                        if not pre:
+                            the_version = sanitize_version(the_version)
                         # trust this to be the release and validate below
                         version = the_version
                         description = r.find(class_='markdown-body').text
@@ -142,8 +146,11 @@ def main():
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.')
     parser.add_argument('repo', metavar='REPO',
                         help='GitHub repository in format owner/name')
-    parser.add_argument('--nosniff', dest='sniff', action='store_false')
+    parser.add_argument('--nosniff', dest='sniff', action='store_false',
+                        help='Only use GitHub API, no HTML parsing (worse)')
     parser.add_argument('--novalidate', dest='validate', action='store_false')
+    parser.add_argument('--pre', dest='pre', action='store_true',
+                        help='Include pre-releases in potential versions')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
     parser.add_argument('--format',
                         choices=['json', 'version'],
@@ -151,7 +158,7 @@ def main():
     parser.add_argument('--version', action='version',
                         version='%(prog)s {version}'.format(
                             version=pkg_resources.require("lastversion")[0].version))
-    parser.set_defaults(sniff=True, validate=True, verbose=False, format='version')
+    parser.set_defaults(sniff=True, validate=True, verbose=False, format='version', pre=False)
     args = parser.parse_args()
 
     if args.verbose:
@@ -160,7 +167,7 @@ def main():
     else:
         log.basicConfig(format="%(levelname)s: %(message)s")
 
-    version = latest(args.repo, args.sniff, args.validate, args.format)
+    version = latest(args.repo, args.sniff, args.validate, args.format, args.pre)
 
     if version:
         print(version)
