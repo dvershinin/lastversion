@@ -45,3 +45,19 @@ def test_libvmod_xcounter():
     output = lastversion.latest(repo)
 
     assert version.parse(output) >= version.parse("62.3")
+
+
+def test_datadog_agent():
+    repo = "DataDog/datadog-agent"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) >= version.parse("6.11.3")
+
+
+def test_grafana():
+    repo = "grafana/grafana"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) >= version.parse("6.2.2")

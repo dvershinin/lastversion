@@ -12,6 +12,7 @@ import re
 import json
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
+from pprint import pprint
 
 
 def sanitize_version(version):
@@ -69,7 +70,11 @@ def latest(repo, sniff=True, validate=True, format='version'):
                 # this tag is known to hold collection of releases not exposed through API
                 if 'release-timeline-tags' in r['class']:
                     for release in r.find_all(class_='release-entry', recursive=False):
-                        the_version = release.find("a").text
+                        # dotted (collapsed) section of release entries has nothing to look at:
+                        release_a = release.find("a")
+                        if not release_a:
+                            continue
+                        the_version = release_a.text
                         the_version = sanitize_version(the_version)
                         # check if version is ok and not a prerelease; move on to next tag otherwise
                         if validate:
