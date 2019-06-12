@@ -12,7 +12,7 @@ import re
 import json
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
-from pprint import pprint
+import pkg_resources  # part of setuptools
 
 
 def sanitize_version(version):
@@ -138,15 +138,16 @@ def latest(repo, sniff=True, validate=True, format='version'):
 
 
 def main():
-
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.')
-    parser.add_argument('repo', metavar='REPOSITORY',
+    parser.add_argument('repo', metavar='REPOSITORY2',
                         help='GitHub repository in format owner/name')
     parser.add_argument('--nosniff', dest='sniff', action='store_false')
     parser.add_argument('--novalidate', dest='validate', action='store_false')
     parser.add_argument('--format',
                         choices=['json', 'version'],
                         help='Output format')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {version}'.format(version=pkg_resources.require("lastversion")[0].version))
     parser.set_defaults(sniff=True, validate=True, format='version')
     args = parser.parse_args()
 

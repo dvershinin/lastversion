@@ -5,6 +5,6 @@ License: BSD, see LICENSE for more details.
 """
 
 __author__ = "Danila Vershinin"
-__version__ = "0.0.9"
+__version__ = "0.0.10"
 
 from .lastversion import main

@@ -8,6 +8,7 @@ lastversion
 """
 
 from setuptools import find_packages, setup
+import os
 
 install_requires = ["requests", "packaging", "beautifulsoup4", "lxml"]
 tests_requires = ["pytest", "flake8"]
@@ -15,9 +16,15 @@ tests_requires = ["pytest", "flake8"]
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+base_dir = os.path.dirname(__file__)
+
+version = {}
+with open(os.path.join(base_dir, "lastversion", "__init__.py")) as f:
+    exec(f.read(), version)
+
 setup(
     name="lastversion",
-    version="0.0.9",
+    version=version["__version__"],
     author="Danila Vershinin",
     author_email="info@getpagespeed.com",
     url="https://github.com/dvershinin/lastversion",
