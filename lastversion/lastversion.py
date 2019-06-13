@@ -13,7 +13,7 @@ import json
 from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
 import logging as log  # for verbose output
-from __about__ import __version__
+from .__about__ import __version__
 
 
 def sanitize_version(version):
