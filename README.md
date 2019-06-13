@@ -77,7 +77,8 @@ The `--novalidate` will disable validation of fetched version.
     
 ## Installation for other systems
 
-The script requires Python 2.7 and few dependencies. Pip should take of those:
+The script is primarily developed for Python 2.7, but is known to work with recent versions like Python 3.7. 
+Installing with `pip` is easiest:
 
     pip install lastversion
 
