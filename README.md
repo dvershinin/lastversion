@@ -1,3 +1,7 @@
+% lastversion(1)
+% Danila Vershinin
+% July 2019
+
 # lastversion 
 
 [![Build Status](https://travis-ci.org/dvershinin/lastversion.svg?branch=master)](https://travis-ci.org/dvershinin/lastversion)
@@ -33,7 +37,7 @@ Or otherwise require getting latest version in your automation scripts.
  
  But hey, it works for most repositories and I've added Travis tests for some various repositories.
  
- ## Usage
+## Usage
  
  Typically, you would just pass the repository URL (or repo owner/name to it) as the only argument, e.g.:
  
