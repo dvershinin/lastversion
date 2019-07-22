@@ -1,7 +1,3 @@
-% lastversion(1)
-% Danila Vershinin
-% July 2019
-
 # lastversion 
 
 [![Build Status](https://travis-ci.org/dvershinin/lastversion.svg?branch=master)](https://travis-ci.org/dvershinin/lastversion)
