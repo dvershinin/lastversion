@@ -69,3 +69,11 @@ def test_roer():
     output = lastversion.latest(repo)
 
     assert version.parse(output) >= version.parse("0.11.3")
+
+
+def test_ndk():
+    repo = "https://github.com/simplresty/ngx_devel_kit"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) <= version.parse("0.3.0")

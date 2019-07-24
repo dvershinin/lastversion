@@ -18,7 +18,7 @@ from .__about__ import __version__
 
 def sanitize_version(version):
     """extract what appears to be the version information"""
-    s = re.search(r'([0-9]+([.][0-9]+)+)', version)
+    s = re.search(r'([0-9]+([.][0-9]+)+(rc[0-9])?)', version)
     if s:
         return s.group(1)
     else:
@@ -86,6 +86,7 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
                                     break
                             except InvalidVersion:
                                 # move on to next thing to parse it
+                                log.info("Encountered invalid version {}.".format(the_version))
                                 continue
                         else:
                             version = the_version
@@ -98,17 +99,31 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
                         label_latest = r.find(class_='label-latest', recursive=False)
                     if label_latest:
                         the_version = r.find(class_='css-truncate-target').text
-                        if not pre:
-                            the_version = sanitize_version(the_version)
-                        # trust this to be the release and validate below
-                        version = the_version
-                        if format == 'json':
-                            description = r.find(class_='markdown-body')
-                            if not description:
-                                description = r.find(class_='commit-desc')
-                            if description:
-                                description = description.text
-                        break
+                        the_version = sanitize_version(the_version)
+                        # check if version is ok and not a prerelease; move on to next tag otherwise
+                        if validate:
+                            try:
+                                v = Version(the_version)
+                                if not v.is_prerelease or pre:
+                                    version = the_version
+                                    # extra info for json output
+                                    if format == 'json':
+                                        description = r.find(class_='markdown-body')
+                                        if not description:
+                                            description = r.find(class_='commit-desc')
+                                            if description:
+                                                description = description.text
+                                    break
+                                else:
+                                    log.info("Found a pre-release version: {}. Trying next."
+                                             .format(the_version))
+                            except InvalidVersion:
+                                # move on to next thing to parse it
+                                log.info("Encountered invalid version {}.".format(the_version))
+                                continue
+                        else:
+                            version = the_version
+                            break
                 r = r.find_next_sibling(class_='release-entry', recursive=False)
 
         if not version:
