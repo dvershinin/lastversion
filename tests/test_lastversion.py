@@ -85,3 +85,11 @@ def test_naxsi():
     output = lastversion.latest(repo)
 
     assert version.parse(output) <= version.parse("0.56")
+
+
+def test_brotli():
+    repo = "https://github.com/eustas/ngx_brotli/releases"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) == version.parse("0.1.2")

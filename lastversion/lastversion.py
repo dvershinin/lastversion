@@ -18,7 +18,7 @@ from .__about__ import __version__
 
 def sanitize_version(version):
     """extract what appears to be the version information"""
-    s = re.search(r'([0-9]+([.][0-9]+)+(rc[0-9])?)', version)
+    s = re.search(r'([0-9]+([.][0-9]+)+(rc[0-9]?)?)', version)
     if s:
         return s.group(1)
     else:
