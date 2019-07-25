@@ -69,7 +69,9 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
             r = soup.find(class_='release-entry')
             while r:
                 # this tag is known to hold collection of releases not exposed through API
+                breakOut = False
                 if 'release-timeline-tags' in r['class']:
+                    log.info("Inside release-timeline-tags")
                     for release in r.find_all(class_='release-entry', recursive=False):
                         # dotted (collapsed) section of release entries has nothing to look at:
                         release_a = release.find("a")
@@ -80,18 +82,23 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
                         # check if version is ok and not a prerelease; move on to next tag otherwise
                         if validate:
                             try:
+                                log.info("Trying version {}.".format(the_version))
                                 v = Version(the_version)
                                 if not v.is_prerelease or pre:
+                                    log.info("Good version {}.".format(the_version))
                                     version = the_version
+                                    breakOut = True
                                     break
                             except InvalidVersion:
                                 # move on to next thing to parse it
                                 log.info("Encountered invalid version {}.".format(the_version))
-                                continue
                         else:
                             version = the_version
                             break
+                    if breakOut:
+                        break
                 else:
+                    log.info("Inside formal release")
                     # formal release
                     if pre:
                         label_latest = r.find(class_='label-prerelease', recursive=False)
@@ -120,7 +127,6 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
                             except InvalidVersion:
                                 # move on to next thing to parse it
                                 log.info("Encountered invalid version {}.".format(the_version))
-                                continue
                         else:
                             version = the_version
                             break

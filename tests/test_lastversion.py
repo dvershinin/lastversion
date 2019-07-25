@@ -77,3 +77,11 @@ def test_ndk():
     output = lastversion.latest(repo)
 
     assert version.parse(output) <= version.parse("0.3.0")
+
+
+def test_naxsi():
+    repo = "https://github.com/nbs-system/naxsi/releases"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) <= version.parse("0.56")
