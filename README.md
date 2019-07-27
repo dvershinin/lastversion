@@ -80,7 +80,7 @@ The `--novalidate` will disable validation of fetched version.
 ### Installation for CentOS 7
 
     yum install https://extras.getpagespeed.com/release-el7-latest.rpm
-    yum install python2-lastversion
+    yum install lastversion
 
 ## Installation for other systems
 
