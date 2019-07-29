@@ -19,7 +19,7 @@ Tags *usually* represent a release, however, you might get something like "lates
 So in general, quite many project authors do things like:
 
 * Filing a formal release that is clearly a Release Candidate (`rc` in tag), but do not mark it as a pre-release
-* Put extraneous text in release tag e.g. 'release-1.2.3' or `name-1.2.3-2019` anything fancy like that
+* Put extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy like that
 * Put or not put a 'v' prefix to release tags. Today yes, tomorrow not. I'm not consistent about it myself :)
 
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) on the command line, you can use `lastversion`.
@@ -44,7 +44,7 @@ You can also use `lastversion` to get assets/source download URLs for the latest
 
 This will download all assets of the newest stable Mautic, which are 2 zip files.
 
-How this works: `lastversion` outputs all asset URLs, each on new line, and `wget` is smart enough to download each URL. Magic :) 
+How this works: `lastversion` outputs all asset URLs, each on new line, and `wget` is smart enough to download each URL. Magic :)
 
 For releases which have no assets added, it will download source archive.  
 
@@ -132,7 +132,7 @@ If you're planning to fetch versions for a whole lot of projects, setup your [Gi
 
     export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
 
-Then run `source ~/.bashrc`. After this, `lastversion` will use it to get larger API calls allowance from GitHub. Although this is rarely needed, because `lastversion` usually does not resort to API calls because it finds release version through parsing Releases page earlier.
+Then run `source ~/.bashrc`. After this, `lastversion` will use it to get larger API calls allowance from GitHub.
 
 ## Usage in a Python module
 
