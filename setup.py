@@ -10,7 +10,7 @@ lastversion
 from setuptools import find_packages, setup
 import os
 
-install_requires = ["requests", "packaging", "beautifulsoup4", "lxml"]
+install_requires = ["requests", "packaging", "cachecontrol", "lockfile", "appdirs"]
 tests_requires = ["pytest", "flake8"]
 
 with open("README.md", "r") as fh:

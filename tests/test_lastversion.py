@@ -7,6 +7,22 @@ from packaging import version
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
+def test_mautic_pre():
+    repo = "mautic/mautic"
+
+    output = lastversion.latest(repo, 'version', True)
+
+    assert version.parse(output) == version.parse("2.15.2b0")
+
+
+def test_mautic_assets():
+    repo = "mautic/mautic"
+
+    output = lastversion.latest(repo, 'assets', True)
+
+    assert "2.15.2-beta-update.zip" in output
+
+
 def test_gperftools():
     repo = "https://github.com/gperftools/gperftools/releases"
 

@@ -10,29 +10,72 @@ import sys
 import os
 import re
 import json
-from bs4 import BeautifulSoup
-from packaging.version import Version, InvalidVersion
+from packaging.version import Version, InvalidVersion, parse as version_parse
 import logging as log  # for verbose output
 from .__about__ import __version__
+from cachecontrol import CacheControl
+from cachecontrol.caches.file_cache import FileCache
+from appdirs import user_cache_dir
 
 
-def sanitize_version(version):
-    """extract what appears to be the version information"""
-    s = re.search(r'([0-9]+([.][0-9]+)+(rc[0-9]?)?)', version)
-    if s:
-        return s.group(1)
+def github_tag_download_url(repo, tag, version):
+    """ The following format will benefit from:
+    1) not using API, so is not subject to its rate limits
+    2) likely has been accessed by someone in CDN and thus faster
+    3) provides more or less unique filenames once the stuff is downloaded
+    See https://fedoraproject.org/wiki/Packaging:SourceURL#Git_Tags
+    We use variation of this: it does not need a parsed version (thus works for --pre better)
+    and it is not broken on fancy release tags like v1.2.3-stable
+    https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
+    """
+    if os.name != 'nt':
+        return "https://github.com/{}/archive/{}/{}-{}.tar.gz".format(
+            repo, tag, repo.split('/')[1], tag)
     else:
-        return version.strip()
+        return "https://github.com/{}/archive/{}/{}-{}.zip".format(
+            repo, tag, repo.split('/')[1], tag)
 
 
-def latest(repo, sniff=True, validate=True, format='version', pre=False):
+def sanitize_version(version, preOk=False):
+    """extract version from tag name"""
+    log.info("Checking tag {} as version.".format(version))
+    try:
+        v = Version(version)
+        if not v.is_prerelease or preOk:
+            log.info("Parsed as Version OK")
+            log.info("String representation of version is {}.".format(v))
+            return v
+        else:
+            log.info("Parsed as unwated pre-release version: {}.".format(v))
+            return False
+    except InvalidVersion:
+        log.info("Failed to parse tag as Version.")
+        # attempt to remove extraneous chars and revalidate
+        s = re.search(r'([0-9]+([.][0-9]+)+(rc[0-9]?)?)', version)
+        if s:
+            log.info("Sanitazied tag name value to {}.".format(s.group(1)))
+            # we know regex is valid version format, so no need to try catch
+            return Version(s.group(1))
+        else:
+            log.info("Did not find anything that looks like a version in the tag")
+            return False
+
+
+def latest(repo, format='version', pre=False):
 
     # data that we may collect further
+    # the main thing, we're after - parsed version number, e.g. 1.2.3 (no extras chars)
     version = None
+    # corresponding tag name, e.g. v1.2.3 or v1.2.3-stable (extra chars OK,
+    # used for constructing non-API tar download URLs)
+    tag = None
     description = None
     # set this when an API returns json
     data = None
 
+    headers = {}
+    cachedir = user_cache_dir("lastversion")
+    log.info("Using cache directory: {}.".format(cachedir))
     # Some special non-Github cases for our repository are handled by checking URL
 
     # 1. nginx version is taken as version of stable (written by rpm check script)
@@ -43,12 +86,14 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
 
     # 2. monit version can be obtained from Bitbucket downloads section of the project
     elif repo.startswith('https://mmonit.com/'):
-        # Special case Monit repo
-        response = requests.get(
-            "https://api.bitbucket.org/2.0/repositories/{}/downloads".format("tildeslash/monit"),
-            headers={'Connection': 'close'})
-        data = response.json()
-        version = sanitize_version(data['values'][0]['name'])
+        with CacheControl(requests.Session(),
+                          cache=FileCache(cachedir)) as s:
+            # Special case Monit repo
+            response = s.get("https://api.bitbucket.org/2.0/repositories/{}/downloads".format(
+                "tildeslash/monit"), headers=headers)
+            data = response.json()
+            version = sanitize_version(data['values'][0]['name'])
+        s.close()
 
     # 3. Everything else is GitHub passed as owner/repo
     else:
@@ -56,134 +101,121 @@ def latest(repo, sniff=True, validate=True, format='version', pre=False):
         if repo.startswith('https://github.com/'):
             repo = "/".join(repo.split('/')[3:5])
 
-        if sniff:
-            # Start by fetching HTML of releases page (screw you, Github!)
-            response = requests.get(
-                "https://github.com/{}/releases".format(repo),
-                headers={'Connection': 'close'})
-            html = response.text
+        api_token = os.getenv("GITHUB_API_TOKEN")
+        if api_token:
+            headers['Authorization'] = "token {}".format(api_token)
 
-            log.info("Parsing HTML of releases page...")
-            soup = BeautifulSoup(html, 'lxml')
+        with CacheControl(requests.Session(),
+                          cache=FileCache(cachedir)) as s:
 
-            r = soup.find(class_='release-entry')
-            while r:
-                # this tag is known to hold collection of releases not exposed through API
-                breakOut = False
-                if 'release-timeline-tags' in r['class']:
-                    log.info("Inside release-timeline-tags")
-                    for release in r.find_all(class_='release-entry', recursive=False):
-                        # dotted (collapsed) section of release entries has nothing to look at:
-                        release_a = release.find("a")
-                        if not release_a:
-                            continue
-                        the_version = release_a.text
-                        the_version = sanitize_version(the_version)
-                        # check if version is ok and not a prerelease; move on to next tag otherwise
-                        if validate:
-                            try:
-                                log.info("Trying version {}.".format(the_version))
-                                v = Version(the_version)
-                                if not v.is_prerelease or pre:
-                                    log.info("Good version {}.".format(the_version))
-                                    version = the_version
-                                    breakOut = True
-                                    break
-                            except InvalidVersion:
-                                # move on to next thing to parse it
-                                log.info("Encountered invalid version {}.".format(the_version))
-                        else:
+            s.headers.update(headers)
+
+            # releases/latest fetches only non-prerelease, non-draft, so it
+            # should not be used for hunting down pre-releases assets
+            if not pre:
+                r = s.get(
+                    'https://api.github.com/repos/{}/releases/latest'.format(repo),
+                    headers=headers)
+                if r.status_code == 200:
+                    the_tag = r.json()['tag_name']
+                    version = sanitize_version(the_tag, pre)
+                    if version:
+                        log.info("Set version as current selection: {}.".format(version))
+                        tag = the_tag
+                        data = r.json()
+            else:
+                r = s.get(
+                    'https://api.github.com/repos/{}/releases'.format(repo),
+                    headers=headers)
+                if r.status_code == 200:
+                    for release in r.json():
+                        the_tag = release['tag_name']
+                        the_version = sanitize_version(the_tag, pre)
+                        if the_version and ((not version) or (the_version > version)):
                             version = the_version
-                            break
-                    if breakOut:
-                        break
-                else:
-                    log.info("Inside formal release")
-                    # formal release
-                    if pre:
-                        label_latest = r.find(class_='label-prerelease', recursive=False)
-                    else:
-                        label_latest = r.find(class_='label-latest', recursive=False)
-                    if label_latest:
-                        the_version = r.find(class_='css-truncate-target').text
-                        the_version = sanitize_version(the_version)
-                        # check if version is ok and not a prerelease; move on to next tag otherwise
-                        if validate:
-                            try:
-                                v = Version(the_version)
-                                if not v.is_prerelease or pre:
-                                    version = the_version
-                                    # extra info for json output
-                                    if format == 'json':
-                                        description = r.find(class_='markdown-body')
-                                        if not description:
-                                            description = r.find(class_='commit-desc')
-                                            if description:
-                                                description = description.text
-                                    break
-                                else:
-                                    log.info("Found a pre-release version: {}. Trying next."
-                                             .format(the_version))
-                            except InvalidVersion:
-                                # move on to next thing to parse it
-                                log.info("Encountered invalid version {}.".format(the_version))
-                        else:
-                            version = the_version
-                            break
-                r = r.find_next_sibling(class_='release-entry', recursive=False)
+                            log.info("Set version as current selection: {}.".format(version))
+                            tag = the_tag
+                            data = release
 
-        if not version:
-            headers = {'Connection': 'close'}
-            api_token = os.getenv("GITHUB_API_TOKEN")
-            if api_token:
-                headers['Authorization'] = "token {}".format(api_token)
+            # formal release may not exist at all, or be "late/old" in case
+            # actual release is only a simple tag so let's try /tags
 
-            r = requests.get(
-                'https://api.github.com/repos/{}/releases/latest'.format(repo),
+            r = s.get(
+                'https://api.github.com/repos/{}/tags'.format(repo),
                 headers=headers)
             if r.status_code == 200:
-                version = r.json()['tag_name']
-                version = sanitize_version(version)
+                for t in r.json():
+                    the_tag = t['name']
+                    the_version = sanitize_version(the_tag, pre)
+                    if the_version and ((not version) or (the_version > version)):
+                        version = the_version
+                        log.info("Setting version as current selection: {}.".format(version))
+                        tag = the_tag
+                        data = t
             else:
                 sys.stderr.write(r.text)
                 return None
 
-    if validate:
-        try:
-            Version(version)
-        except InvalidVersion:
-            sys.stderr.write('Got invalid version: {}'.format(version))
-            return None
+        s.close()
 
-    # return the release if we've reached far enough:
-    if format == 'version':
-        return version
-    elif format == 'json':
-        if not data:
-            data = {}
-        if description:
-            description = description.strip()
-        data['version'] = version
-        data['description'] = description
-        return json.dumps(data)
+        # bail out, found nothing that looks like a release
+        if not version:
+            return False
+
+        # return the release if we've reached far enough:
+        if format == 'version':
+            return str(version)
+        elif format == 'json':
+            if not data:
+                data = {}
+            if description:
+                description = description.strip()
+            data['version'] = str(version)
+            data['description'] = description
+            data['v_prefix'] = tag.startswith("v")
+            data['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
+            return json.dumps(data)
+        elif format == 'assets':
+            if 'assets' in data and len(data['assets']) > 0:
+                assets_urls = []
+                for asset in data['assets']:
+                    if os.name == 'nt' and asset['name'].endswith('.tar.gz'):
+                        continue
+                    # zips are OK for Linux, so we do some heuristics to weed out Windows stuff
+                    if os.name == 'posix' and asset['name'].endswith('-win64.zip'):
+                        continue
+                    # todo logic for filtering assets based on... ?
+                    assets_urls.append(asset['browser_download_url'])
+                return "\n".join(assets_urls)
+            else:
+                return github_tag_download_url(repo, tag, str(version))
+        elif format == 'source':
+            return github_tag_download_url(repo, tag, str(version))
 
 
 def main():
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.')
     parser.add_argument('repo', metavar='REPO',
                         help='GitHub repository in format owner/name')
-    parser.add_argument('--nosniff', dest='sniff', action='store_false',
-                        help='Only use GitHub API, no HTML parsing (worse)')
-    parser.add_argument('--novalidate', dest='validate', action='store_false')
+    # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
+    # how / which data of last release we want to present
+    # assets will give download urls for assets if available and sources archive otherwise
+    # sources will give download urls for sources always
+    # json always includes "version", "tag_name" etc + whichever json data was
+    # used to satisfy lastversion
     parser.add_argument('--format',
-                        choices=['json', 'version'],
+                        choices=['version', 'assets', 'source', 'json'],
                         help='Output format')
+    parser.add_argument('--assets', dest='assets', action='store_true',
+                        help='Returns assets download URLs for last release')
+    parser.add_argument('--source', dest='source', action='store_true',
+                        help='Returns only source URL for last release')
     parser.add_argument('--version', action='version',
                         version='%(prog)s {version}'.format(version=__version__))
-    parser.set_defaults(sniff=True, validate=True, verbose=False, format='version', pre=False)
+    parser.set_defaults(validate=True, verbose=False, format='version', pre=False, assets=False)
     args = parser.parse_args()
 
     if args.verbose:
@@ -192,7 +224,13 @@ def main():
     else:
         log.basicConfig(format="%(levelname)s: %(message)s")
 
-    version = latest(args.repo, args.sniff, args.validate, args.format, args.pre)
+    if args.assets:
+        args.format = 'assets'
+
+    if args.source:
+        args.format = 'source'
+
+    version = latest(args.repo, args.format, args.pre)
 
     if version:
         print(version)
