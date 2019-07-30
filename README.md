@@ -54,7 +54,7 @@ To always download source, use `--source` instead:
 
 An asset is a downloadable file that typically represents an executable, or otherwise "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled (for specific platform), program.
 
-Source files, are either tarballs or zipballs of sources for the source code of release.    
+Source files, are either tarballs or zipballs of sources for the source code of release. 
 
 ### Get last version (betas are fine)
 
@@ -200,3 +200,14 @@ The `lastversion.latest` function accepts 3 arguments
 * `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
 * `format`, which accepts same values as when you run `lastversion` interactively
 * `preOk`, boolean for whether to include pre-releases as potential versions
+
+### Check if there is a newer kernel for your Linux machine
+
+```bash
+NEWER_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
+if [ $? -eq 0 ]; then
+  echo "I better update my kernel now, because ${KERNEL} is there"
+else 
+  echo "My kernel is latest and greatest."
+fi 
+```  
