@@ -52,8 +52,6 @@ To always download source, use `--source` instead:
 
     wget $(lastversion --source mautic/mautic)  
 
-
-
 An asset is a downloadable file that typically represents an executable, or otherwise "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled (for specific platform), program.
 
 Source files, are either tarballs or zipballs of sources for the source code of release.    
@@ -67,7 +65,7 @@ If you think otherwise, then pass `--pre` switch and if the latest version of re
 
 ## Usage
 
- Typically, you would just pass the repository URL (or repo owner/name to it) as the only argument, e.g.:
+ Typically, you would just pass a repository URL (or repo owner/name to it) as the only argument, e.g.:
 
     lastversion https://github.com/gperftools/gperftools
 
@@ -75,28 +73,43 @@ Equivalently accepted invocation with same output is:
 
     lastversion gperftools/gperftools    
 
+If you're lazy to even copy paste a project's URL, you can just type its name as argument, which will use repository search API (slower).
+Helps to answer what is the latest Linux version:
+
+    lastversion linux     
+
+Or wondering what is the latest version of Wordpress? :
+
+    lastversion wordpress
+   
+A special value of `self` for the main argument, will lookup the last release of `lastversion` itself.
+
 For more options to control output or behavior, see `--help` output:    
 
  ```
- usage: lastversion [-h] [--pre] [--verbose]
-                    [--format {version,assets,source,json}] [--assets]
-                    [--version]
-                    REPO
+usage: lastversion [-h] [--pre] [--verbose]
+                   [--format {version,assets,source,json}] [--assets]
+                   [--source] [--version] [-gt VER] [--filter REGEX]
+                   REPO
 
- Get latest release from GitHub.
+Get latest release from GitHub.
 
- positional arguments:
-   REPO                  GitHub repository in format owner/name
+positional arguments:
+  REPO                  GitHub repository in format owner/name
 
- optional arguments:
-   -h, --help            show this help message and exit
-   --pre                 Include pre-releases in potential versions
-   --verbose
-   --format {version,assets,source,json}
-                         Output format
-   --assets              Returns only download URLs for last release
-   --version             show program's version number and exit
-
+optional arguments:
+  -h, --help            show this help message and exit
+  --pre                 Include pre-releases in potential versions
+  --verbose
+  --format {version,assets,source,json}
+                        Output format
+  --assets              Returns assets download URLs for last release
+  --source              Returns only source URL for last release
+  --version             show program's version number and exit
+  -gt VER, --newer-than VER
+                        Output only if last version is newer than given
+                        version
+  --filter REGEX        Filters --assets result by a regular expression
 ```
 
 The `--format` will affect what kind of information from last release and in which format will be displayed, e.g.:
@@ -110,10 +123,49 @@ You can use shortcuts `--source` instead of `--format source`, and `--assets` in
 
     lastversion --source mautic/mautic #> https://github.com/mautic/mautic/archive/2.15.1/mautic-2.15.1.tar.gz
 
+By default, `lastversion` filters output of `--assets` to be OS specific. Who needs `.exe` on Linux?
+
+To override this behavior, you can use `--filter`, which has a regular expression as its argument.
+To disable OS filtering, use `--filter .`, this will match everything.
+
+You can naturally use `--filter` in place where you would use `grep`, e.g. `lastversion --assets --filter win REPO`
+
+### Scripting with lastversion
+
+#### Check for NEW release
+
+When you're building some upstream package, and you did this before, there is known "last build| version.
+Automatinc builds become easy with:
+
+```bash
+CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
+LASTVER=$(lastversion repo/owner -gt $CURRENTLY_BUILT_VER)
+if [ $? -eq 0 ]; then
+  # LASTVER is newer, update and trigger build
+  ....
+```
+
+#### Status codes
+
+Exit status codes are the usual means of communicating a command's execution success or failure. 
+So `lastversion` follows this: successful command returns `0` while anything else is an error of some kind:
+ 
+Exit status code `1` is returned for cases like no release tag existing for repository at all, or repository does not exist.
+
+Exit status code `2` is returned for `-gt` version comparison negative lookup.
+
+Exit status code `3` is returned when filtering assets of last release yields empty URL set (no match)
+
 ### Installation for CentOS 7
 
     yum install https://extras.getpagespeed.com/release-el7-latest.rpm
     yum install lastversion
+
+Packaged install relies on some dependencies that were missing in EPEL or base repository.
+Following dependent packages are in our repository as well:    
+
+* `python2-CacheControl`
+* newer `python2-msgpack`
 
 ## Installation for other systems
 

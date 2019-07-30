@@ -4,18 +4,20 @@ lastversion
 License: BSD, see LICENSE for more details.
 """
 
-import requests
 import argparse
-import sys
+import json
+import logging as log  # for verbose output
 import os
 import re
-import json
-from packaging.version import Version, InvalidVersion, parse as version_parse
-import logging as log  # for verbose output
-from .__about__ import __version__
+import sys
+
+import requests
+from appdirs import user_cache_dir
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
-from appdirs import user_cache_dir
+from packaging.version import Version, InvalidVersion
+
+from .__about__ import __version__
 
 
 def github_tag_download_url(repo, tag, version):
@@ -34,6 +36,11 @@ def github_tag_download_url(repo, tag, version):
     else:
         return "https://github.com/{}/archive/{}/{}-{}.zip".format(
             repo, tag, repo.split('/')[1], tag)
+
+
+windowsAssetMarkers = ('.exe', '-win32.exe', '-win64.exe', '-win64.zip')
+posixAssetMarkers = ('.tar.gz', '-linux32', '-linux64')
+darwingAssetMarkers = ('-osx-amd64')
 
 
 def sanitize_version(version, preOk=False):
@@ -61,7 +68,7 @@ def sanitize_version(version, preOk=False):
             return False
 
 
-def latest(repo, format='version', pre=False):
+def latest(repo, format='version', pre=False, newer_than=False, filter=False):
 
     # data that we may collect further
     # the main thing, we're after - parsed version number, e.g. 1.2.3 (no extras chars)
@@ -109,6 +116,13 @@ def latest(repo, format='version', pre=False):
                           cache=FileCache(cachedir)) as s:
 
             s.headers.update(headers)
+
+            # search it :)
+            if '/' not in repo:
+                r = s.get(
+                    'https://api.github.com/search/repositories?q={}+in:name'.format(repo),
+                    headers=headers)
+                repo = r.json()['items'][0]['full_name']
 
             # releases/latest fetches only non-prerelease, non-draft, so it
             # should not be used for hunting down pre-releases assets
@@ -162,6 +176,10 @@ def latest(repo, format='version', pre=False):
         if not version:
             return False
 
+        # special exit code "2" is useful for scripting to detect if no newer release exists
+        if newer_than and not (version > newer_than):
+            sys.exit(2)
+
         # return the release if we've reached far enough:
         if format == 'version':
             return str(version)
@@ -176,21 +194,37 @@ def latest(repo, format='version', pre=False):
             data['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
             return json.dumps(data)
         elif format == 'assets':
+            urls = []
             if 'assets' in data and len(data['assets']) > 0:
-                assets_urls = []
                 for asset in data['assets']:
-                    if os.name == 'nt' and asset['name'].endswith('.tar.gz'):
-                        continue
-                    # zips are OK for Linux, so we do some heuristics to weed out Windows stuff
-                    if os.name == 'posix' and asset['name'].endswith('-win64.zip'):
-                        continue
-                    # todo logic for filtering assets based on... ?
-                    assets_urls.append(asset['browser_download_url'])
-                return "\n".join(assets_urls)
+                    if filter:
+                        if not re.search(filter, asset['name']):
+                            continue
+                    else:
+                        if os.name == 'nt' and asset['name'].endswith(posixAssetMarkers):
+                            continue
+                        # zips are OK for Linux, so we do some heuristics to weed out Windows stuff
+                        if os.name == 'posix' and asset['name'].endswith(windowsAssetMarkers):
+                            continue
+                    urls.append(asset['browser_download_url'])
             else:
-                return github_tag_download_url(repo, tag, str(version))
+                download_url = github_tag_download_url(repo, tag, str(version))
+                if not filter or re.search(filter, download_url):
+                    urls.append(download_url)
+            if not len(urls):
+                sys.exit(3)
+            else:
+                return "\n".join(urls)
         elif format == 'source':
             return github_tag_download_url(repo, tag, str(version))
+
+
+def check_version(value):
+    try:
+        value = Version(value)
+    except InvalidVersion:
+        raise argparse.ArgumentTypeError("%s is an invalid version value" % value)
+    return value
 
 
 def main():
@@ -215,8 +249,17 @@ def main():
                         help='Returns only source URL for last release')
     parser.add_argument('--version', action='version',
                         version='%(prog)s {version}'.format(version=__version__))
-    parser.set_defaults(validate=True, verbose=False, format='version', pre=False, assets=False)
+    parser.add_argument('-gt', '--newer-than', type=check_version, metavar='VER',
+                        help="Output only if last version is newer than given version")
+    parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
+                                                          "expression")
+
+    parser.set_defaults(validate=True, verbose=False, format='version', pre=False, assets=False,
+                        newer_than=False, filter=False)
     args = parser.parse_args()
+
+    if args.repo == "self":
+        args.repo = "dvershinin/lastversion"
 
     if args.verbose:
         log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
@@ -230,7 +273,10 @@ def main():
     if args.source:
         args.format = 'source'
 
-    version = latest(args.repo, args.format, args.pre)
+    if args.filter:
+        args.filter = re.compile(args.filter)
+
+    version = latest(args.repo, args.format, args.pre, args.newer_than, args.filter)
 
     if version:
         print(version)
