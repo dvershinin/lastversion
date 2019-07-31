@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 import os
 
 install_requires = ["requests", "packaging", "cachecontrol", "lockfile", "appdirs"]
-tests_requires = ["pytest", "flake8"]
+tests_requires = ["pytest", "flake8", "pytest-xdist"]
 
 with open("README.md", "r") as fh:
     long_description = fh.read()

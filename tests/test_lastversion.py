@@ -15,6 +15,14 @@ def test_mautic_pre():
     assert version.parse(output) == version.parse("2.15.2b0")
 
 
+def test_monit():
+    repo = "https://mmonit.com/"
+
+    output = lastversion.latest(repo, 'version')
+
+    assert output > version.parse("5.25.0")
+
+
 def test_mautic_assets():
     repo = "mautic/mautic"
 

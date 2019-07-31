@@ -20,7 +20,7 @@ from packaging.version import Version, InvalidVersion
 from .__about__ import __version__
 
 
-def github_tag_download_url(repo, tag, version):
+def github_tag_download_url(repo, tag):
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
     2) likely has been accessed by someone in CDN and thus faster
@@ -40,15 +40,15 @@ def github_tag_download_url(repo, tag, version):
 
 windowsAssetMarkers = ('.exe', '-win32.exe', '-win64.exe', '-win64.zip')
 posixAssetMarkers = ('.tar.gz', '-linux32', '-linux64')
-darwingAssetMarkers = ('-osx-amd64')
+darwinAssetMarkers = ('-osx-amd64', '-darwin-amd64.tar')
 
 
-def sanitize_version(version, preOk=False):
+def sanitize_version(version, pre_ok=False):
     """extract version from tag name"""
     log.info("Checking tag {} as version.".format(version))
     try:
         v = Version(version)
-        if not v.is_prerelease or preOk:
+        if not v.is_prerelease or pre_ok:
             log.info("Parsed as Version OK")
             log.info("String representation of version is {}.".format(v))
             return v
@@ -68,7 +68,7 @@ def sanitize_version(version, preOk=False):
             return False
 
 
-def latest(repo, format='version', pre=False, newer_than=False, filter=False):
+def latest(repo, output_format='version', pre=False, newer_than=False, assets_filter=False):
 
     # data that we may collect further
     # the main thing, we're after - parsed version number, e.g. 1.2.3 (no extras chars)
@@ -81,26 +81,26 @@ def latest(repo, format='version', pre=False, newer_than=False, filter=False):
     data = None
 
     headers = {}
-    cachedir = user_cache_dir("lastversion")
-    log.info("Using cache directory: {}.".format(cachedir))
+    cache_dir = user_cache_dir("lastversion")
+    log.info("Using cache directory: {}.".format(cache_dir))
     # Some special non-Github cases for our repository are handled by checking URL
 
     # 1. nginx version is taken as version of stable (written by rpm check script)
     # to /usr/local/share/builder/nginx-stable.ver
-    if repo.startswith('http://nginx.org/') or repo.startswith('https://nginx.org/'):
+    if repo.startswith(('http://nginx.org/', 'https://nginx.org/')):
         with open('/usr/local/share/builder/nginx-stable.ver', 'r') as file:
-            version = file.read().replace('\n', '')
+            return file.read().replace('\n', '')
 
     # 2. monit version can be obtained from Bitbucket downloads section of the project
     elif repo.startswith('https://mmonit.com/'):
         with CacheControl(requests.Session(),
-                          cache=FileCache(cachedir)) as s:
+                          cache=FileCache(cache_dir)) as s:
             # Special case Monit repo
             response = s.get("https://api.bitbucket.org/2.0/repositories/{}/downloads".format(
                 "tildeslash/monit"), headers=headers)
             data = response.json()
-            version = sanitize_version(data['values'][0]['name'])
-        s.close()
+            s.close()
+            return sanitize_version(data['values'][0]['name'])
 
     # 3. Everything else is GitHub passed as owner/repo
     else:
@@ -113,7 +113,7 @@ def latest(repo, format='version', pre=False, newer_than=False, filter=False):
             headers['Authorization'] = "token {}".format(api_token)
 
         with CacheControl(requests.Session(),
-                          cache=FileCache(cachedir)) as s:
+                          cache=FileCache(cache_dir)) as s:
 
             s.headers.update(headers)
 
@@ -181,9 +181,9 @@ def latest(repo, format='version', pre=False, newer_than=False, filter=False):
             sys.exit(2)
 
         # return the release if we've reached far enough:
-        if format == 'version':
+        if output_format == 'version':
             return str(version)
-        elif format == 'json':
+        elif output_format == 'json':
             if not data:
                 data = {}
             if description:
@@ -193,30 +193,32 @@ def latest(repo, format='version', pre=False, newer_than=False, filter=False):
             data['v_prefix'] = tag.startswith("v")
             data['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
             return json.dumps(data)
-        elif format == 'assets':
+        elif output_format == 'assets':
             urls = []
             if 'assets' in data and len(data['assets']) > 0:
                 for asset in data['assets']:
-                    if filter:
-                        if not re.search(filter, asset['name']):
+                    if assets_filter:
+                        if not re.search(assets_filter, asset['name']):
                             continue
                     else:
-                        if os.name == 'nt' and asset['name'].endswith(posixAssetMarkers):
+                        if os.name == 'nt' and asset['name'].endswith(
+                                posixAssetMarkers + darwinAssetMarkers):
                             continue
                         # zips are OK for Linux, so we do some heuristics to weed out Windows stuff
-                        if os.name == 'posix' and asset['name'].endswith(windowsAssetMarkers):
+                        if os.name == 'posix' and asset['name'].endswith(
+                                darwinAssetMarkers + windowsAssetMarkers):
                             continue
                     urls.append(asset['browser_download_url'])
             else:
-                download_url = github_tag_download_url(repo, tag, str(version))
-                if not filter or re.search(filter, download_url):
+                download_url = github_tag_download_url(repo, tag)
+                if not assets_filter or re.search(assets_filter, download_url):
                     urls.append(download_url)
             if not len(urls):
                 sys.exit(3)
             else:
                 return "\n".join(urls)
-        elif format == 'source':
-            return github_tag_download_url(repo, tag, str(version))
+        elif output_format == 'source':
+            return github_tag_download_url(repo, tag)
 
 
 def check_version(value):

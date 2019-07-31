@@ -8,5 +8,5 @@ python:
 install: pip install -e .[tests]
 
 script:
-  - pytest -v
+  - pytest -v -n auto
   - flake8 lastversion tests

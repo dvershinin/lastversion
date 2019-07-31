@@ -1,5 +1,5 @@
 test:
-	pytest -v
+	pytest -v -n auto
 
 publish: clean
 	python setup.py sdist bdist_wheel
