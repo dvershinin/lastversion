@@ -7,6 +7,14 @@ from packaging import version
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
+def test_tdesktop():
+    repo = "https://github.com/telegramdesktop/tdesktop/releases"
+
+    output = lastversion.latest(repo, 'version', False)
+
+    assert version.parse(output) == version.parse("1.7.14")
+
+
 def test_mautic_pre():
     repo = "mautic/mautic"
 

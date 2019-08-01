@@ -162,6 +162,18 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                     the_tag = t['name']
                     the_version = sanitize_version(the_tag, pre)
                     if the_version and ((not version) or (the_version > version)):
+                        # rare case: if upstream filed formal pre-release that passes as stable
+                        # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
+                        # TODO handle API failure here as it may result in "false positive"?
+                        if not pre:
+                            r = s.get('https://api.github.com/repos/{}/releases/tags/{}'.
+                                      format(repo, the_tag), headers=headers)
+                            if r.status_code == 200:
+                                if r.json()['prerelease']:
+                                    log.info(
+                                        "Found formal release for this tag which is unwanted "
+                                        "pre-release: {}.".format(version))
+                                    continue
                         version = the_version
                         log.info("Setting version as current selection: {}.".format(version))
                         tag = the_tag
