@@ -20,7 +20,7 @@ def test_mautic_pre():
 
     output = lastversion.latest(repo, 'version', True)
 
-    assert version.parse(output) == version.parse("2.15.2b0")
+    assert version.parse(output) == version.parse("2.15.2")
 
 
 def test_monit():
@@ -29,14 +29,6 @@ def test_monit():
     output = lastversion.latest(repo, 'version')
 
     assert output > version.parse("5.25.0")
-
-
-def test_mautic_assets():
-    repo = "mautic/mautic"
-
-    output = lastversion.latest(repo, 'assets', True)
-
-    assert "2.15.2-beta-update.zip" in output
 
 
 def test_gperftools():

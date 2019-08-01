@@ -127,6 +127,8 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             # releases/latest fetches only non-prerelease, non-draft, so it
             # should not be used for hunting down pre-releases assets
             if not pre:
+                # https://stackoverflow.com/questions/28060116/which-is-more-reliable-for-github-api-conditional-requests-etag-or-last-modifie/57309763?noredirect=1#comment101114702_57309763
+                # ideally we disable ETag validation for this endpoint completely
                 r = s.get(
                     'https://api.github.com/repos/{}/releases/latest'.format(repo),
                     headers=headers)
