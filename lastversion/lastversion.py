@@ -79,6 +79,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
     description = None
     # set this when an API returns json
     data = None
+    license = None
 
     headers = {}
     cache_dir = user_cache_dir("lastversion")
@@ -184,6 +185,12 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                 sys.stderr.write(r.text)
                 return None
 
+            if output_format == 'json':
+                r = s.get(
+                    'https://api.github.com/repos/{}/license'.format(repo),
+                    headers=headers)
+                if r.status_code == 200:
+                    license = r.json()
         s.close()
 
         # bail out, found nothing that looks like a release
@@ -206,6 +213,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             data['description'] = description
             data['v_prefix'] = tag.startswith("v")
             data['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
+            data['license'] = license
             return json.dumps(data)
         elif output_format == 'assets':
             urls = []

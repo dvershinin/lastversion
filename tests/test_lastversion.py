@@ -100,7 +100,7 @@ def test_ndk():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) <= version.parse("0.3.0")
+    assert version.parse(output) <= version.parse("0.3.1")
 
 
 def test_naxsi():
