@@ -11,6 +11,7 @@ import os
 import re
 import sys
 
+import dateutil.parser
 import requests
 from appdirs import user_cache_dir
 from cachecontrol import CacheControl
@@ -80,6 +81,11 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
     # set this when an API returns json
     data = None
     license = None
+    # date of selected release, used in checks
+    # github API returns tags NOT in chronological order
+    # so if author switched from v20150121 (old) to v2.0.1 format, the old value is "higher"
+    # so we have to check if a tag is actually newer, this is very slow but we have to accept :)
+    tagDate = None
 
     headers = {}
     cache_dir = user_cache_dir("lastversion")
@@ -140,6 +146,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                         log.info("Set version as current selection: {}.".format(version))
                         tag = the_tag
                         data = r.json()
+                        tagDate = dateutil.parser.parse(r.json()['published_at'])
             else:
                 r = s.get(
                     'https://api.github.com/repos/{}/releases'.format(repo),
@@ -153,6 +160,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                             log.info("Set version as current selection: {}.".format(version))
                             tag = the_tag
                             data = release
+                            tagDate = dateutil.parser.parse(data['published_at'])
 
             # formal release may not exist at all, or be "late/old" in case
             # actual release is only a simple tag so let's try /tags
@@ -164,7 +172,15 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                 for t in r.json():
                     the_tag = t['name']
                     the_version = sanitize_version(the_tag, pre)
-                    if the_version and ((not version) or (the_version > version)):
+
+                    r_commit = s.get(
+                        'https://api.github.com/repos/{}/git/commits/{}'.format(
+                            repo, t['commit']['sha']), headers=headers)
+                    the_date = r_commit.json()['committer']['date']
+                    the_date = dateutil.parser.parse(the_date)
+
+                    if (the_version and ((not version) or (the_version > version))) \
+                            or (not tagDate or the_date > tagDate):
                         # rare case: if upstream filed formal pre-release that passes as stable
                         # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
                         # TODO handle API failure here as it may result in "false positive"?
@@ -180,6 +196,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                         version = the_version
                         log.info("Setting version as current selection: {}.".format(version))
                         tag = the_tag
+                        tagDate = the_date
                         data = t
             else:
                 sys.stderr.write(r.text)

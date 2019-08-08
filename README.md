@@ -14,13 +14,15 @@ Sometimes project authors use formal releases, and next thing you know, for next
 There is no consistency in human beings.
 
 OK, you think you could use another API endpoint to [list tags](https://developer.github.com/v3/repos/#list-tags).
-Tags *usually* represent a release, however, you might get something like "latest-stable" for a tag name value.
+Tags *usually* represent a release, however, the API does not sort them chronologically. 
+Moreover, you might get something like "latest-stable" for a tag name's value.
 
-So in general, quite many project authors do things like:
+In general, quite many project authors complicate things further by:
 
-* Filing a formal release that is clearly a Release Candidate (`rc` in tag), but do not mark it as a pre-release
-* Put extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy like that
-* Put or not put a 'v' prefix to release tags. Today yes, tomorrow not. I'm not consistent about it myself :)
+* Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forget to mark it as a pre-release
+* Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy like that
+* Putting or not put a 'v' prefix to release tags. Today yes, tomorrow not. I'm not consistent about it myself :)
+* Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) on the command line, you can use `lastversion`.
 
@@ -176,11 +178,16 @@ Installing with `pip` is easiest:
 
 ## Tips
 
-Note that `lastversion` makes use of caching API response to be fast and light on GitHub API,
+Getting latest version is heavy on the API, because GitHub does not allow to fetch tags in chronological order, 
+and some repositories switch from one version format to another, so *we can't just consider highest version to be latest*.
+We have to fetch every tag's commit date, and see if it's actually more recent. Thus it's slower with larger repositories, 
+which have potentially a lot of tags.
+
+Thus, `lastversion` makes use of caching API response to be fast and light on GitHub API,
 It does conditional ETag validation, which, as per GitHub API will not count towards rate limit.
 The cache is stored in `~/.cache/lastversion` on Linux systems.
 
-If you're planning to fetch versions for a whole lot of projects, setup your [GitHub API token](https://github.com/settings/tokens) in `~/.bashrc` like this:
+It is *much recommended* to setup your [GitHub API token](https://github.com/settings/tokens) in `~/.bashrc` like this, to increase your rate limit:
 
     export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
 

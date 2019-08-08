@@ -10,7 +10,7 @@ lastversion
 from setuptools import find_packages, setup
 import os
 
-install_requires = ["requests", "packaging", "cachecontrol", "lockfile", "appdirs"]
+install_requires = ["requests", "packaging", "cachecontrol", "lockfile", "appdirs", "python-dateutil"]
 tests_requires = ["pytest>=4.4.0", "flake8", "pytest-xdist"]
 
 with open("README.md", "r") as fh:

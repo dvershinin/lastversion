@@ -117,3 +117,11 @@ def test_brotli():
     output = lastversion.latest(repo)
 
     assert version.parse(output) == version.parse("0.1.2")
+
+
+def test_changed_format():
+    repo = "https://github.com/nginx-shib/nginx-http-shibboleth/releases"
+
+    output = lastversion.latest(repo)
+
+    assert version.parse(output) == version.parse("2.0.1")
