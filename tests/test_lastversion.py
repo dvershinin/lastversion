@@ -12,7 +12,7 @@ def test_tdesktop():
 
     output = lastversion.latest(repo, 'version', False)
 
-    assert version.parse(output) == version.parse("1.7.14")
+    assert version.parse(output) >= version.parse('1.8.1')
 
 
 def test_mautic_pre():
