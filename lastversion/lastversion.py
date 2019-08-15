@@ -230,6 +230,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             data['description'] = description
             data['v_prefix'] = tag.startswith("v")
             data['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
+            data['tag_name'] = tag
             data['license'] = license
             return json.dumps(data)
         elif output_format == 'assets':
