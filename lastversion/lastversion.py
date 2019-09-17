@@ -324,6 +324,7 @@ def main():
     if version:
         print(version)
     else:
+        sys.stderr.write("No release was found" + os.linesep)
         sys.exit(1)
 
 
