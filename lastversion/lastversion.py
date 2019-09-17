@@ -270,7 +270,8 @@ def check_version(value):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Get latest release from GitHub.')
+    parser = argparse.ArgumentParser(description='Get latest release from GitHub.',
+                                     prog='lastversion')
     parser.add_argument('repo', metavar='REPO',
                         help='GitHub repository in format owner/name')
     # affects what is considered last release
