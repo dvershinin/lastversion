@@ -113,6 +113,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
     else:
         # But if full link specified, strip it to owner/repo
         apiBase = 'https://api.github.com'
+        githubHostname = 'github.com'
         if repo.startswith(('https://', 'http://')):
             urlParts = repo.split('/')
             githubHostname = urlParts[2]
