@@ -21,7 +21,7 @@ from packaging.version import Version, InvalidVersion
 from .__about__ import __version__
 
 
-def github_tag_download_url(repo, tag):
+def github_tag_download_url(hostname, repo, tag):
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
     2) likely has been accessed by someone in CDN and thus faster
@@ -32,11 +32,11 @@ def github_tag_download_url(repo, tag):
     https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
     """
     if os.name != 'nt':
-        return "https://github.com/{}/archive/{}/{}-{}.tar.gz".format(
-            repo, tag, repo.split('/')[1], tag)
+        return "https://{}/{}/archive/{}/{}-{}.tar.gz".format(
+            hostname, repo, tag, repo.split('/')[1], tag)
     else:
-        return "https://github.com/{}/archive/{}/{}-{}.zip".format(
-            repo, tag, repo.split('/')[1], tag)
+        return "https://{}/{}/archive/{}/{}-{}.zip".format(
+            hostname, repo, tag, repo.split('/')[1], tag)
 
 
 windowsAssetMarkers = ('.exe', '-win32.exe', '-win64.exe', '-win64.zip')
@@ -112,8 +112,16 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
     # 3. Everything else is GitHub passed as owner/repo
     else:
         # But if full link specified, strip it to owner/repo
-        if repo.startswith('https://github.com/'):
-            repo = "/".join(repo.split('/')[3:5])
+        apiBase = 'https://api.github.com'
+        if repo.startswith(('https://', 'http://')):
+            urlParts = repo.split('/')
+            githubHostname = urlParts[2]
+            repo = urlParts[3] + "/" + urlParts[4]
+            if 'github.com' != githubHostname:
+                apiBase = "https://{}/api/v3".format(githubHostname)
+
+        # Explicitly specify API version we want:
+        # headers['Accept'] = "application/vnd.github.v3+json"
 
         api_token = os.getenv("GITHUB_API_TOKEN")
         if api_token:
@@ -127,7 +135,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             # search it :)
             if '/' not in repo:
                 r = s.get(
-                    'https://api.github.com/search/repositories?q={}+in:name'.format(repo),
+                    '{}/search/repositories?q={}+in:name'.format(apiBase, repo),
                     headers=headers)
                 repo = r.json()['items'][0]['full_name']
 
@@ -137,7 +145,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                 # https://stackoverflow.com/questions/28060116/which-is-more-reliable-for-github-api-conditional-requests-etag-or-last-modifie/57309763?noredirect=1#comment101114702_57309763
                 # ideally we disable ETag validation for this endpoint completely
                 r = s.get(
-                    'https://api.github.com/repos/{}/releases/latest'.format(repo),
+                    '{}/repos/{}/releases/latest'.format(apiBase, repo),
                     headers=headers)
                 if r.status_code == 200:
                     the_tag = r.json()['tag_name']
@@ -149,7 +157,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                         tagDate = dateutil.parser.parse(r.json()['published_at'])
             else:
                 r = s.get(
-                    'https://api.github.com/repos/{}/releases'.format(repo),
+                    '{}/repos/{}/releases'.format(apiBase, repo),
                     headers=headers)
                 if r.status_code == 200:
                     for release in r.json():
@@ -166,7 +174,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             # actual release is only a simple tag so let's try /tags
 
             r = s.get(
-                'https://api.github.com/repos/{}/tags'.format(repo),
+                '{}/repos/{}/tags'.format(apiBase, repo),
                 headers=headers)
             if r.status_code == 200:
                 for t in r.json():
@@ -174,8 +182,8 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                     the_version = sanitize_version(the_tag, pre)
 
                     r_commit = s.get(
-                        'https://api.github.com/repos/{}/git/commits/{}'.format(
-                            repo, t['commit']['sha']), headers=headers)
+                        '{}/repos/{}/git/commits/{}'.format(
+                            apiBase, repo, t['commit']['sha']), headers=headers)
                     the_date = r_commit.json()['committer']['date']
                     the_date = dateutil.parser.parse(the_date)
 
@@ -185,8 +193,8 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                         # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
                         # TODO handle API failure here as it may result in "false positive"?
                         if not pre:
-                            r = s.get('https://api.github.com/repos/{}/releases/tags/{}'.
-                                      format(repo, the_tag), headers=headers)
+                            r = s.get('{}/repos/{}/releases/tags/{}'.
+                                      format(apiBase, repo, the_tag), headers=headers)
                             if r.status_code == 200:
                                 if r.json()['prerelease']:
                                     log.info(
@@ -204,7 +212,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
 
             if output_format == 'json':
                 r = s.get(
-                    'https://api.github.com/repos/{}/license'.format(repo),
+                    '{}/repos/{}/license'.format(apiBase, repo),
                     headers=headers)
                 if r.status_code == 200:
                     license = r.json()
@@ -250,7 +258,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                             continue
                     urls.append(asset['browser_download_url'])
             else:
-                download_url = github_tag_download_url(repo, tag)
+                download_url = github_tag_download_url(githubHostname, repo, tag)
                 if not assets_filter or re.search(assets_filter, download_url):
                     urls.append(download_url)
             if not len(urls):
@@ -258,7 +266,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             else:
                 return "\n".join(urls)
         elif output_format == 'source':
-            return github_tag_download_url(repo, tag)
+            return github_tag_download_url(githubHostname, repo, tag)
 
 
 def check_version(value):
