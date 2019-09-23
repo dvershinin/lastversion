@@ -281,6 +281,7 @@ def check_version(value):
 def download_file(url, local_filename=None):
     if local_filename is None:
         local_filename = url.split('/')[-1]
+    print("Downloading {}".format(local_filename))
     # NOTE the stream=True parameter below
     with requests.get(url, stream=True) as r:
         r.raise_for_status()

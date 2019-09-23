@@ -5,7 +5,9 @@
 
 A tiny command line utility that helps to answer one simple question:
 
-> What is the latest released version for a GitHub project?
+> What is the latest *stable* version for a GitHub project?
+
+... and, optionally, download it.
 
 GitHub has an API endpoint [here](https://developer.github.com/v3/repos/releases/#get-the-latest-release). But if you're here, then you know how it sucks:
 
@@ -37,10 +39,22 @@ It uses both of the API endpoints and incorporates logic for cleaning up human i
 ## Synopsis
 
     lastversion apache/incubator-pagespeed-ngx #> 1.13.35.2
+    lastversion apache/incubator-pagespeed-ngx -d #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
+    lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz #> downloads with chosen filename
 
 ### Download latest version of something     
 
-You can also use `lastversion` to get assets/source download URLs for the latest release.
+You can also use `lastversion` to download assets/sources for the latest release.
+
+Download the most recent Mautic:
+
+    lastversion mautic/mautic --download 
+    
+Customize downloaded filename (works only for sources, which is the default):
+
+    lastversion mautic/mautic --download mautic.tar.gz
+    
+Or you can just have `lastversion` output sources/assets URLs and have those downloaded by something else:    
 
     wget $(lastversion --assets mautic/mautic)
 
