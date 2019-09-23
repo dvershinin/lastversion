@@ -278,6 +278,20 @@ def check_version(value):
     return value
 
 
+def download_file(url, local_filename=None):
+    if local_filename is None:
+        local_filename = url.split('/')[-1]
+    # NOTE the stream=True parameter below
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(local_filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:  # filter out keep-alive new chunks
+                    f.write(chunk)
+                    # f.flush()
+    return local_filename
+
+
 def main():
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.',
                                      prog='lastversion')
@@ -287,6 +301,8 @@ def main():
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
+    # no --download = False, --download filename.tar, --download = None
+    parser.add_argument('-d', '--download', dest='download', nargs='?', default=False, const=None)
     # how / which data of last release we want to present
     # assets will give download urls for assets if available and sources archive otherwise
     # sources will give download urls for sources always
@@ -328,10 +344,21 @@ def main():
     if args.filter:
         args.filter = re.compile(args.filter)
 
+    # imply source download, unless --assets specified
+    if args.download is not False and args.format != 'assets':
+        args.format = 'source'
+
     version = latest(args.repo, args.format, args.pre, args.newer_than, args.filter)
 
     if version:
-        print(version)
+        if args.download is not False:
+            for url in version.splitlines():
+                log.info("Downloading {} ...".format(url))
+                # there can be many assets, so we do not "rename" them
+                # there can be only one source, so we allow passing custom filename for it
+                download_file(version, args.download if args.format == 'source' else None)
+        else:
+            print(version)
     else:
         sys.stderr.write("No release was found" + os.linesep)
         sys.exit(1)
