@@ -152,7 +152,7 @@ You can naturally use `--filter` in place where you would use `grep`, e.g. `last
 #### Check for NEW release
 
 When you're building some upstream package, and you did this before, there is a known "last build" version.
-Automatinc builds become easy with:
+Automatic builds become easy with:
 
 ```bash
 CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
