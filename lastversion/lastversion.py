@@ -20,8 +20,12 @@ from packaging.version import Version, InvalidVersion
 
 from .__about__ import __version__
 
+windowsAssetMarkers = ('.exe', '-win32.exe', '-win64.exe', '-win64.zip')
+posixAssetMarkers = ('.tar.gz', '-linux32', '-linux64')
+darwinAssetMarkers = ('-osx-amd64', '-darwin-amd64.tar')
 
-def github_tag_download_url(hostname, repo, tag):
+
+def github_tag_download_url(hostname, repo, tag, shorter=False):
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
     2) likely has been accessed by someone in CDN and thus faster
@@ -31,17 +35,13 @@ def github_tag_download_url(hostname, repo, tag):
     and it is not broken on fancy release tags like v1.2.3-stable
     https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
     """
-    if os.name != 'nt':
-        return "https://{}/{}/archive/{}/{}-{}.tar.gz".format(
-            hostname, repo, tag, repo.split('/')[1], tag)
+    ext = 'tar.gz' if "https://{}/{}/archive/{}/{}-{}.tar.gz" else 'zip'
+    format = 'https://{}/{}/archive/{}/{}-{}.{}'
+    if shorter:
+        format = 'https://{}/{}/archive/{}.{}'
+        return format.format(hostname, repo, tag, ext)
     else:
-        return "https://{}/{}/archive/{}/{}-{}.zip".format(
-            hostname, repo, tag, repo.split('/')[1], tag)
-
-
-windowsAssetMarkers = ('.exe', '-win32.exe', '-win64.exe', '-win64.zip')
-posixAssetMarkers = ('.tar.gz', '-linux32', '-linux64')
-darwinAssetMarkers = ('-osx-amd64', '-darwin-amd64.tar')
+        return format.format(hostname, repo, tag, repo.split('/')[1], tag, ext)
 
 
 def sanitize_version(version, pre_ok=False):
@@ -69,7 +69,8 @@ def sanitize_version(version, pre_ok=False):
             return False
 
 
-def latest(repo, output_format='version', pre=False, newer_than=False, assets_filter=False):
+def latest(repo, output_format='version', pre=False, newer_than=False, assets_filter=False,
+           shortUrls=False):
 
     # data that we may collect further
     # the main thing, we're after - parsed version number, e.g. 1.2.3 (no extras chars)
@@ -259,7 +260,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                             continue
                     urls.append(asset['browser_download_url'])
             else:
-                download_url = github_tag_download_url(githubHostname, repo, tag)
+                download_url = github_tag_download_url(githubHostname, repo, tag, shortUrls)
                 if not assets_filter or re.search(assets_filter, download_url):
                     urls.append(download_url)
             if not len(urls):
@@ -267,7 +268,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             else:
                 return "\n".join(urls)
         elif output_format == 'source':
-            return github_tag_download_url(githubHostname, repo, tag)
+            return github_tag_download_url(githubHostname, repo, tag, shortUrls)
 
 
 def check_version(value):
@@ -322,9 +323,11 @@ def main():
                         help="Output only if last version is newer than given version")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
                                                           "expression")
+    parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
+                        help='A tiny bit shorter URLs produced')
 
     parser.set_defaults(validate=True, verbose=False, format='version', pre=False, assets=False,
-                        newer_than=False, filter=False)
+                        newer_than=False, filter=False, shorter_urls=False)
     args = parser.parse_args()
 
     if args.repo == "self":
@@ -349,7 +352,8 @@ def main():
     if args.download is not False and args.format != 'assets':
         args.format = 'source'
 
-    version = latest(args.repo, args.format, args.pre, args.newer_than, args.filter)
+    version = latest(args.repo, args.format, args.pre, args.newer_than, args.filter,
+                     args.shorter_urls)
 
     if version:
         if args.download is not False:
