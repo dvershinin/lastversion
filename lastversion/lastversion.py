@@ -36,12 +36,12 @@ def github_tag_download_url(hostname, repo, tag, shorter=False):
     https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
     """
     ext = 'tar.gz' if "https://{}/{}/archive/{}/{}-{}.tar.gz" else 'zip'
-    format = 'https://{}/{}/archive/{}/{}-{}.{}'
+    urlFormat = 'https://{}/{}/archive/{}/{}-{}.{}'
     if shorter:
-        format = 'https://{}/{}/archive/{}.{}'
-        return format.format(hostname, repo, tag, ext)
+        urlFormat = 'https://{}/{}/archive/{}.{}'
+        return urlFormat.format(hostname, repo, tag, ext)
     else:
-        return format.format(hostname, repo, tag, repo.split('/')[1], tag, ext)
+        return urlFormat.format(hostname, repo, tag, repo.split('/')[1], tag, ext)
 
 
 def sanitize_version(version, pre_ok=False):
