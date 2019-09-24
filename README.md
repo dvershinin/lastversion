@@ -151,7 +151,7 @@ You can naturally use `--filter` in place where you would use `grep`, e.g. `last
 
 #### Check for NEW release
 
-When you're building some upstream package, and you did this before, there is known "last build| version.
+When you're building some upstream package, and you did this before, there is a known "last build" version.
 Automatinc builds become easy with:
 
 ```bash
@@ -161,6 +161,9 @@ if [ $? -eq 0 ]; then
   # LASTVER is newer, update and trigger build
   ....
 ```
+
+There is more to it, if you want to make this reliable.
+See my ranting on [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
 
 #### Status codes
 
