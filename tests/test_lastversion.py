@@ -20,7 +20,7 @@ def test_mautic_pre():
 
     output = lastversion.latest(repo, 'version', True)
 
-    assert version.parse(output) == version.parse("2.15.2")
+    assert version.parse(output) >= version.parse("2.15.2")
 
 
 def test_monit():
