@@ -154,13 +154,12 @@ You can naturally use `--filter` in place where you would use `grep`, e.g. `last
 When you're building some upstream package, and you did this before, there is a known "last build" version.
 Automatic builds become easy with:
 
-```bash
-CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
-LASTVER=$(lastversion repo/owner -gt $CURRENTLY_BUILT_VER)
-if [ $? -eq 0 ]; then
-  # LASTVER is newer, update and trigger build
-  ....
-```
+    CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
+    LASTVER=$(lastversion repo/owner -gt $CURRENTLY_BUILT_VER)
+    if [ $? -eq 0 ]; then
+      # LASTVER is newer, update and trigger build
+      ....
+
 
 There is more to it, if you want to make this reliable.
 See my ranting on [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
