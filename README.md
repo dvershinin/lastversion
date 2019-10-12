@@ -22,10 +22,10 @@ Moreover, you might get something like "latest-stable" for a tag name's value.
 
 In general, quite many project authors complicate things further by:
 
-* Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forget to mark it as a pre-release
-* Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy like that
-* Putting or not put a 'v' prefix to release tags. Today yes, tomorrow not. I'm not consistent about it myself :)
-* Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
+*   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forget to mark it as a pre-release
+*   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy like that
+*   Putting or not put a 'v' prefix to release tags. Today yes, tomorrow not. I'm not consistent about it myself :)
+*   Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) on the command line, you can use `lastversion`.
 
@@ -131,10 +131,10 @@ optional arguments:
 
 The `--format` will affect what kind of information from last release and in which format will be displayed, e.g.:
 
-* `version` is the default. Just outputs well format version number
-* `assets` will output newline separated list of assets URLs (if any), otherwise link to sources archive
-* `source` will output link to source archive, no matter if the release has some assets added
-* `json` can be used by external Python modules or for debugging, it is JSON output of an API call that satisfied last version checks
+*   `version` is the default. Just outputs well format version number
+*   `assets` will output newline separated list of assets URLs (if any), otherwise link to sources archive
+*   `source` will output link to source archive, no matter if the release has some assets added
+*   `json` can be used by external Python modules or for debugging, it is JSON output of an API call that satisfied last version checks
 
 You can use shortcuts `--source` instead of `--format source`, and `--assets` instead of `--format assets`, as in the above examples.
 
@@ -183,8 +183,8 @@ Exit status code `3` is returned when filtering assets of last release yields em
 Packaged install relies on some dependencies that were missing in EPEL or base repository.
 Following dependent packages are in our repository as well:    
 
-* `python2-CacheControl`
-* newer `python2-msgpack`
+*   `python2-CacheControl`
+*   newer `python2-msgpack`
 
 ## Installation for other systems
 
@@ -221,9 +221,9 @@ Will yield: `2.15.2b0`.
 
 The `lastversion.latest` function accepts 3 arguments
 
-* `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
-* `format`, which accepts same values as when you run `lastversion` interactively
-* `preOk`, boolean for whether to include pre-releases as potential versions
+*   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
+*   `format`, which accepts same values as when you run `lastversion` interactively
+*   `preOk`, boolean for whether to include pre-releases as potential versions
 
 ### Check if there is a newer kernel for your Linux machine
 

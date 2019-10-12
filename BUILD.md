@@ -2,7 +2,7 @@
 
 Since I'm not exactly a Python guy, I write down stuff here for log of how the build environment is set in CentOS 7.
 
-```
+```bash
 git clone ... lastversion && cd lastversion
 
 # we need a virtualenv for latest pip, setuptools or things will choke on Markdown description
