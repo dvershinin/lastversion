@@ -8,6 +8,7 @@ import argparse
 import json
 import logging as log  # for verbose output
 import os
+import platform
 import re
 import sys
 
@@ -20,9 +21,57 @@ from packaging.version import Version, InvalidVersion
 
 from .__about__ import __version__
 
-windowsAssetMarkers = ('.exe', '-win32.exe', '-win64.exe', '-win64.zip')
-posixAssetMarkers = ('.tar.gz', '-linux32', '-linux64')
-darwinAssetMarkers = ('-osx-amd64', '-darwin-amd64.tar')
+# matches os.name to known extensions that are meant *mostly* to run on it, and not other os.name-s
+osExtensions = {
+    'nt': '.exe',
+    'posix': ('.tgz', '.tar.gz')
+}
+
+# matches *start* of sys.platform value to words in asset name
+pfMarkers = {
+    'win': ['windows', 'win'],
+    'linux': ['linux'],
+    'darwin': ['osx', 'darwin'],
+    'freebsd': ['freebsd', 'netbsd']
+}
+
+# matches platform.dist() ('redhat', '8.0', 'Ootpa') to words in asset name
+# TODO use https://pypi.org/project/distro/
+distroMarkers = {
+    'centos': ['centos'],
+    'redhat': ['centos', 'redhat']
+}
+
+# this is all too simple for now
+nonAmd64Markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'mips64', 'ppc64',
+                   'mips64le', 'ppc64le']
+
+
+# instead of matching exactly, the asset belongs to machine if it doesn't belong to other OS logic
+def asset_does_not_belong_to_machine(asset):
+    # replace underscore with dash so that our shiny word boundary regexes won't break
+    asset = asset.replace('_', '-')
+    # bail if asset's extension "belongs" to other OS-es (simple)
+    for osName, osExts in osExtensions.items():
+        if os.name != osName and asset.endswith(osExts):
+            return True
+    # bail if asset's platform words belong to other platforms
+    for pf, pfWords in pfMarkers.items():
+        if not sys.platform.startswith(pf):
+            for pfWord in pfWords:
+                r = re.compile(r'\b{}(\d+)?\b'.format(pfWord), flags=re.IGNORECASE)
+                matches = r.search(asset)
+                if matches:
+                    return True
+    # weed out non-64 bit stuff from x86_64 bit OS
+    # caution: may be false positive with 32 bit Python on 64 bit OS
+    if platform.machine() in ['x86_64', 'AMD64']:
+        for nonAmd64Word in nonAmd64Markers:
+            r = re.compile(r'\b{}\b'.format(nonAmd64Word), flags=re.IGNORECASE)
+            matches = r.search(asset)
+            if matches:
+                return True
+    # TODO weed out non-matching distros
 
 
 def github_tag_download_url(hostname, repo, tag, shorter=False):
@@ -35,7 +84,7 @@ def github_tag_download_url(hostname, repo, tag, shorter=False):
     and it is not broken on fancy release tags like v1.2.3-stable
     https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
     """
-    ext = 'tar.gz' if "https://{}/{}/archive/{}/{}-{}.tar.gz" else 'zip'
+    ext = 'zip' if os.name == 'nt' else 'tar.gz'
     urlFormat = 'https://{}/{}/archive/{}/{}-{}.{}'
     if shorter:
         urlFormat = 'https://{}/{}/archive/{}.{}'
@@ -251,12 +300,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                         if not re.search(assets_filter, asset['name']):
                             continue
                     else:
-                        if os.name == 'nt' and asset['name'].endswith(
-                                posixAssetMarkers + darwinAssetMarkers):
-                            continue
-                        # zips are OK for Linux, so we do some heuristics to weed out Windows stuff
-                        if os.name == 'posix' and asset['name'].endswith(
-                                darwinAssetMarkers + windowsAssetMarkers):
+                        if asset_does_not_belong_to_machine(asset['name']):
                             continue
                     urls.append(asset['browser_download_url'])
             else:
