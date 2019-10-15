@@ -32,7 +32,7 @@ pfMarkers = {
     'win': ['windows', 'win'],
     'linux': ['linux'],
     'darwin': ['osx', 'darwin'],
-    'freebsd': ['freebsd', 'netbsd']
+    'freebsd': ['freebsd', 'netbsd', 'openbsd']
 }
 
 # matches platform.dist() ('redhat', '8.0', 'Ootpa') to words in asset name
@@ -68,6 +68,10 @@ def asset_does_not_belong_to_machine(asset):
     if platform.machine() in ['x86_64', 'AMD64']:
         for nonAmd64Word in nonAmd64Markers:
             r = re.compile(r'\b{}\b'.format(nonAmd64Word), flags=re.IGNORECASE)
+            matches = r.search(asset)
+            if matches:
+                return True
+            r = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
             matches = r.search(asset)
             if matches:
                 return True
