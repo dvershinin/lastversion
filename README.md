@@ -235,3 +235,5 @@ else
   echo "My kernel is latest and greatest."
 fi 
 ```  
+
+[![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)

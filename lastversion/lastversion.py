@@ -47,8 +47,15 @@ nonAmd64Markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'mip
                    'mips64le', 'ppc64le']
 
 
-# instead of matching exactly, the asset belongs to machine if it doesn't belong to other OS logic
 def asset_does_not_belong_to_machine(asset):
+    """
+    Checks whether a given asset name is likely unusable on this machine
+    An asset belongs to machine as long as this returns False
+    :param asset:
+    :type asset: str
+    :return:
+    :rtype:
+    """
     # replace underscore with dash so that our shiny word boundary regexes won't break
     asset = asset.replace('_', '-')
     # bail if asset's extension "belongs" to other OS-es (simple)
@@ -89,12 +96,11 @@ def github_tag_download_url(hostname, repo, tag, shorter=False):
     https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
     """
     ext = 'zip' if os.name == 'nt' else 'tar.gz'
-    urlFormat = 'https://{}/{}/archive/{}/{}-{}.{}'
+    url_format = 'https://{}/{}/archive/{}/{}-{}.{}'
     if shorter:
-        urlFormat = 'https://{}/{}/archive/{}.{}'
-        return urlFormat.format(hostname, repo, tag, ext)
-    else:
-        return urlFormat.format(hostname, repo, tag, repo.split('/')[1], tag, ext)
+        url_format = 'https://{}/{}/archive/{}.{}'
+        return url_format.format(hostname, repo, tag, ext)
+    return url_format.format(hostname, repo, tag, repo.split('/')[1], tag, ext)
 
 
 def sanitize_version(version, pre_ok=False):
@@ -106,9 +112,8 @@ def sanitize_version(version, pre_ok=False):
             log.info("Parsed as Version OK")
             log.info("String representation of version is {}.".format(v))
             return v
-        else:
-            log.info("Parsed as unwated pre-release version: {}.".format(v))
-            return False
+        log.info("Parsed as unwanted pre-release version: {}.".format(v))
+        return False
     except InvalidVersion:
         log.info("Failed to parse tag as Version.")
         # attempt to remove extraneous chars and revalidate
@@ -117,13 +122,12 @@ def sanitize_version(version, pre_ok=False):
             log.info("Sanitazied tag name value to {}.".format(s.group(1)))
             # we know regex is valid version format, so no need to try catch
             return Version(s.group(1))
-        else:
-            log.info("Did not find anything that looks like a version in the tag")
-            return False
+        log.info("Did not find anything that looks like a version in the tag")
+        return False
 
 
 def latest(repo, output_format='version', pre=False, newer_than=False, assets_filter=False,
-           shortUrls=False):
+           short_urls=False):
 
     # data that we may collect further
     # the main thing, we're after - parsed version number, e.g. 1.2.3 (no extras chars)
@@ -134,12 +138,12 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
     description = None
     # set this when an API returns json
     data = None
-    repoLicense = None
+    repo_license = None
     # date of selected release, used in checks
     # github API returns tags NOT in chronological order
     # so if author switched from v20150121 (old) to v2.0.1 format, the old value is "higher"
     # so we have to check if a tag is actually newer, this is very slow but we have to accept :)
-    tagDate = None
+    tag_date = None
 
     headers = {}
     cache_dir = user_cache_dir("lastversion")
@@ -153,7 +157,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             return file.read().replace('\n', '')
 
     # 2. monit version can be obtained from Bitbucket downloads section of the project
-    elif repo.startswith('https://mmonit.com/'):
+    if repo.startswith('https://mmonit.com/'):
         with CacheControl(requests.Session(),
                           cache=FileCache(cache_dir)) as s:
             # Special case Monit repo
@@ -164,162 +168,171 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             return sanitize_version(data['values'][0]['name'])
 
     # 3. Everything else is GitHub passed as owner/repo
-    else:
-        # But if full link specified, strip it to owner/repo
-        apiBase = 'https://api.github.com'
-        githubHostname = 'github.com'
-        if repo.startswith(('https://', 'http://')):
-            urlParts = repo.split('/')
-            githubHostname = urlParts[2]
-            repo = urlParts[3] + "/" + urlParts[4]
-            if 'github.com' != githubHostname:
-                apiBase = "https://{}/api/v3".format(githubHostname)
+    # But if full link specified, strip it to owner/repo
+    api_base = 'https://api.github.com'
+    github_hostname = 'github.com'
+    if repo.startswith(('https://', 'http://')):
+        url_parts = repo.split('/')
+        github_hostname = url_parts[2]
+        repo = url_parts[3] + "/" + url_parts[4]
+        if github_hostname != 'github.com':
+            api_base = "https://{}/api/v3".format(github_hostname)
 
-        # Explicitly specify API version we want:
-        # headers['Accept'] = "application/vnd.github.v3+json"
+    # Explicitly specify API version we want:
+    # headers['Accept'] = "application/vnd.github.v3+json"
 
-        api_token = os.getenv("GITHUB_API_TOKEN")
-        if api_token:
-            headers['Authorization'] = "token {}".format(api_token)
+    api_token = os.getenv("GITHUB_API_TOKEN")
+    if api_token:
+        headers['Authorization'] = "token {}".format(api_token)
 
-        with CacheControl(requests.Session(),
-                          cache=FileCache(cache_dir)) as s:
+    with CacheControl(requests.Session(),
+                      cache=FileCache(cache_dir)) as s:
 
-            s.headers.update(headers)
+        s.headers.update(headers)
 
-            # search it :)
-            if '/' not in repo:
-                r = s.get(
-                    '{}/search/repositories?q={}+in:name'.format(apiBase, repo),
-                    headers=headers)
-                repo = r.json()['items'][0]['full_name']
-
-            # releases/latest fetches only non-prerelease, non-draft, so it
-            # should not be used for hunting down pre-releases assets
-            if not pre:
-                # https://stackoverflow.com/questions/28060116/which-is-more-reliable-for-github-api-conditional-requests-etag-or-last-modifie/57309763?noredirect=1#comment101114702_57309763
-                # ideally we disable ETag validation for this endpoint completely
-                r = s.get(
-                    '{}/repos/{}/releases/latest'.format(apiBase, repo),
-                    headers=headers)
-                if r.status_code == 200:
-                    the_tag = r.json()['tag_name']
-                    version = sanitize_version(the_tag, pre)
-                    if version:
-                        log.info("Set version as current selection: {}.".format(version))
-                        tag = the_tag
-                        data = r.json()
-                        tagDate = dateutil.parser.parse(r.json()['published_at'])
-            else:
-                r = s.get(
-                    '{}/repos/{}/releases'.format(apiBase, repo),
-                    headers=headers)
-                if r.status_code == 200:
-                    for release in r.json():
-                        the_tag = release['tag_name']
-                        the_version = sanitize_version(the_tag, pre)
-                        if the_version and ((not version) or (the_version > version)):
-                            version = the_version
-                            log.info("Set version as current selection: {}.".format(version))
-                            tag = the_tag
-                            data = release
-                            tagDate = dateutil.parser.parse(data['published_at'])
-
-            # formal release may not exist at all, or be "late/old" in case
-            # actual release is only a simple tag so let's try /tags
-
+        # search it :)
+        if '/' not in repo:
             r = s.get(
-                '{}/repos/{}/tags'.format(apiBase, repo),
+                '{}/search/repositories?q={}+in:name'.format(api_base, repo),
+                headers=headers)
+            repo = r.json()['items'][0]['full_name']
+
+        # releases/latest fetches only non-prerelease, non-draft, so it
+        # should not be used for hunting down pre-releases assets
+        if not pre:
+            # https://stackoverflow.com/questions/28060116/which-is-more-reliable-for-github-api-conditional-requests-etag-or-last-modifie/57309763?noredirect=1#comment101114702_57309763
+            # ideally we disable ETag validation for this endpoint completely
+            r = s.get(
+                '{}/repos/{}/releases/latest'.format(api_base, repo),
                 headers=headers)
             if r.status_code == 200:
-                for t in r.json():
-                    the_tag = t['name']
+                the_tag = r.json()['tag_name']
+                version = sanitize_version(the_tag, pre)
+                if version:
+                    log.info("Set version as current selection: {}.".format(version))
+                    tag = the_tag
+                    data = r.json()
+                    tag_date = dateutil.parser.parse(r.json()['published_at'])
+        else:
+            r = s.get(
+                '{}/repos/{}/releases'.format(api_base, repo),
+                headers=headers)
+            if r.status_code == 200:
+                for release in r.json():
+                    the_tag = release['tag_name']
                     the_version = sanitize_version(the_tag, pre)
-
-                    r_commit = s.get(
-                        '{}/repos/{}/git/commits/{}'.format(
-                            apiBase, repo, t['commit']['sha']), headers=headers)
-                    the_date = r_commit.json()['committer']['date']
-                    the_date = dateutil.parser.parse(the_date)
-
-                    if (the_version and ((not version) or (the_version > version))) \
-                            or (not tagDate or the_date > tagDate):
-                        # rare case: if upstream filed formal pre-release that passes as stable
-                        # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
-                        # TODO handle API failure here as it may result in "false positive"?
-                        if not pre:
-                            r = s.get('{}/repos/{}/releases/tags/{}'.
-                                      format(apiBase, repo, the_tag), headers=headers)
-                            if r.status_code == 200:
-                                if r.json()['prerelease']:
-                                    log.info(
-                                        "Found formal release for this tag which is unwanted "
-                                        "pre-release: {}.".format(version))
-                                    continue
+                    if the_version and ((not version) or (the_version > version)):
                         version = the_version
-                        log.info("Setting version as current selection: {}.".format(version))
+                        log.info("Set version as current selection: {}.".format(version))
                         tag = the_tag
-                        tagDate = the_date
-                        data = t
-            else:
-                sys.stderr.write(r.text)
-                return None
+                        data = release
+                        tag_date = dateutil.parser.parse(data['published_at'])
 
-            if output_format == 'json':
-                r = s.get(
-                    '{}/repos/{}/license'.format(apiBase, repo),
-                    headers=headers)
-                if r.status_code == 200:
-                    repoLicense = r.json()
-        s.close()
+        # formal release may not exist at all, or be "late/old" in case
+        # actual release is only a simple tag so let's try /tags
 
-        # bail out, found nothing that looks like a release
-        if not version:
-            return False
+        r = s.get(
+            '{}/repos/{}/tags'.format(api_base, repo),
+            headers=headers)
+        if r.status_code == 200:
+            for t in r.json():
+                the_tag = t['name']
+                the_version = sanitize_version(the_tag, pre)
 
-        # special exit code "2" is useful for scripting to detect if no newer release exists
-        if newer_than and not (version > newer_than):
-            sys.exit(2)
+                r_commit = s.get(
+                    '{}/repos/{}/git/commits/{}'.format(
+                        api_base, repo, t['commit']['sha']), headers=headers)
+                the_date = r_commit.json()['committer']['date']
+                the_date = dateutil.parser.parse(the_date)
 
-        # return the release if we've reached far enough:
-        if output_format == 'version':
-            return str(version)
-        elif output_format == 'json':
-            if not data:
-                data = {}
-            if description:
-                description = description.strip()
-            data['version'] = str(version)
-            data['description'] = description
-            data['v_prefix'] = tag.startswith("v")
-            data['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
-            data['tag_name'] = tag
-            data['license'] = repoLicense
-            return json.dumps(data)
-        elif output_format == 'assets':
-            urls = []
-            if 'assets' in data and len(data['assets']) > 0:
-                for asset in data['assets']:
-                    if assets_filter:
-                        if not re.search(assets_filter, asset['name']):
-                            continue
-                    else:
-                        if asset_does_not_belong_to_machine(asset['name']):
-                            continue
-                    urls.append(asset['browser_download_url'])
-            else:
-                download_url = github_tag_download_url(githubHostname, repo, tag, shortUrls)
-                if not assets_filter or re.search(assets_filter, download_url):
-                    urls.append(download_url)
-            if not len(urls):
-                sys.exit(3)
-            else:
-                return "\n".join(urls)
-        elif output_format == 'source':
-            return github_tag_download_url(githubHostname, repo, tag, shortUrls)
+                if (the_version and ((not version) or (the_version > version))) \
+                        or (not tag_date or the_date > tag_date):
+                    # rare case: if upstream filed formal pre-release that passes as stable
+                    # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
+                    # TODO handle API failure here as it may result in "false positive"?
+                    if not pre:
+                        r = s.get('{}/repos/{}/releases/tags/{}'.
+                                  format(api_base, repo, the_tag), headers=headers)
+                        if r.status_code == 200:
+                            # noinspection SpellCheckingInspection
+                            if r.json()['prerelease']:
+                                log.info(
+                                    "Found formal release for this tag which is unwanted "
+                                    "pre-release: {}.".format(version))
+                                continue
+                    version = the_version
+                    log.info("Setting version as current selection: {}.".format(version))
+                    tag = the_tag
+                    tag_date = the_date
+                    data = t
+        else:
+            sys.stderr.write(r.text)
+            return None
+
+        if output_format == 'json':
+            r = s.get(
+                '{}/repos/{}/license'.format(api_base, repo),
+                headers=headers)
+            if r.status_code == 200:
+                repo_license = r.json()
+    s.close()
+
+    # bail out, found nothing that looks like a release
+    if not version:
+        return False
+
+    # special exit code "2" is useful for scripting to detect if no newer release exists
+    if newer_than and not (version > newer_than):
+        sys.exit(2)
+
+    # return the release if we've reached far enough:
+    if output_format == 'version':
+        return str(version)
+
+    if output_format == 'json':
+        if not data:
+            data = {}
+        if description:
+            description = description.strip()
+        data['version'] = str(version)
+        data['description'] = description
+        data['v_prefix'] = tag.startswith("v")
+        data['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
+        data['tag_name'] = tag
+        data['license'] = repo_license
+        return json.dumps(data)
+
+    if output_format == 'assets':
+        urls = []
+        if 'assets' in data and data['assets']:
+            for asset in data['assets']:
+                if assets_filter:
+                    if not re.search(assets_filter, asset['name']):
+                        continue
+                else:
+                    if asset_does_not_belong_to_machine(asset['name']):
+                        continue
+                urls.append(asset['browser_download_url'])
+        else:
+            download_url = github_tag_download_url(github_hostname, repo, tag, short_urls)
+            if not assets_filter or re.search(assets_filter, download_url):
+                urls.append(download_url)
+        if not urls:
+            sys.exit(3)
+        else:
+            return "\n".join(urls)
+    elif output_format == 'source':
+        return github_tag_download_url(github_hostname, repo, tag, short_urls)
 
 
 def check_version(value):
+    """
+    Argument parser helper for --newer-than (-gt) option
+    :param value:
+    :type value:
+    :return:
+    :rtype:
+    """
     try:
         value = Version(value)
     except InvalidVersion:

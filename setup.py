@@ -9,6 +9,9 @@ lastversion
 
 from setuptools import find_packages, setup
 import os
+import re
+
+_version_re = re.compile(r"__version__\s=\s'(.*)'")
 
 install_requires = ["requests", "packaging", "cachecontrol", "lockfile", "appdirs", "python-dateutil"]
 tests_requires = ["pytest>=4.4.0", "flake8", "pytest-xdist"]
@@ -18,9 +21,8 @@ with open("README.md", "r") as fh:
 
 base_dir = os.path.dirname(__file__)
 
-version = {}
-with open(os.path.join(base_dir, "lastversion", "__about__.py")) as fp:
-    exec(fp.read(), version)
+with open(os.path.join(base_dir, "lastversion", "__about__.py"), 'r') as f:
+    version = _version_re.search(f.read()).group(1)
 
 setup(
     name="lastversion",
