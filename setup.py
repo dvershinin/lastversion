@@ -26,7 +26,7 @@ with open(os.path.join(base_dir, "lastversion", "__about__.py"), 'r') as f:
 
 setup(
     name="lastversion",
-    version=version["__version__"],
+    version=version,
     author="Danila Vershinin",
     author_email="info@getpagespeed.com",
     url="https://github.com/dvershinin/lastversion",
