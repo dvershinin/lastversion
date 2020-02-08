@@ -4,7 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/lastversion.svg)](https://badge.fury.io/py/lastversion)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/manual/GetPageSpeed/lastversion?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dvershinin/lastversion&amp;utm_campaign=Badge_Grade)
 
-A tiny command line utility that helps to answer one simple question:
+A tiny command-line utility that helps to answer one simple question:
 
 > What is the latest *stable* version for a GitHub project?
 
@@ -12,8 +12,8 @@ A tiny command line utility that helps to answer one simple question:
 
 GitHub has an API endpoint [here](https://developer.github.com/v3/repos/releases/#get-the-latest-release). But if you're here, then you know how it sucks:
 
-A release would show up in this API response *only* if it was filed formally using GitHub release interface.
-Sometimes project authors use formal releases, and next thing you know, for next release they won't.
+A release would show up in this API response *only* if it was filed formally using the GitHub release interface.
+Sometimes project authors use formal releases, and next thing you know, for the next release they won't.
 There is no consistency in human beings.
 
 OK, you think you could use another API endpoint to [list tags](https://developer.github.com/v3/repos/#list-tags).
@@ -29,12 +29,12 @@ In general, quite many project authors complicate things further by:
 
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) on the command line, you can use `lastversion`.
 
-Its primary use is for build systems - whenever you want to watch specific repositories for released versions in order to build packages automatically.
+Its primary use is for build systems - whenever you want to watch specific repositories for released versions to build packages automatically.
 Or otherwise require getting latest version in your automation scripts.
 
 [Like I do](https://www.getpagespeed.com/redhat)
 
-`lastversion` does a little bit of AI in order to detect if releasers mistakenly filed beta version as a stable release.
+`lastversion` does a little bit of AI to detect if releasers mistakenly filed a beta version as a stable release.
 It uses both of the API endpoints and incorporates logic for cleaning up human inconsistency from version information.
 
 ## Synopsis
@@ -43,43 +43,17 @@ It uses both of the API endpoints and incorporates logic for cleaning up human i
     lastversion apache/incubator-pagespeed-ngx -d #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
     lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz #> downloads with chosen filename
 
-### Download latest version of something     
+## Installation for CentOS/RHEL 7, 8
 
-You can also use `lastversion` to download assets/sources for the latest release.
+    sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
+    sudo yum install lastversion
+   
+## Installation for other systems
 
-Download the most recent Mautic:
+Installing with `pip` is easiest:
 
-    lastversion mautic/mautic --download 
+    pip install lastversion
     
-Customize downloaded filename (works only for sources, which is the default):
-
-    lastversion mautic/mautic --download mautic.tar.gz
-    
-Or you can just have `lastversion` output sources/assets URLs and have those downloaded by something else:    
-
-    wget $(lastversion --assets mautic/mautic)
-
-This will download all assets of the newest stable Mautic, which are 2 zip files.
-
-How this works: `lastversion` outputs all asset URLs, each on new line, and `wget` is smart enough to download each URL. Magic :)
-
-For releases which have no assets added, it will download source archive.  
-
-To always download source, use `--source` instead:
-
-    wget $(lastversion --source mautic/mautic)  
-
-An asset is a downloadable file that typically represents an executable, or otherwise "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled (for specific platform), program.
-
-Source files, are either tarballs or zipballs of sources for the source code of release. 
-
-### Get last version (betas are fine)
-
-We consider latest release is the one which is stable / not marked as beta.
-If you think otherwise, then pass `--pre` switch and if the latest version of repository is a pre-release, then you'll get its version instead:
-
-    lastversion --pre mautic/mautic #> 2.15.2b0
-
 ## Usage
 
  Typically, you would just pass a repository URL (or repo owner/name to it) as the only argument, e.g.:
@@ -132,7 +106,7 @@ optional arguments:
 The `--format` will affect what kind of information from last release and in which format will be displayed, e.g.:
 
 *   `version` is the default. Just outputs well format version number
-*   `assets` will output newline separated list of assets URLs (if any), otherwise link to sources archive
+*   `assets` will output newline-separated list of assets URLs (if any), otherwise link to sources archive
 *   `source` will output link to source archive, no matter if the release has some assets added
 *   `json` can be used by external Python modules or for debugging, it is JSON output of an API call that satisfied last version checks
 
@@ -146,6 +120,43 @@ To override this behavior, you can use `--filter`, which has a regular expressio
 To disable OS filtering, use `--filter .`, this will match everything.
 
 You can naturally use `--filter` in place where you would use `grep`, e.g. `lastversion --assets --filter win REPO`
+
+### Use case: How to download latest version of something     
+
+You can also use `lastversion` to download assets/sources for the latest release.
+
+Download the most recent Mautic:
+
+    lastversion mautic/mautic --download 
+    
+Customize downloaded filename (works only for sources, which is the default):
+
+    lastversion mautic/mautic --download mautic.tar.gz
+    
+Or you can just have `lastversion` output sources/assets URLs and have those downloaded by something else:    
+
+    wget $(lastversion --assets mautic/mautic)
+
+This will download all assets of the newest stable Mautic, which are 2 zip files.
+
+How this works: `lastversion` outputs all asset URLs, each on a new line, and `wget` is smart enough to download each URL. Magic :)
+
+For releases which have no assets added, it will download source archive.  
+
+To always download source, use `--source` instead:
+
+    wget $(lastversion --source mautic/mautic)  
+
+An asset is a downloadable file that typically represents an executable, or otherwise "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled (for specific platform), program.
+
+Source files, are either tarballs or zipballs of sources for the source code of release. 
+
+### Use case: Get last version (betas are fine)
+
+We consider latest release is the one which is stable / not marked as beta.
+If you think otherwise, then pass `--pre` switch and if the latest version of repository is a pre-release, then you'll get its version instead:
+
+    lastversion --pre mautic/mautic #> 2.15.2b0
 
 ### Scripting with lastversion
 
@@ -164,7 +175,7 @@ Automatic builds become easy with:
 There is more to it, if you want to make this reliable.
 See my ranting on [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
 
-#### Status codes
+#### Exit Status codes
 
 Exit status codes are the usual means of communicating a command's execution success or failure. 
 So `lastversion` follows this: successful command returns `0` while anything else is an error of some kind:
@@ -174,24 +185,6 @@ Exit status code `1` is returned for cases like no release tag existing for repo
 Exit status code `2` is returned for `-gt` version comparison negative lookup.
 
 Exit status code `3` is returned when filtering assets of last release yields empty URL set (no match)
-
-### Installation for CentOS 7
-
-    yum install https://extras.getpagespeed.com/release-el7-latest.rpm
-    yum install lastversion
-
-Packaged install relies on some dependencies that were missing in EPEL or base repository.
-Following dependent packages are in our repository as well:    
-
-*   `python2-CacheControl`
-*   newer `python2-msgpack`
-
-## Installation for other systems
-
-The script is primarily developed for Python 2.7, but is known to work with recent versions like Python 3.7.
-Installing with `pip` is easiest:
-
-    pip install lastversion
 
 ## Tips
 
@@ -229,7 +222,7 @@ The `lastversion.latest` function accepts 3 arguments
 
 ```bash
 NEWER_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
   echo "I better update my kernel now, because ${KERNEL} is there"
 else 
   echo "My kernel is latest and greatest."
