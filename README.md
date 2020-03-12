@@ -24,7 +24,8 @@ In general, quite many project authors complicate things further by:
 
 *   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forget to mark it as a pre-release
 *   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy like that
-*   Putting or not put a 'v' prefix to release tags. Today yes, tomorrow not. I'm not consistent about it myself :)
+*   Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
+ consistent about it myself :)
 *   Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) on the command line, you can use `lastversion`.
@@ -77,31 +78,36 @@ A special value of `self` for the main argument, will lookup the last release of
 
 For more options to control output or behavior, see `--help` output:    
 
- ```
-usage: lastversion [-h] [--pre] [--verbose]
-                   [--format {version,assets,source,json}] [--assets]
-                   [--source] [--version] [-gt VER] [--filter REGEX]
-                   REPO
+    usage: lastversion [-h] [--pre] [--verbose] [-d [DOWNLOAD]]
+                       [--format {version,assets,source,json}] [--assets]
+                       [--source] [--version] [-gt VER] [-b MAJOR]
+                       [--filter REGEX] [-su]
+                       REPO
+    
+    Get latest release from GitHub.
+    
+    positional arguments:
+      REPO                  GitHub repository in format owner/name
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      --pre                 Include pre-releases in potential versions
+      --verbose
+      -d [DOWNLOAD], --download [DOWNLOAD]
+      --format {version,assets,source,json}
+                            Output format
+      --assets              Returns assets download URLs for last release
+      --source              Returns only source URL for last release
+      --version             show program's version number and exit
+      -gt VER, --newer-than VER
+                            Output only if last version is newer than given
+                            version
+      -b MAJOR, --major MAJOR
+                            Only consider releases of specific major version, e.g.
+                            2.1.x
+      --filter REGEX        Filters --assets result by a regular expression
+      -su, --shorter-urls   A tiny bit shorter URLs produced
 
-Get latest release from GitHub.
-
-positional arguments:
-  REPO                  GitHub repository in format owner/name
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --pre                 Include pre-releases in potential versions
-  --verbose
-  --format {version,assets,source,json}
-                        Output format
-  --assets              Returns assets download URLs for last release
-  --source              Returns only source URL for last release
-  --version             show program's version number and exit
-  -gt VER, --newer-than VER
-                        Output only if last version is newer than given
-                        version
-  --filter REGEX        Filters --assets result by a regular expression
-```
 
 The `--format` will affect what kind of information from last release and in which format will be displayed, e.g.:
 
@@ -157,6 +163,16 @@ We consider latest release is the one which is stable / not marked as beta.
 If you think otherwise, then pass `--pre` switch and if the latest version of repository is a pre-release, then you'll get its version instead:
 
     lastversion --pre mautic/mautic #> 2.15.2b0
+    
+### Use case: version of a specific branch
+
+For some projects, there may be several stable releases available simultenously, in different
+branches. An obvious example is PHP. You can use `--major` flag to specify the major release
+version to match with, to help you find latest stable release of a branch, like so:
+
+    lastversion php/php-src --major 7.2 
+
+This will give you current stable version of PHP 7.2.x, e.g. `7.2.28`.
 
 ### Scripting with lastversion
 
