@@ -43,8 +43,8 @@ distroMarkers = {
 }
 
 # this is all too simple for now
-nonAmd64Markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'mips64', 'ppc64',
-                   'mips64le', 'ppc64le']
+nonAmd64Markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7',
+                   'mips64', 'ppc64', 'mips64le', 'ppc64le']
 
 
 def asset_does_not_belong_to_machine(asset):
@@ -103,9 +103,18 @@ def github_tag_download_url(hostname, repo, tag, shorter=False):
     return url_format.format(hostname, repo, tag, repo.split('/')[1], tag, ext)
 
 
-def sanitize_version(version, pre_ok=False):
+def sanitize_version(version, pre_ok=False, major=None):
     """extract version from tag name"""
     log.info("Checking tag {} as version.".format(version))
+    if major and '{}.'.format(major) not in version:
+        log.info('{} is not under the desired major {}'.format(
+            version, major))
+        return False
+    # many times they would tag foo-1.2.3 which would parse to LegacyVersion
+    # we can avoid this, by reassigning to what comes after the dash:
+    parts = version.split('-', 1)
+    if len(parts) == 2 and parts[0].isalpha():
+        version = parts[1]
     try:
         v = Version(version)
         if not v.is_prerelease or pre_ok:
@@ -119,7 +128,7 @@ def sanitize_version(version, pre_ok=False):
         # attempt to remove extraneous chars and revalidate
         s = re.search(r'([0-9]+([.][0-9]+)+(rc[0-9]?)?)', version)
         if s:
-            log.info("Sanitazied tag name value to {}.".format(s.group(1)))
+            log.info("Sanitized tag name value to {}.".format(s.group(1)))
             # we know regex is valid version format, so no need to try catch
             return Version(s.group(1))
         log.info("Did not find anything that looks like a version in the tag")
@@ -127,7 +136,7 @@ def sanitize_version(version, pre_ok=False):
 
 
 def latest(repo, output_format='version', pre=False, newer_than=False, assets_filter=False,
-           short_urls=False):
+           short_urls=False, major=None):
 
     # data that we may collect further
     # the main thing, we're after - parsed version number, e.g. 1.2.3 (no extras chars)
@@ -184,6 +193,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
     api_token = os.getenv("GITHUB_API_TOKEN")
     if api_token:
         headers['Authorization'] = "token {}".format(api_token)
+        log.info('Using API token.')
 
     with CacheControl(requests.Session(),
                       cache=FileCache(cache_dir)) as s:
@@ -207,7 +217,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
                 headers=headers)
             if r.status_code == 200:
                 the_tag = r.json()['tag_name']
-                version = sanitize_version(the_tag, pre)
+                version = sanitize_version(the_tag, pre, major)
                 if version:
                     log.info("Set version as current selection: {}.".format(version))
                     tag = the_tag
@@ -220,7 +230,7 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
             if r.status_code == 200:
                 for release in r.json():
                     the_tag = release['tag_name']
-                    the_version = sanitize_version(the_tag, pre)
+                    the_version = sanitize_version(the_tag, pre, major)
                     if the_version and ((not version) or (the_version > version)):
                         version = the_version
                         log.info("Set version as current selection: {}.".format(version))
@@ -232,20 +242,21 @@ def latest(repo, output_format='version', pre=False, newer_than=False, assets_fi
         # actual release is only a simple tag so let's try /tags
 
         r = s.get(
-            '{}/repos/{}/tags'.format(api_base, repo),
+            '{}/repos/{}/tags?per_page=100'.format(api_base, repo),
             headers=headers)
         if r.status_code == 200:
             for t in r.json():
                 the_tag = t['name']
-                the_version = sanitize_version(the_tag, pre)
-
+                the_version = sanitize_version(the_tag, pre, major)
+                if not the_version:
+                    continue
                 r_commit = s.get(
                     '{}/repos/{}/git/commits/{}'.format(
                         api_base, repo, t['commit']['sha']), headers=headers)
                 the_date = r_commit.json()['committer']['date']
                 the_date = dateutil.parser.parse(the_date)
 
-                if (the_version and ((not version) or (the_version > version))) \
+                if (not version) or (the_version > version) \
                         or (not tag_date or the_date > tag_date):
                     # rare case: if upstream filed formal pre-release that passes as stable
                     # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
@@ -382,13 +393,16 @@ def main():
                         version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('-gt', '--newer-than', type=check_version, metavar='VER',
                         help="Output only if last version is newer than given version")
+    parser.add_argument('-b', '--major', type=check_version, metavar='MAJOR',
+                        help="Only consider releases of specific major "
+                             "version, e.g. 2.1.x")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
                                                           "expression")
     parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
                         help='A tiny bit shorter URLs produced')
-
-    parser.set_defaults(validate=True, verbose=False, format='version', pre=False, assets=False,
-                        newer_than=False, filter=False, shorter_urls=False)
+    parser.set_defaults(validate=True, verbose=False, format='version',
+                        pre=False, assets=False, newer_than=False, filter=False,
+                        shorter_urls=False, major=None)
     args = parser.parse_args()
 
     if args.repo == "self":
@@ -414,7 +428,7 @@ def main():
         args.format = 'source'
 
     version = latest(args.repo, args.format, args.pre, args.newer_than, args.filter,
-                     args.shorter_urls)
+                     args.shorter_urls, args.major)
 
     if version:
         if args.download is not False:

@@ -125,3 +125,11 @@ def test_changed_format():
     output = lastversion.latest(repo)
 
     assert version.parse(output) == version.parse("2.0.1")
+
+
+def test_major():
+    repo = "https://github.com/SpiderLabs/ModSecurity"
+
+    output = lastversion.latest(repo, major='2.9')
+
+    assert version.parse(output) == version.parse("2.9.3")
