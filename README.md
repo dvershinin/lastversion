@@ -166,7 +166,7 @@ If you think otherwise, then pass `--pre` switch and if the latest version of re
     
 ### Use case: version of a specific branch
 
-For some projects, there may be several stable releases available simultenously, in different
+For some projects, there may be several stable releases available simultaneously, in different
 branches. An obvious example is PHP. You can use `--major` flag to specify the major release
 version to match with, to help you find latest stable release of a branch, like so:
 

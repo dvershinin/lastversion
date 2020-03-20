@@ -12,7 +12,7 @@ def test_tdesktop():
 
     output = lastversion.latest(repo, 'version', False)
 
-    assert version.parse(output) >= version.parse('1.8.1')
+    assert output >= version.parse('1.8.1')
 
 
 def test_mautic_pre():
@@ -20,7 +20,7 @@ def test_mautic_pre():
 
     output = lastversion.latest(repo, 'version', True)
 
-    assert version.parse(output) >= version.parse("2.15.2")
+    assert output >= version.parse("2.15.2")
 
 
 def test_monit():
@@ -36,7 +36,7 @@ def test_gperftools():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("2.7")
+    assert output >= version.parse("2.7")
 
 
 def test_symfony():
@@ -44,7 +44,7 @@ def test_symfony():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("4.2.8")
+    assert output >= version.parse("4.2.8")
 
 
 def test_ngx_pagespeed():
@@ -52,7 +52,7 @@ def test_ngx_pagespeed():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("1.13.35.2")
+    assert output >= version.parse("1.13.35.2")
 
 
 def test_wp_cli():
@@ -60,7 +60,7 @@ def test_wp_cli():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("2.2.0")
+    assert output >= version.parse("2.2.0")
 
 
 def test_libvmod_xcounter():
@@ -68,7 +68,7 @@ def test_libvmod_xcounter():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("62.3")
+    assert output >= version.parse("62.3")
 
 
 def test_datadog_agent():
@@ -76,7 +76,7 @@ def test_datadog_agent():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("6.11.3")
+    assert output >= version.parse("6.11.3")
 
 
 def test_grafana():
@@ -84,7 +84,7 @@ def test_grafana():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("6.2.2")
+    assert output >= version.parse("6.2.2")
 
 
 def test_roer():
@@ -92,7 +92,7 @@ def test_roer():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) >= version.parse("0.11.3")
+    assert output >= version.parse("0.11.3")
 
 
 def test_ndk():
@@ -100,7 +100,7 @@ def test_ndk():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) <= version.parse("0.3.1")
+    assert output <= version.parse("0.3.1")
 
 
 def test_naxsi():
@@ -108,7 +108,7 @@ def test_naxsi():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) <= version.parse("0.56")
+    assert output <= version.parse("0.56")
 
 
 def test_brotli():
@@ -116,7 +116,7 @@ def test_brotli():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) == version.parse("0.1.2")
+    assert output == version.parse("0.1.2")
 
 
 def test_changed_format():
@@ -124,7 +124,7 @@ def test_changed_format():
 
     output = lastversion.latest(repo)
 
-    assert version.parse(output) == version.parse("2.0.1")
+    assert output == version.parse("2.0.1")
 
 
 def test_major():
@@ -132,4 +132,4 @@ def test_major():
 
     output = lastversion.latest(repo, major='2.9')
 
-    assert version.parse(output) == version.parse("2.9.3")
+    assert output == version.parse("2.9.3")
