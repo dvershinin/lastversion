@@ -1,6 +1,3 @@
-import logging as log  # for verbose output
-import os
-
 import feedparser
 import datetime
 
@@ -20,6 +17,10 @@ class MercurialRepoSession(ProjectHolder):
         }
     }
 
+    @classmethod
+    def matches_default_hostnames(cls, hostname):
+        return hostname.startswith('hg.')
+
     def __init__(self, repo, hostname):
         super(ProjectHolder, self).__init__()
         self.hostname = hostname
@@ -30,6 +31,7 @@ class MercurialRepoSession(ProjectHolder):
         # to leverage cachecontrol, we fetch the feed using requests as usual
         # then feed the feed to feedparser as a raw string
         # e.g. https://hg.nginx.org/nginx/atom-tags
+        # https://pythonhosted.org/feedparser/common-atom-elements.html
         r = self.get('https://{}/{}/atom-tags'.format(self.hostname, self.repo))
         feed = feedparser.parse(r.text)
         for tag in feed.entries:
@@ -44,9 +46,3 @@ class MercurialRepoSession(ProjectHolder):
                 # converting from struct
                 tag['tag_date'] = datetime.datetime(*tag['published_parsed'][:6])
         return ret
-
-# https://stackoverflow.com/questions/691519/regular-expression-to-match-only-odd-or-even-number
-# https://pythonhosted.org/feedparser/common-atom-elements.html
-# TODO adapter array should list how many elements make up "repo", e.g. for hg.nginx.com/repo it
-#  is only one instead of 2
-# https://pymotw.com/2/abc/

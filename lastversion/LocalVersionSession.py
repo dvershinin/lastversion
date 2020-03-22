@@ -1,11 +1,10 @@
-import requests
-
-
 # special case, private use now
 # nginx version is taken as version of stable (written by rpm check script)
 # to /usr/local/share/builder/nginx-stable.ver
+from .ProjectHolder import ProjectHolder
 
-class LocalVersionSession(requests.Session):
+
+class LocalVersionSession(ProjectHolder):
     DEFAULT_HOSTNAME = None
 
     def __init__(self, repo, hostname):

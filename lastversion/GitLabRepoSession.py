@@ -11,7 +11,7 @@ class GitLabRepoSession(ProjectHolder):
 
     def __init__(self, repo, hostname):
         super(GitLabRepoSession, self).__init__()
-        self.pa_token = os.getenv("GITHUB_PA_TOKEN")
+        self.pa_token = os.getenv("GITLAB_PA_TOKEN")
         self.hostname = hostname
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME
@@ -34,7 +34,7 @@ class GitLabRepoSession(ProjectHolder):
         if r.status_code == 200:
             for t in r.json():
                 tag = t['name']
-                version = sanitize_version(tag, pre_ok, major)
+                version = self.sanitize_version(tag, pre_ok, major)
                 if not version:
                     continue
                 if not ret or version > ret['version']:

@@ -16,7 +16,6 @@ class GitHubRepoSession(ProjectHolder):
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
         self.api_token = os.getenv("GITHUB_API_TOKEN")
-        self.tags_cache = {}
         self.hostname = hostname
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME
@@ -54,6 +53,12 @@ class GitHubRepoSession(ProjectHolder):
 
     def repo_license(self, tag):
         r = self.repo_query('/license?ref={}'.format(tag))
+        if r.status_code == 200:
+            return r.json()
+        return None
+
+    def repo_readme(self, tag):
+        r = self.repo_query('/readme?ref={}'.format(tag))
         if r.status_code == 200:
             return r.json()
         return None
@@ -118,6 +123,10 @@ class GitHubRepoSession(ProjectHolder):
                     ret['tag_date'] = parser.parse(tag['updated'])
                     ret['version'] = version
                     ret['type'] = 'feed'
+                    # remove keys which are non-jsonable
+                    # TODO use those (pop returns them)
+                    ret.pop('updated_parsed', None)
+                    ret.pop('published_parsed', None)
                 log.info("Selected version as current selection: {}.".format(version))
                 break
         # we are good with release from feeds only without looking at the API
@@ -139,7 +148,7 @@ class GitHubRepoSession(ProjectHolder):
             r = self.repo_query('/releases/latest')
             if r.status_code == 200:
                 tag_name = r.json()['tag_name']
-                version = sanitize_version(tag_name, pre_ok, major)
+                version = self.sanitize_version(tag_name, pre_ok, major)
                 if version:
                     log.info("Selected version as current selection: {}.".format(version))
                     ret = r.json()
@@ -152,7 +161,7 @@ class GitHubRepoSession(ProjectHolder):
             if r.status_code == 200:
                 for release in r.json():
                     tag_name = release['tag_name']
-                    version = sanitize_version(tag_name, pre_ok, major)
+                    version = self.sanitize_version(tag_name, pre_ok, major)
                     if not version:
                         continue
                     if not ret or version > ret['version']:
@@ -169,7 +178,7 @@ class GitHubRepoSession(ProjectHolder):
         if r.status_code == 200:
             for t in r.json():
                 tag_name = t['name']
-                version = sanitize_version(tag_name, pre_ok, major)
+                version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
                     continue
                 c = self.repo_query('/git/commits/{}'.format(t['commit']['sha']))

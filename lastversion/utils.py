@@ -1,12 +1,9 @@
-import logging as log  # for verbose output
 import os
-import re
-
 import platform
+import re
 import sys
 
 import requests
-from packaging.version import Version, InvalidVersion
 
 
 class ApiCredentialsError(Exception):

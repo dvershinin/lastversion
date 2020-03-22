@@ -11,24 +11,15 @@ import os
 import re
 import sys
 
+import yaml
 from appdirs import user_cache_dir
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
-from cachecontrol.heuristics import ExpiresAfter
+# from cachecontrol.heuristics import ExpiresAfter
 from packaging.version import Version, InvalidVersion
 
-# PyCharm can't deduce if these class are used (but they are), so suppress the "unused imports"
-# noinspection PyUnresolvedReferences
-from .BitBucketRepoSession import BitBucketRepoSession
-# noinspection PyUnresolvedReferences
-from .GitHubRepoSession import GitHubRepoSession
-# noinspection PyUnresolvedReferences
-from .GitLabRepoSession import GitLabRepoSession
-# noinspection PyUnresolvedReferences
-from .LocalVersionSession import LocalVersionSession
-# noinspection PyUnresolvedReferences
-from .MercurialRepoSession import MercurialRepoSession
 from .ProjectHolder import ProjectHolder
+from .HolderFactory import HolderFactory
 from .__about__ import __version__
 from .utils import download_file, ApiCredentialsError
 
@@ -38,12 +29,27 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     cache_dir = user_cache_dir("lastversion")
     log.info("Using cache directory: {}.".format(cache_dir))
 
-    # find the right hosting for this repo if a URL is passed
-    project_holder = ProjectHolder.get_instance_for_repo(repo)
+    repo_data = {
+        'module_of': None
+    }
+    if repo.endswith('.yml'):
+        with open(repo) as fpi:
+            repo_data = yaml.full_load(fpi)
+            if 'repo' in repo_data:
+                if 'nginx-extras' in repo:
+                    repo_data['module_of'] = 'nginx'
+                name = os.path.splitext(os.path.basename(repo))[0]
+                if repo_data['module_of']:
+                    name = 'nginx-module-{}'.format(name)
+                repo = repo_data['repo']
+                repo_data['name'] = name
+
+    # find the right hosting for this repo
+    project_holder = HolderFactory.get_instance_for_repo(repo)
 
     # we are completely "offline" for 1 hour, not even making conditional requests
-    with CacheControl(project_holder, cache=FileCache(cache_dir), heuristic=ExpiresAfter(hours=1)) \
-            as s:
+    # heuristic=ExpiresAfter(hours=1)   <- make configurable
+    with CacheControl(project_holder, cache=FileCache(cache_dir)) as s:
         release = s.get_latest(pre_ok=pre_ok, major=major)
     s.close()
 
@@ -62,9 +68,16 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
         release['version'] = str(version)
         release['tag_date'] = str(release['tag_date'])
         release['v_prefix'] = tag.startswith("v")
-        release['spec_tag'] = tag.replace(str(version), "%{upstream_version}")
+        release['spec_tag'] = tag.replace(
+            str(version),
+            '%{upstream_version}' if repo_data['module_of'] else '%{version}'
+        )
         release['tag_name'] = tag
-        release['license'] = s.repo_license(tag)
+        if hasattr(s, 'repo_license'):
+            release['license'] = s.repo_license(tag)
+        if hasattr(s, 'repo_readme'):
+            release['readme'] = s.repo_readme(tag)
+        release.update(repo_data)
         return release
 
     if output_format == 'assets':
@@ -89,9 +102,15 @@ def check_version(value):
     return value
 
 
+def parse_version(tag):
+    h = ProjectHolder()
+    return h.sanitize_version(tag, pre_ok=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.',
                                      prog='lastversion')
+    parser.add_argument('action', nargs='?', default='get')
     parser.add_argument('repo', metavar='REPO',
                         help='GitHub repository in format owner/name')
     # affects what is considered last release
@@ -150,6 +169,12 @@ def main():
     if args.download is not False and args.format != 'assets':
         args.format = 'source'
 
+    if args.action == 'test':
+        print(parse_version(args.repo))
+        # TODO dynamic exit status
+        sys.exit(0)
+
+    # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
                      args.shorter_urls, args.major)
@@ -180,7 +205,7 @@ def main():
         if args.format == 'assets':
             print("\n".join(res))
         elif args.format == 'json':
-            print(json.dumps(res))
+            json.dump(res, sys.stdout)
         else:
             print(res)
     else:
