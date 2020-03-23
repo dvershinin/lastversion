@@ -183,15 +183,6 @@ def main():
         sys.exit(4)
 
     if res:
-        # those are like different commands
-        # compare command
-        # special exit code "2" is useful for scripting to detect if no newer release exists
-        if args.newer_than:
-            if not (res > args.newer_than):
-                sys.exit(2)
-            else:
-                sys.exit(9)
-
         # download command
         if args.download is not False:
             for url in res.splitlines():
@@ -208,6 +199,10 @@ def main():
             json.dump(res, sys.stdout)
         else:
             print(res)
+            # special exit code "2" is useful for scripting to detect if no newer release exists
+            if args.newer_than:
+                if not (res > args.newer_than):
+                    sys.exit(2)
     else:
         # empty list returned to --assets, emit 3
         if args.format == 'assets' and res is not False:
