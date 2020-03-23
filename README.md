@@ -40,73 +40,90 @@ It uses both of the API endpoints and incorporates logic for cleaning up human i
 
 ## Synopsis
 
-    lastversion apache/incubator-pagespeed-ngx #> 1.13.35.2
-    lastversion apache/incubator-pagespeed-ngx -d #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
-    lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz #> downloads with chosen filename
+```bash
+lastversion apache/incubator-pagespeed-ngx #> 1.13.35.2
+lastversion apache/incubator-pagespeed-ngx -d #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
+lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz #> downloads with chosen filename
+```
 
 ## Installation for CentOS/RHEL 7, 8
 
-    sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
-    sudo yum install lastversion
+```bash
+sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
+sudo yum install lastversion
+```
    
 ## Installation for other systems
 
 Installing with `pip` is easiest:
 
-    pip install lastversion
+```bash
+pip install lastversion
+```
     
 ## Usage
 
  Typically, you would just pass a repository URL (or repo owner/name to it) as the only argument, e.g.:
 
-    lastversion https://github.com/gperftools/gperftools
+```bash
+lastversion https://github.com/gperftools/gperftools
+```
 
 Equivalently accepted invocation with same output is:
 
-    lastversion gperftools/gperftools    
+```bash
+lastversion gperftools/gperftools
+```    
 
 If you're lazy to even copy paste a project's URL, you can just type its name as argument, which will use repository search API (slower).
 Helps to answer what is the latest Linux version:
 
-    lastversion linux     
+```bash
+lastversion linux
+```
 
 Or wondering what is the latest version of Wordpress? :
 
-    lastversion wordpress
+```bash
+lastversion wordpress
+```
    
 A special value of `self` for the main argument, will lookup the last release of `lastversion` itself.
 
 For more options to control output or behavior, see `--help` output:    
 
-    usage: lastversion [-h] [--pre] [--verbose] [-d [DOWNLOAD]]
-                       [--format {version,assets,source,json}] [--assets]
-                       [--source] [--version] [-gt VER] [-b MAJOR]
-                       [--filter REGEX] [-su]
-                       REPO
-    
-    Get latest release from GitHub.
-    
-    positional arguments:
-      REPO                  GitHub repository in format owner/name
-    
-    optional arguments:
-      -h, --help            show this help message and exit
-      --pre                 Include pre-releases in potential versions
-      --verbose
-      -d [DOWNLOAD], --download [DOWNLOAD]
-      --format {version,assets,source,json}
-                            Output format
-      --assets              Returns assets download URLs for last release
-      --source              Returns only source URL for last release
-      --version             show program's version number and exit
-      -gt VER, --newer-than VER
-                            Output only if last version is newer than given
-                            version
-      -b MAJOR, --major MAJOR
-                            Only consider releases of specific major version, e.g.
-                            2.1.x
-      --filter REGEX        Filters --assets result by a regular expression
-      -su, --shorter-urls   A tiny bit shorter URLs produced
+```
+usage: lastversion [-h] [--pre] [--verbose] [-d [DOWNLOAD]]
+                   [--format {version,assets,source,json}] [--assets]
+                   [--source] [--version] [-gt VER] [-b MAJOR]
+                   [--filter REGEX] [-su]
+                   [action] REPO
+
+Get latest release from GitHub.
+
+positional arguments:
+  action                Special action to run, e.g. test
+  REPO                  GitHub repository in format owner/name
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --pre                 Include pre-releases in potential versions
+  --verbose
+  -d [DOWNLOAD], --download [DOWNLOAD]
+  --format {version,assets,source,json}
+                        Output format
+  --assets              Returns assets download URLs for last release
+  --source              Returns only source URL for last release
+  --version             show program's version number and exit
+  -gt VER, --newer-than VER
+                        Output only if last version is newer than given
+                        version
+  -b MAJOR, --major MAJOR
+                        Only consider releases of specific major version, e.g.
+                        2.1.x
+  --filter REGEX        Filters --assets result by a regular expression
+  -su, --shorter-urls   A tiny bit shorter URLs produced
+```
 
 
 The `--format` will affect what kind of information from last release and in which format will be displayed, e.g.:
@@ -134,11 +151,15 @@ You can also use `lastversion` to download assets/sources for the latest release
 
 Download the most recent Mautic:
 
-    lastversion mautic/mautic --download 
+```bash
+lastversion mautic/mautic --download 
+```
     
 Customize downloaded filename (works only for sources, which is the default):
 
-    lastversion mautic/mautic --download mautic.tar.gz
+```bash
+lastversion mautic/mautic --download mautic.tar.gz
+```
     
 Or you can just have `lastversion` output sources/assets URLs and have those downloaded by something else:    
 
@@ -186,8 +207,8 @@ This will give you current stable version of PHP 7.2.x, e.g. `7.2.28`.
 #### Special use case: NGINX stable vs mainline branch version
 
 ```bash
-lastversion https://nginx.org --major stable # > 1.16.1
-lastversion https://nginx.org --major mainline # > 1.17.9
+lastversion https://nginx.org --major stable #> 1.16.1
+lastversion https://nginx.org --major mainline #> 1.17.9
 ```
     
 Behind the scenes, this checks with `hg.nginx.org` which is a Mercurial web repo.
@@ -251,36 +272,40 @@ The cache is stored in `~/.cache/lastversion` on Linux systems.
 
 It is *much recommended* to setup your [GitHub API token](https://github.com/settings/tokens) in `~/.bashrc` like this, to increase your rate limit:
 
-    export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
+```bash
+export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
+```
     
 For GitLab, you can use a
 [Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html):
 
-    export GITLAB_PA_TOKEN=xxxxxxxxxxxxxxx
+```bash
+export GITLAB_PA_TOKEN=xxxxxxxxxxxxxxx
+```
 
 Then run `source ~/.bashrc`. After this, `lastversion` will use it to get larger API calls allowance from GitHub.
 
 ## Usage in a Python module
 
+Invoke `lastversion.latest` function get version information for a repo.  
+ 
 ```python
 from lastversion import lastversion
+from packaging import version
 repo = "mautic/mautic"
 release = lastversion.latest(repo, output_format='version', pre_ok=True)
+
+if release is not False:
+    if release.is_prerelease: 
+        print('Found prerelease')
+    if release >= version.parse('1.8.1')
+        print('It is newer')
+    print(str(release))
 ```
 
 With `output_format='version'`, the function returns a 
 [Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) object, or
- `False`. So you can do things like:
-
-```python
-if release is False:
-    return
-if release.is_prerelease: 
-    print('Found prerelease')
-print(str(release))
-``` 
-
-Will yield, e.g.: `2.15.2b0`.
+ `False`. So you can do things like above, namely version comparison, checking dev status, etc.
 
 The `lastversion.latest` function accepts 3 arguments
 

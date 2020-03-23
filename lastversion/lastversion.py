@@ -112,7 +112,8 @@ def parse_version(tag):
 def main():
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.',
                                      prog='lastversion')
-    parser.add_argument('action', nargs='?', default='get')
+    parser.add_argument('action', nargs='?', default='get', help='Special action to run, '
+                                                                 'e.g. test')
     parser.add_argument('repo', metavar='REPO',
                         help='GitHub repository in format owner/name')
     # affects what is considered last release
