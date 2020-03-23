@@ -114,7 +114,8 @@ The `--format` will affect what kind of information from last release and in whi
 *   `version` is the default. Just outputs well format version number
 *   `assets` will output newline-separated list of assets URLs (if any), otherwise link to sources archive
 *   `source` will output link to source archive, no matter if the release has some assets added
-*   `json` can be used by external Python modules or for debugging, it is JSON output of an API call that satisfied last version checks
+*   `json` can be used by external Python modules or for debugging, it is dict/JSON output of an API
+ call that satisfied last version checks
 
 You can use shortcuts `--source` instead of `--format source`, and `--assets` instead of `--format assets`, as in the above examples.
 
@@ -166,13 +167,21 @@ If you think otherwise, then pass `--pre` switch and if the latest version of re
     
 ### Use case: version of a specific branch
 
-For some projects, there may be several stable releases available simultenously, in different
+For some projects, there may be several stable releases available simultaneously, in different
 branches. An obvious example is PHP. You can use `--major` flag to specify the major release
 version to match with, to help you find latest stable release of a branch, like so:
 
     lastversion php/php-src --major 7.2 
 
 This will give you current stable version of PHP 7.2.x, e.g. `7.2.28`.
+
+### Test version parser
+
+The `test` command can be used for troubleshooting or simply well formatting a string with version:
+
+    lastversion test 'blah-1.2.3-devel' # > 1.2.3.dev0
+    lastversion test '1.2.x' # > False (no clear version)
+    lastversion test '1.2.3-rc1' # > 1.2.3rc1
 
 ### Scripting with lastversion
 
@@ -232,14 +241,14 @@ The `lastversion.latest` function accepts 3 arguments
 
 *   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
 *   `format`, which accepts same values as when you run `lastversion` interactively
-*   `preOk`, boolean for whether to include pre-releases as potential versions
+*   `pre_ok`, boolean for whether to include pre-releases as potential versions
 
 ### Check if there is a newer kernel for your Linux machine
 
 ```bash
-NEWER_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
+LATEST_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
 if [[ $? -eq 0 ]]; then
-  echo "I better update my kernel now, because ${KERNEL} is there"
+  echo "I better update my kernel now, because ${LATEST_KERNEL} is there"
 else 
   echo "My kernel is latest and greatest."
 fi 

@@ -1,0 +1,13 @@
+---
+
+repo: leev/ngx_http_geoip2_module
+summary: NGINX GeoIP2 module
+description: |
+  NGINX module which creates variables with values from the maxmind
+  geoip2 databases. based on the client IP (default) or from a
+  specific variable (supports both IPv4 and IPv6)
+soname: ngx_http_geoip2_module
+build_requires:
+  - libmaxminddb-devel
+
+module_of: nginx
