@@ -201,7 +201,7 @@ def main():
             print(res)
             # special exit code "2" is useful for scripting to detect if no newer release exists
             if args.newer_than:
-                if not (res > args.newer_than):
+                if res <= args.newer_than:
                     sys.exit(2)
     else:
         # empty list returned to --assets, emit 3

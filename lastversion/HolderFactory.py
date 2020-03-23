@@ -1,3 +1,4 @@
+import logging as log  # for verbose output
 from .BitBucketRepoSession import BitBucketRepoSession
 from .GitHubRepoSession import GitHubRepoSession
 from .GitLabRepoSession import GitLabRepoSession
@@ -30,6 +31,7 @@ class HolderFactory:
                 known_repo = sc.is_with_url(repo)
                 if known_repo:
                     holder_class = sc
+                    log.info('Using {} adapter'.format(k))
                     break
                 if sc.matches_default_hostnames(hostname):
                     holder_class = sc

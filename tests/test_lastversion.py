@@ -1,8 +1,9 @@
 import os
 
-from lastversion.lastversion import latest
 from packaging import version
+
 from lastversion.ProjectHolder import ProjectHolder
+from lastversion.lastversion import latest
 
 # change dir to tests directory to make relative paths possible
 os.chdir(os.path.dirname(os.path.realpath(__file__)))

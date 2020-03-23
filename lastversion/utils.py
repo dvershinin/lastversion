@@ -8,7 +8,6 @@ import requests
 
 class ApiCredentialsError(Exception):
     """raise this when there's a lookup error for my app"""
-    pass
 
 
 # matches os.name to known extensions that are meant *mostly* to run on it, and not other os.name-s
