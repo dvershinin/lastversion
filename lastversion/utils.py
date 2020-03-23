@@ -72,6 +72,7 @@ def asset_does_not_belong_to_machine(asset):
             if matches:
                 return True
     # TODO weed out non-matching distros
+    return False
 
 
 def download_file(url, local_filename=None):

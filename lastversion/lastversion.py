@@ -86,6 +86,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     if output_format == 'source':
         return s.release_download_url(release, short_urls)
 
+    return None
+
 
 def check_version(value):
     """
