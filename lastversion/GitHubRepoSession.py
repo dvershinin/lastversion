@@ -43,6 +43,8 @@ class GitHubRepoSession(ProjectHolder):
                                           'Missing scopes?')
             raise ApiCredentialsError('Denied API access. Please set GITHUB_API_TOKEN env var '
                                       'as per https://github.com/dvershinin/lastversion#tips')
+        if r.status_code == 403:
+            raise ApiCredentialsError('Exceeded API rate limit: {}'.format(r.json()['message']))
         return r
 
     def repo_query(self, uri):
