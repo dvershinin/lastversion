@@ -1,6 +1,7 @@
 import logging as log  # for verbose output
 import os
 import re
+import time
 
 import feedparser
 from dateutil import parser
@@ -19,8 +20,10 @@ class GitHubRepoSession(ProjectHolder):
         self.hostname = hostname
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME
-        # Explicitly specify API version we want:
-        # headers['Accept'] = "application/vnd.github.v3+json"
+        # Explicitly specify the API version that we want:
+        self.headers.update({
+            'Accept': 'application/vnd.github.v3+json'
+        })
         if self.api_token:
             log.info('Using API token.')
             self.headers.update({'Authorization': "token {}".format(self.api_token)})
@@ -34,7 +37,7 @@ class GitHubRepoSession(ProjectHolder):
             self.repo = r.json()['items'][0]['full_name']
         else:
             self.repo = repo
-        self.rate_limited_wait_so_far = 0
+        self.rate_limited_count = 0
 
     def get_rate_limit_url(self):
         return '{}/rate_limit'.format(self.api_base)
@@ -48,25 +51,38 @@ class GitHubRepoSession(ProjectHolder):
             raise ApiCredentialsError('Denied API access. Please set GITHUB_API_TOKEN env var '
                                       'as per https://github.com/dvershinin/lastversion#tips')
         if r.status_code == 403:
-            if self.rate_limited_wait_so_far > 3600:
-                raise ApiCredentialsError(
-                    'Exceeded API rate limit after waiting: {}'.format(
-                        r.json()['message'])
-                )
-            # get rate limit info
-            r_limit = self.rate_limit().json()
-            import time
-            wait_for = r_limit['resources']['core']['reset'] - time.time()
-            if wait_for < 0:
-                wait_for = 10
-            log.warning('Waiting for {} seconds to regain API quota...'.format(wait_for))
-            time.sleep(wait_for)
-            self.rate_limited_wait_so_far = self.rate_limited_wait_so_far + wait_for
-            # try again
+            if 'X-RateLimit-Reset' in r.headers and 'X-RateLimit-Remaining' in r.headers:
+                if self.rate_limited_count > 2:
+                    raise ApiCredentialsError(
+                        'API requests were denied after retrying {} times'.format(
+                            self.rate_limited_count)
+                    )
+                remaining = int(r.headers['X-RateLimit-Remaining'])
+                wait_for = int(r.headers['X-RateLimit-Reset']) - time.time()
+                if not remaining:
+                    # got 403, likely due to used quota
+                    if wait_for < 300:
+                        if wait_for < 0:
+                            log.warning(
+                                'Exceeded API quota. Repeating request because quota is about to '
+                                'be reinstated'
+                            )
+                        else:
+                            log.warning(
+                                'Waiting {} seconds for API quota reinstatement'.format(wait_for)
+                            )
+                            time.sleep(wait_for)
+                        self.rate_limited_count = self.rate_limited_count + 1
+                        return self.get(url)
+                    else:
+                        raise ApiCredentialsError(
+                            'Exceeded API rate limit after waiting: {}'.format(
+                                r.json()['message'])
+                        )
             return self.get(url)
 
-        if r.status_code == 200 and url != self.get_rate_limit_url():
-            self.rate_limited_wait_so_far = 0
+        if r.status_code == 403 and url != self.get_rate_limit_url():
+            self.rate_limited_count = 0
         return r
 
     def rate_limit(self):
@@ -119,6 +135,8 @@ class GitHubRepoSession(ProjectHolder):
         # the only downside is they don't bear pre-release mark (unlike API), and limited data
         # we work around both so we are fine to to use them for speed!
         r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
+        # API requests are varied by cookie, we don't want serializer for cache fail because of that
+        self.cookies.clear()
         feed = feedparser.parse(r.text)
         # TODO choose topmost (most recent), but do a doble check whether the edit was released (
         #  tag api)
