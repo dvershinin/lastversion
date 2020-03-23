@@ -34,7 +34,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     }
     if repo.endswith('.yml'):
         with open(repo) as fpi:
-            repo_data = yaml.full_load(fpi)
+            repo_data = yaml.safe_load(fpi)
             if 'repo' in repo_data:
                 if 'nginx-extras' in repo:
                     repo_data['module_of'] = 'nginx'
