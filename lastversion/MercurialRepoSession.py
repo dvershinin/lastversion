@@ -22,7 +22,7 @@ class MercurialRepoSession(ProjectHolder):
         return hostname.startswith('hg.')
 
     def __init__(self, repo, hostname):
-        super(ProjectHolder, self).__init__()
+        super(MercurialRepoSession, self).__init__()
         self.hostname = hostname
         self.repo = repo
 
