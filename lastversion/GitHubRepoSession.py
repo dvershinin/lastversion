@@ -34,6 +34,10 @@ class GitHubRepoSession(ProjectHolder):
             self.repo = r.json()['items'][0]['full_name']
         else:
             self.repo = repo
+        self.rate_limited_wait_so_far = 0
+
+    def get_rate_limit_url(self):
+        return '{}/rate_limit'.format(self.api_base)
 
     def get(self, url, **kwargs):
         r = super(GitHubRepoSession, self).get(url, **kwargs)
@@ -44,8 +48,28 @@ class GitHubRepoSession(ProjectHolder):
             raise ApiCredentialsError('Denied API access. Please set GITHUB_API_TOKEN env var '
                                       'as per https://github.com/dvershinin/lastversion#tips')
         if r.status_code == 403:
-            raise ApiCredentialsError('Exceeded API rate limit: {}'.format(r.json()['message']))
+            if self.rate_limited_wait_so_far > 3600:
+                raise ApiCredentialsError(
+                    'Exceeded API rate limit after waiting: {}'.format(
+                        r.json()['message'])
+                )
+            # get rate limit info
+            r_limit = self.rate_limit().json()
+            import time
+            wait_for = r_limit['resources']['core']['reset'] - time.time()
+            log.warning('Waiting for {} seconds to regain API quota...'.format(wait_for))
+            time.sleep(wait_for)
+            self.rate_limited_wait_so_far = self.rate_limited_wait_so_far + wait_for
+            # try again
+            return self.get(url)
+
+        if r.status_code == 200 and url != self.get_rate_limit_url():
+            self.rate_limited_wait_so_far = 0
         return r
+
+    def rate_limit(self):
+        url = '{}/rate_limit'.format(self.api_base)
+        return self.get(url)
 
     def repo_query(self, uri):
         url = '{}/repos/{}{}'.format(self.api_base, self.repo, uri)
