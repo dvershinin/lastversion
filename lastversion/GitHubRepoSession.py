@@ -57,6 +57,8 @@ class GitHubRepoSession(ProjectHolder):
             r_limit = self.rate_limit().json()
             import time
             wait_for = r_limit['resources']['core']['reset'] - time.time()
+            if wait_for < 0:
+                wait_for = 10
             log.warning('Waiting for {} seconds to regain API quota...'.format(wait_for))
             time.sleep(wait_for)
             self.rate_limited_wait_so_far = self.rate_limited_wait_so_far + wait_for

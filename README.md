@@ -6,7 +6,7 @@
 
 A tiny command-line utility that helps to answer one simple question:
 
-> What is the latest *stable* version for a GitHub project?
+> What is the latest *stable* version for a GitHub/GitLab/BitBucket/etc. project?
 
 ... and, optionally, download it.
 
@@ -142,7 +142,9 @@ Customize downloaded filename (works only for sources, which is the default):
     
 Or you can just have `lastversion` output sources/assets URLs and have those downloaded by something else:    
 
-    wget $(lastversion --assets mautic/mautic)
+```bash
+wget $(lastversion --assets mautic/mautic)
+```
 
 This will download all assets of the newest stable Mautic, which are 2 zip files.
 
@@ -152,7 +154,9 @@ For releases which have no assets added, it will download source archive.
 
 To always download source, use `--source` instead:
 
-    wget $(lastversion --source mautic/mautic)  
+```bash
+wget $(lastversion --source mautic/mautic)  
+```
 
 An asset is a downloadable file that typically represents an executable, or otherwise "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled (for specific platform), program.
 
@@ -163,7 +167,9 @@ Source files, are either tarballs or zipballs of sources for the source code of 
 We consider latest release is the one which is stable / not marked as beta.
 If you think otherwise, then pass `--pre` switch and if the latest version of repository is a pre-release, then you'll get its version instead:
 
-    lastversion --pre mautic/mautic #> 2.15.2b0
+```bash
+lastversion --pre mautic/mautic #> 2.15.2b0
+```
     
 ### Use case: version of a specific branch
 
@@ -171,17 +177,37 @@ For some projects, there may be several stable releases available simultaneously
 branches. An obvious example is PHP. You can use `--major` flag to specify the major release
 version to match with, to help you find latest stable release of a branch, like so:
 
-    lastversion php/php-src --major 7.2 
+```bash
+lastversion php/php-src --major 7.2
+``` 
 
 This will give you current stable version of PHP 7.2.x, e.g. `7.2.28`.
+
+#### Special use case: NGINX stable vs mainline branch version
+
+```bash
+lastversion https://nginx.org --major stable # > 1.16.1
+lastversion https://nginx.org --major mainline # > 1.17.9
+```
+    
+Behind the scenes, this checks with `hg.nginx.org` which is a Mercurial web repo.
+Those are supported as well, e.g.
+
+```bash
+lastversion https://hg.example.com/project/
+```
+    
+Mercurial repos are rather rare these days, but support has been added primarily for NGINX.
 
 ### Test version parser
 
 The `test` command can be used for troubleshooting or simply well formatting a string with version:
 
-    lastversion test 'blah-1.2.3-devel' # > 1.2.3.dev0
-    lastversion test '1.2.x' # > False (no clear version)
-    lastversion test '1.2.3-rc1' # > 1.2.3rc1
+```bash
+lastversion test 'blah-1.2.3-devel' # > 1.2.3.dev0
+lastversion test '1.2.x' # > False (no clear version)
+lastversion test '1.2.3-rc1' # > 1.2.3rc1
+```
 
 ### Scripting with lastversion
 
@@ -190,12 +216,13 @@ The `test` command can be used for troubleshooting or simply well formatting a s
 When you're building some upstream package, and you did this before, there is a known "last build" version.
 Automatic builds become easy with:
 
-    CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
-    LASTVER=$(lastversion repo/owner -gt $CURRENTLY_BUILT_VER)
-    if [ $? -eq 0 ]; then
-      # LASTVER is newer, update and trigger build
-      ....
-
+```bash
+CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
+LASTVER=$(lastversion repo/owner -gt $CURRENTLY_BUILT_VER)
+if [ $? -eq 0 ]; then
+  # LASTVER is newer, update and trigger build
+  ....
+```
 
 There is more to it, if you want to make this reliable.
 See my ranting on [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
@@ -225,17 +252,35 @@ The cache is stored in `~/.cache/lastversion` on Linux systems.
 It is *much recommended* to setup your [GitHub API token](https://github.com/settings/tokens) in `~/.bashrc` like this, to increase your rate limit:
 
     export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
+    
+For GitLab, you can use a
+[Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html):
+
+    export GITLAB_PA_TOKEN=xxxxxxxxxxxxxxx
 
 Then run `source ~/.bashrc`. After this, `lastversion` will use it to get larger API calls allowance from GitHub.
 
 ## Usage in a Python module
 
-    from lastversion import lastversion
-    repo = "mautic/mautic"
-    lastVersion = lastversion.latest(repo, 'version', True)
-    print(lastVersion)
+```python
+from lastversion import lastversion
+repo = "mautic/mautic"
+release = lastversion.latest(repo, output_format='version', pre_ok=True)
+```
 
-Will yield: `2.15.2b0`.
+With `output_format='version'`, the function returns a 
+[Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) object, or
+ `False`. So you can do things like:
+
+```python
+if release is False:
+    return
+if release.is_prerelease: 
+    print('Found prerelease')
+print(str(release))
+``` 
+
+Will yield, e.g.: `2.15.2b0`.
 
 The `lastversion.latest` function accepts 3 arguments
 
