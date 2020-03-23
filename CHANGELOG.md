@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2020-03-23
+### Fixed
+* Compatibility with older PyYAML
+
 ## [1.0.0] - 2020-03-23
 
 ### Changed
