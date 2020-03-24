@@ -14,7 +14,7 @@ import re
 _version_re = re.compile(r"__version__\s=\s'(.*)'")
 
 install_requires = ['requests', 'packaging', 'cachecontrol', 'lockfile', 'appdirs',
-                    'python-dateutil', 'feedparser', 'PyYAML']
+                    'python-dateutil', 'feedparser', 'PyYAML', 'tqdm']
 tests_requires = ["pytest>=4.4.0", "flake8", "pytest-xdist"]
 
 with open("README.md", "r") as fh:

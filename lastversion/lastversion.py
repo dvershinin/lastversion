@@ -188,7 +188,10 @@ def main():
     if res:
         # download command
         if args.download is not False:
-            for url in res.splitlines():
+            if args.format == 'source':
+                # there is only one source, but we need an array
+                res = [res]
+            for url in res:
                 log.info("Downloading {} ...".format(url))
                 # there can be many assets, so we do not "rename" them
                 # there can be only one source, so we allow passing custom filename for it

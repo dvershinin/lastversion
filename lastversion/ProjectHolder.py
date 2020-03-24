@@ -27,7 +27,7 @@ class ProjectHolder(requests.Session):
 
     def __init__(self):
         super(ProjectHolder, self).__init__()
-        self.headers.update({ 'User-Agent': 'lastversion/{}'.format(__version__) })
+        self.headers.update({'User-Agent': 'lastversion/{}'.format(__version__)})
         log.info('Using {} project holder'.format(type(self).__name__))
         self.branches = None
 

@@ -4,6 +4,7 @@ import re
 import sys
 
 import requests
+import tqdm
 
 
 class ApiCredentialsError(Exception):
@@ -78,13 +79,27 @@ def asset_does_not_belong_to_machine(asset):
 def download_file(url, local_filename=None):
     if local_filename is None:
         local_filename = url.split('/')[-1]
-    print("Downloading {}".format(local_filename))
     # NOTE the stream=True parameter below
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        with open(local_filename, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-                    # f.flush()
+        if 'Content-Length' in r.headers:
+            file_size = int(r.headers['Content-Length'])
+            chunk_size = 1024
+            num_bars = int(file_size / chunk_size)
+            with open(local_filename, 'wb') as f:
+                for chunk in tqdm.tqdm(
+                        r.iter_content(chunk_size=chunk_size),
+                        total=num_bars,
+                        unit='KB',
+                        desc='Downloading {}'.format(local_filename),
+                        leave=True  # progressbar stays
+                ):
+                    if chunk:  # filter out keep-alive new chunks
+                        f.write(chunk)
+        else:
+            # no content-length, no progress bar possible
+            with open(local_filename, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    if chunk:  # filter out keep-alive new chunks
+                        f.write(chunk)
     return local_filename
