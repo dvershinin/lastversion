@@ -221,8 +221,8 @@ def main():
                     log.error('No assets found to install')
                     sys.exit(1)
                 for rpm in rpms:
-                    cmd = "sudo yum install {}".format(rpm)
-                    os.system(cmd)
+                    import subprocess
+                    subprocess.call(["sudo", yum, "install", rpm])
                     sys.exit(0)
 
         # display version in various formats:

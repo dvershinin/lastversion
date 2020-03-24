@@ -4,49 +4,63 @@
 [![PyPI version](https://badge.fury.io/py/lastversion.svg)](https://badge.fury.io/py/lastversion)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/manual/GetPageSpeed/lastversion?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dvershinin/lastversion&amp;utm_campaign=Badge_Grade)
 
-A tiny command-line utility that helps to answer one simple question:
+A tiny command-line utility that helps to answer a simple question:
 
 > What is the latest *stable* version for a GitHub/GitLab/BitBucket/etc. project?
 
-... and, optionally, download it.
+... and, optionally, download/install it.
 
-GitHub has an API endpoint [here](https://developer.github.com/v3/repos/releases/#get-the-latest-release). But if you're here, then you know how it sucks:
+GitHub has an API endpoint 
+[here](https://developer.github.com/v3/repos/releases/#get-the-latest-release). 
+But if you're here, then you know how it sucks:
 
-A release would show up in this API response *only* if it was filed formally using the GitHub release interface.
-Sometimes project authors use formal releases, and next thing you know, for the next release they won't.
+A release would show up in this API response *only* if it was filed formally using the GitHub 
+release interface.
+Sometimes project authors use formal releases, and next thing you know, for the next release 
+they won't.
 There is no consistency in human beings.
 
-OK, you think you could use another API endpoint to [list tags](https://developer.github.com/v3/repos/#list-tags).
+OK, you think you could use another API endpoint to 
+[list tags](https://developer.github.com/v3/repos/#list-tags).
 Tags *usually* represent a release, however, the API does not sort them chronologically. 
 Moreover, you might get something like "latest-stable" for a tag name's value.
 
 In general, quite many project authors complicate things further by:
 
-*   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forget to mark it as a pre-release
-*   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy like that
+*   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forget to mark 
+it as a pre-release
+*   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy 
+like that
 *   Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
  consistent about it myself :)
 *   Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
-To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) on the command line, you can use `lastversion`.
+To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) 
+on the command line, you can use `lastversion`.
 
-Its primary use is for build systems - whenever you want to watch specific repositories for released versions to build packages automatically.
+Its primary use is for build systems - whenever you want to watch specific repositories for released
+versions to build packages automatically.
 Or otherwise require getting latest version in your automation scripts.
 
 [Like I do](https://www.getpagespeed.com/redhat)
 
-`lastversion` does a little bit of AI to detect if releasers mistakenly filed a beta version as a stable release.
-It uses both of the API endpoints and incorporates logic for cleaning up human inconsistency from version information.
+`lastversion` does a little bit of AI to detect if releasers mistakenly filed a beta version as a 
+stable release.
+It uses both of the API endpoints and incorporates logic for cleaning up human inconsistency from 
+version information.
 
 ## Synopsis
 
 ```bash
-lastversion apache/incubator-pagespeed-ngx #> 1.13.35.2
-lastversion apache/incubator-pagespeed-ngx -d #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
-lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz #> downloads with chosen filename
+lastversion apache/incubator-pagespeed-ngx 
+#> 1.13.35.2
+lastversion apache/incubator-pagespeed-ngx -d 
+#> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
+lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz 
+#> downloads with chosen filename
 ```
 
-## Installation for CentOS/RHEL 7, 8
+## Installation for CentOS/RHEL 7, 8 or Amazon Linux 2
 
 ```bash
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
@@ -63,7 +77,8 @@ pip install lastversion
     
 ## Usage
 
- Typically, you would just pass a repository URL (or repo owner/name to it) as the only argument, e.g.:
+Typically, you would just pass a repository URL (or repo owner/name to it) as the only argument, 
+e.g.:
 
 ```bash
 lastversion https://github.com/gperftools/gperftools
@@ -75,20 +90,22 @@ Equivalently accepted invocation with same output is:
 lastversion gperftools/gperftools
 ```    
 
-If you're lazy to even copy paste a project's URL, you can just type its name as argument, which will use repository search API (slower).
+If you're lazy to even copy paste a project's URL, you can just type its name as argument, which 
+will use repository search API (slower).
 Helps to answer what is the latest Linux version:
 
 ```bash
 lastversion linux
 ```
 
-Or wondering what is the latest version of Wordpress? :
+Or wondering what is the latest version of WordPress? :
 
 ```bash
 lastversion wordpress
 ```
    
-A special value of `self` for the main argument, will lookup the last release of `lastversion` itself.
+A special value of `self` for the main argument, will lookup the last release of `lastversion` 
+itself.
 
 For more options to control output or behavior, see `--help` output:    
 
@@ -126,7 +143,8 @@ optional arguments:
 ```
 
 
-The `--format` will affect what kind of information from last release and in which format will be displayed, e.g.:
+The `--format` will affect what kind of information from last release and in which format will be 
+displayed, e.g.:
 
 *   `version` is the default. Just outputs well format version number
 *   `assets` will output newline-separated list of assets URLs (if any), otherwise link to sources archive
@@ -134,22 +152,36 @@ The `--format` will affect what kind of information from last release and in whi
 *   `json` can be used by external Python modules or for debugging, it is dict/JSON output of an API
  call that satisfied last version checks
 
-You can use shortcuts `--source` instead of `--format source`, and `--assets` instead of `--format assets`, as in the above examples.
+An asset is a downloadable file that typically represents an executable, or otherwise 
+"ready to launch" project. It's what you see filed under formal releases, and is usually a compiled 
+(for specific platform), program.
 
-    lastversion --source mautic/mautic #> https://github.com/mautic/mautic/archive/2.15.1/mautic-2.15.1.tar.gz
+Source files, are either tarballs or zipballs of sources for the source code of release. 
+
+You can display either assets or source URLs of the latest release, by passing the corresponding
+ `--format flag`, e.g. `--format source`
+
+You also simply pass `--source` instead of `--format source`, and `--assets` instead of 
+`--format assets`, as in:
+
+```bash
+lastversion --assets mautic/mautic 
+#> https://github.com/mautic/mautic/archive/2.15.1/mautic-2.15.1.tar.gz
+```
 
 By default, `lastversion` filters output of `--assets` to be OS specific. Who needs `.exe` on Linux?
 
 To override this behavior, you can use `--filter`, which has a regular expression as its argument.
 To disable OS filtering, use `--filter .`, this will match everything.
 
-You can naturally use `--filter` in place where you would use `grep`, e.g. `lastversion --assets --filter win REPO`
+You can naturally use `--filter` in place where you would use `grep`, e.g. 
+`lastversion --assets --filter win REPO`
 
 ### Use case: How to download latest version of something     
 
 You can also use `lastversion` to download assets/sources for the latest release.
 
-Download the most recent Mautic:
+Download the most recent Mautic source release:
 
 ```bash
 lastversion mautic/mautic --download 
@@ -161,7 +193,8 @@ Customize downloaded filename (works only for sources, which is the default):
 lastversion mautic/mautic --download mautic.tar.gz
 ```
     
-Or you can just have `lastversion` output sources/assets URLs and have those downloaded by something else:    
+Or you can just have `lastversion` output sources/assets URLs and have those downloaded by 
+something else:    
 
 ```bash
 wget $(lastversion --assets mautic/mautic)
@@ -169,7 +202,8 @@ wget $(lastversion --assets mautic/mautic)
 
 This will download all assets of the newest stable Mautic, which are 2 zip files.
 
-How this works: `lastversion` outputs all asset URLs, each on a new line, and `wget` is smart enough to download each URL. Magic :)
+How this works: `lastversion` outputs all asset URLs, each on a new line, and `wget` is smart 
+enough to download each URL. Magic :)
 
 For releases which have no assets added, it will download source archive.  
 
@@ -179,17 +213,15 @@ To always download source, use `--source` instead:
 wget $(lastversion --source mautic/mautic)  
 ```
 
-An asset is a downloadable file that typically represents an executable, or otherwise "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled (for specific platform), program.
-
-Source files, are either tarballs or zipballs of sources for the source code of release. 
-
 ### Use case: Get last version (betas are fine)
 
 We consider latest release is the one which is stable / not marked as beta.
-If you think otherwise, then pass `--pre` switch and if the latest version of repository is a pre-release, then you'll get its version instead:
+If you think otherwise, then pass `--pre` switch and if the latest version of repository is a 
+pre-release, then you'll get its version instead:
 
 ```bash
-lastversion --pre mautic/mautic #> 2.15.2b0
+lastversion --pre mautic/mautic 
+#> 2.15.2b0
 ```
     
 ### Use case: version of a specific branch
@@ -220,6 +252,20 @@ lastversion https://hg.example.com/project/
     
 Mercurial repos are rather rare these days, but support has been added primarily for NGINX.
 
+### Install an RPM asset
+
+If a project provides .rpm assets and your system has `yum`, you can install the project's RPM
+directly, like so:
+
+    lastversion install mailspring
+    
+This finds [MailSpring](https://github.com/Foundry376/Mailspring), gets its latest release info, 
+filters assets for `.rpm` and passes it to `yum` via `sudo`. 
+
+Needless to say, more often than not such RPM packages have no idea about all potentially missing
+dependencies. Thus, only use `lastversion install ...` if the software is missing from the base
+`yum` repositories.
+
 ### Test version parser
 
 The `test` command can be used for troubleshooting or simply well formatting a string with version:
@@ -234,43 +280,51 @@ lastversion test '1.2.3-rc1' # > 1.2.3rc1
 
 #### Check for NEW release
 
-When you're building some upstream package, and you did this before, there is a known "last build" version.
+When you're building some upstream package, and you did this before, there is a known "last build" 
+version.
 Automatic builds become easy with:
 
 ```bash
 CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
-LASTVER=$(lastversion repo/owner -gt $CURRENTLY_BUILT_VER)
+LASTVER=$(lastversion repo/owner -gt ${CURRENTLY_BUILT_VER})
 if [ $? -eq 0 ]; then
   # LASTVER is newer, update and trigger build
-  ....
+  # ....
+fi
 ```
 
 There is more to it, if you want to make this reliable.
-See my ranting on [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
+See my ranting on 
+[RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
 
 #### Exit Status codes
 
 Exit status codes are the usual means of communicating a command's execution success or failure. 
-So `lastversion` follows this: successful command returns `0` while anything else is an error of some kind:
+So `lastversion` follows this: successful command returns `0` while anything else is an error of 
+some kind:
  
-Exit status code `1` is returned for cases like no release tag existing for repository at all, or repository does not exist.
+Exit status code `1` is returned for cases like no release tag existing for repository at all, or 
+repository does not exist.
 
 Exit status code `2` is returned for `-gt` version comparison negative lookup.
 
-Exit status code `3` is returned when filtering assets of last release yields empty URL set (no match)
+Exit status code `3` is returned when filtering assets of last release yields empty URL set 
+(no match)
 
 ## Tips
 
-Getting latest version is heavy on the API, because GitHub does not allow to fetch tags in chronological order, 
-and some repositories switch from one version format to another, so *we can't just consider highest version to be latest*.
-We have to fetch every tag's commit date, and see if it's actually more recent. Thus it's slower with larger repositories, 
-which have potentially a lot of tags.
+Getting latest version is heavy on the API, because GitHub does not allow to fetch tags in 
+chronological order, and some repositories switch from one version format to another, so *we can't 
+just consider highest version to be latest*.
+We have to fetch every tag's commit date, and see if it's actually more recent. Thus it's slower
+with larger repositories, which have potentially a lot of tags.
 
 Thus, `lastversion` makes use of caching API response to be fast and light on GitHub API,
 It does conditional ETag validation, which, as per GitHub API will not count towards rate limit.
 The cache is stored in `~/.cache/lastversion` on Linux systems.
 
-It is *much recommended* to setup your [GitHub API token](https://github.com/settings/tokens) in `~/.bashrc` like this, to increase your rate limit:
+It is *much recommended* to setup your [GitHub API token](https://github.com/settings/tokens) in 
+`~/.bashrc` like this, to increase your rate limit:
 
 ```bash
 export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
@@ -283,7 +337,8 @@ For GitLab, you can use a
 export GITLAB_PA_TOKEN=xxxxxxxxxxxxxxx
 ```
 
-Then run `source ~/.bashrc`. After this, `lastversion` will use it to get larger API calls allowance from GitHub.
+Then run `source ~/.bashrc`. After this, `lastversion` will use it to get larger API calls allowance
+from GitHub.
 
 ## Usage in a Python module
 
