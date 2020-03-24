@@ -113,7 +113,7 @@ def main():
     parser = argparse.ArgumentParser(description='Get latest release from GitHub.',
                                      prog='lastversion')
     parser.add_argument('action', nargs='?', default='get', help='Special action to run, '
-                                                                 'e.g. test')
+                                                                 'e.g. download, test')
     parser.add_argument('repo', metavar='REPO',
                         help='GitHub repository in format owner/name')
     # affects what is considered last release
@@ -168,14 +168,26 @@ def main():
     if args.filter:
         args.filter = re.compile(args.filter)
 
-    # imply source download, unless --assets specified
-    if args.download is not False and args.format != 'assets':
-        args.format = 'source'
-
     if args.action == 'test':
         print(parse_version(args.repo))
         # TODO dynamic exit status
         sys.exit(0)
+
+    if args.action == 'install':
+        # we can only install assets
+        args.format = 'assets'
+
+    # imply source download, unless --assets specified
+    # --download is legacy flag to specify download action or name of desired download file
+    # --download == None indicates download intent where filename is based on upstream
+    if args.action == 'download':
+        if args.download is False:
+            args.download = None
+
+    if args.download is not False:
+        args.action = 'download'
+        if args.format != 'assets':
+            args.format = 'source'
 
     # other action are either getting release or doing something with release (extend get action)
     try:
@@ -187,7 +199,7 @@ def main():
 
     if res:
         # download command
-        if args.download is not False:
+        if args.action == 'download':
             if args.format == 'source':
                 # there is only one source, but we need an array
                 res = [res]
@@ -197,6 +209,21 @@ def main():
                 # there can be only one source, so we allow passing custom filename for it
                 download_file(url, args.download if args.format == 'source' else None)
             sys.exit(0)
+
+        if args.action == 'install':
+            rpms = [asset for asset in res if asset.endswith('.rpm')]
+            # if an installator is capable of fetching the URL, pass it directly
+            # otherwise download to temp directory
+            yum = "/usr/bin/yum"
+            # TODO find out why dnf is downloading much slower than lastversion :-\
+            if os.path.exists(yum):
+                if not rpms:
+                    log.error('No assets found to install')
+                    sys.exit(1)
+                for rpm in rpms:
+                    cmd = "sudo yum install {}".format(rpm)
+                    os.system(cmd)
+                    sys.exit(0)
 
         # display version in various formats:
         if args.format == 'assets':

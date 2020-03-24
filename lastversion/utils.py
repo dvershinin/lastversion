@@ -82,24 +82,29 @@ def download_file(url, local_filename=None):
     # NOTE the stream=True parameter below
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        if 'Content-Length' in r.headers:
-            file_size = int(r.headers['Content-Length'])
-            chunk_size = 1024
-            num_bars = int(file_size / chunk_size)
-            with open(local_filename, 'wb') as f:
-                for chunk in tqdm.tqdm(
-                        r.iter_content(chunk_size=chunk_size),
-                        total=num_bars,
-                        unit='KB',
-                        desc='Downloading {}'.format(local_filename),
-                        leave=True  # progressbar stays
-                ):
-                    if chunk:  # filter out keep-alive new chunks
-                        f.write(chunk)
-        else:
-            # no content-length, no progress bar possible
-            with open(local_filename, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    if chunk:  # filter out keep-alive new chunks
-                        f.write(chunk)
+        # content-length may be empty, default to 0
+        file_size = int(r.headers.get('Content-Length', 0))
+        bar_size = 1024
+        # fetch 8 KB at a time
+        chunk_size = 8192
+        # how many bars are there in a chunk?
+        chunk_bar_size = chunk_size / bar_size
+        # bars are by KB
+        num_bars = int(file_size / bar_size)
+
+        pbar = tqdm.tqdm(
+            total=num_bars,
+            unit='KB',
+            desc='Downloading {}'.format(local_filename),
+            leave=True  # progressbar stays
+        )
+        with open(local_filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if chunk:  # filter out keep-alive new chunks
+                    f.write(chunk)
+                    # we fetch 8 KB, so we update progress by +8x
+                    pbar.update(chunk_bar_size)
+        pbar.set_description('Downloaded {}'.format(local_filename))
+        pbar.close()
+
     return local_filename
