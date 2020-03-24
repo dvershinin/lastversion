@@ -222,7 +222,7 @@ def main():
                     sys.exit(1)
                 for rpm in rpms:
                     import subprocess
-                    subprocess.call(["sudo", yum, "install", rpm])
+                    subprocess.call(["/bin/sudo", yum, "install", rpm])
                     sys.exit(0)
 
         # display version in various formats:

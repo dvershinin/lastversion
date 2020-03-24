@@ -1,1 +1,2 @@
-skips: ['B101']
+# allow assert call (tests), allow subprocess import
+skips: ['B101', 'B404']
