@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2020-03-31
+### Fixed
+* Do not output progressbar when downloading and no TTY available, e.g. for log output
+
+## [1.1.0] - 2020-03-24
+### Added
+* Install action
+* Progressbar for download action, when download size is known
+
 ## [1.0.1] - 2020-03-23
 ### Fixed
 * Compatibility with older PyYAML
