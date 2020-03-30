@@ -93,6 +93,7 @@ def download_file(url, local_filename=None):
         num_bars = int(file_size / bar_size)
 
         pbar = tqdm.tqdm(
+            disable=None,  # disable on non-TTY
             total=num_bars,
             unit='KB',
             desc='Downloading {}'.format(local_filename),
