@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2020-04-04
+### Fixed
+* Require requests>=2.6.1 to compensate for cachecontrol bug
+
 ## [1.1.1] - 2020-03-31
 ### Fixed
 * Do not output progressbar when downloading and no TTY available, e.g. for log output
