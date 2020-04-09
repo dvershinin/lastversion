@@ -7,7 +7,7 @@ import feedparser
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
-from .utils import asset_does_not_belong_to_machine, ApiCredentialsError
+from .utils import asset_does_not_belong_to_machine, ApiCredentialsError, BadProjectError
 
 
 class GitHubRepoSession(ProjectHolder):
@@ -34,7 +34,12 @@ class GitHubRepoSession(ProjectHolder):
         if '/' not in repo:
             r = self.get(
                 '{}/search/repositories?q={}+in:name'.format(self.api_base, repo))
-            self.repo = r.json()['items'][0]['full_name']
+            data = r.json()
+            if not data['items']:
+                raise BadProjectError(
+                    'No project found on GitHub for search query: {}'.format(repo)
+                )
+            self.repo = data['items'][0]['full_name']
         else:
             self.repo = repo
         self.rate_limited_count = 0

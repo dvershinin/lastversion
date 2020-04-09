@@ -21,7 +21,7 @@ from packaging.version import Version, InvalidVersion
 from .ProjectHolder import ProjectHolder
 from .HolderFactory import HolderFactory
 from .__about__ import __version__
-from .utils import download_file, ApiCredentialsError
+from .utils import download_file, ApiCredentialsError, BadProjectError
 
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
@@ -201,7 +201,7 @@ def main():
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
                      args.shorter_urls, args.major)
-    except ApiCredentialsError as error:
+    except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
         sys.exit(4)
 

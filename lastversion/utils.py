@@ -8,7 +8,11 @@ import tqdm
 
 
 class ApiCredentialsError(Exception):
-    """raise this when there's a lookup error for my app"""
+    """raised when there's an API error related to credentials"""
+
+
+class BadProjectError(Exception):
+    """raised when no such project exists"""
 
 
 # matches os.name to known extensions that are meant *mostly* to run on it, and not other os.name-s
