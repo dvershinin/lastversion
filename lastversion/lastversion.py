@@ -68,10 +68,18 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
         release['version'] = str(version)
         release['tag_date'] = str(release['tag_date'])
         release['v_prefix'] = tag.startswith("v")
+        version_macro = 'upstream_version' if repo_data['module_of'] else 'version'
+        version_macro = '%{{{}}}'.format(version_macro)
         release['spec_tag'] = tag.replace(
             str(version),
-            '%{upstream_version}' if repo_data['module_of'] else '%{version}'
+            version_macro
         )
+        # spec_tag_no_prefix is the helpful macro which will allow us to know where tarball
+        # extracts to (GitHub-specific)
+        if release['spec_tag'].startswith('v{}'.format(version_macro)):
+            release['spec_tag_no_prefix'] = release['spec_tag'].lstrip('v')
+        else:
+            release['spec_tag_no_prefix'] = release['spec_tag']
         release['tag_name'] = tag
         if hasattr(s, 'repo_license'):
             release['license'] = s.repo_license(tag)
