@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.3] - 2020-04-15
+### Fixed
+* Show error when no repo found (no results from search)
+* Added spec_tag_no_prefix to JSON output
+* Returning Null for license when it doesn't exist at release tag
+
 ## [1.1.2] - 2020-04-04
 ### Fixed
 * Require requests>=2.6.1 to compensate for cachecontrol bug
