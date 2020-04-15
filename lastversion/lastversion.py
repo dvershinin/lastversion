@@ -29,9 +29,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     cache_dir = user_cache_dir("lastversion")
     log.info("Using cache directory: {}.".format(cache_dir))
 
-    repo_data = {
-        'module_of': None
-    }
+    repo_data = {}
     if repo.endswith('.yml'):
         with open(repo) as fpi:
             repo_data = yaml.safe_load(fpi)
@@ -39,8 +37,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
                 if 'nginx-extras' in repo:
                     repo_data['module_of'] = 'nginx'
                 name = os.path.splitext(os.path.basename(repo))[0]
-                if repo_data['module_of']:
-                    name = 'nginx-module-{}'.format(name)
+                if 'module_of' in repo_data:
+                    name = '{}-module-{}'.format(repo_data['module_of'], name)
                 repo = repo_data['repo']
                 repo_data['name'] = name
 
@@ -68,7 +66,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
         release['version'] = str(version)
         release['tag_date'] = str(release['tag_date'])
         release['v_prefix'] = tag.startswith("v")
-        version_macro = 'upstream_version' if repo_data['module_of'] else 'version'
+        version_macro = 'upstream_version' if 'module_of' in repo_data else 'version'
         version_macro = '%{{{}}}'.format(version_macro)
         release['spec_tag'] = tag.replace(
             str(version),
@@ -76,7 +74,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
         )
         # spec_tag_no_prefix is the helpful macro which will allow us to know where tarball
         # extracts to (GitHub-specific)
-        if release['spec_tag'].startswith('v{}'.format(version_macro)):
+        if release['spec_tag'].startswith('v{}'.format(version_macro)) or \
+                re.match(r'^v\d', release['spec_tag']):
             release['spec_tag_no_prefix'] = release['spec_tag'].lstrip('v')
         else:
             release['spec_tag_no_prefix'] = release['spec_tag']

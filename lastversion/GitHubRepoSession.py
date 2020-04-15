@@ -101,7 +101,13 @@ class GitHubRepoSession(ProjectHolder):
     def repo_license(self, tag):
         r = self.repo_query('/license?ref={}'.format(tag))
         if r.status_code == 200:
-            return r.json()
+            # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag
+            # we have to double check whether the license file exists "at release tag"
+            license_data = r.json()
+            license_path = license_data['path']
+            license_r = self.repo_query('/contents/{}?ref={}'.format(license_path, tag))
+            if license_r.status_code == 200:
+                return license_data
         return None
 
     def repo_readme(self, tag):
