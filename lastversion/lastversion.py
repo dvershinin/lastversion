@@ -246,8 +246,8 @@ def main():
                 if args.assumeyes:
                     params.append('-y')
                 subprocess.call(params)
-            except FileNotFoundError:
-                log.critical('Package manager is not found. Only YUM/DNF is supported at this time')
+            except OSError:
+                log.critical('Failed to launch package manager. Only YUM/DNF is supported!')
                 sys.exit(1)
             # if the system has yum, then lastversion has to be installed from yum and
             # has access to system packages like yum python or dnf python API
