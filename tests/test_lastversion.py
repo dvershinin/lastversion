@@ -26,7 +26,7 @@ def test_mautic_pre():
 
 
 def test_monit():
-    repo = "https://mmonit.com/"
+    repo = "https://mmonit.com/monit/dist/monit-5.26.0.tar.gz"
 
     output = latest(repo, 'version')
 

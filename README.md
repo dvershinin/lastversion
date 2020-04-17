@@ -27,8 +27,8 @@ Moreover, you might get something like "latest-stable" for a tag name's value.
 
 In general, quite many project authors complicate things further by:
 
-*   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forget to mark 
-it as a pre-release
+*   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forgetting to
+ mark it as a pre-release
 *   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy 
 like that
 *   Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
@@ -40,7 +40,7 @@ on the command line, you can use `lastversion`.
 
 Its primary use is for build systems - whenever you want to watch specific repositories for released
 versions to build packages automatically.
-Or otherwise require getting latest version in your automation scripts.
+Or otherwise require getting the latest version in your automation scripts.
 
 [Like I do](https://www.getpagespeed.com/redhat)
 
@@ -110,44 +110,48 @@ itself.
 For more options to control output or behavior, see `--help` output:    
 
 ```
-usage: lastversion [-h] [--pre] [--verbose] [-d [DOWNLOAD]]
+usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [--format {version,assets,source,json}] [--assets]
-                   [--source] [--version] [-gt VER] [-b MAJOR]
-                   [--filter REGEX] [-su]
-                   [action] REPO
+                   [--source] [-gt VER] [-b MAJOR] [--filter REGEX] [-su] [-y]
+                   [--version]
+                   [action] <repo or URL>
 
-Get latest release from GitHub.
+Get the latest release from GitHub/GitLab/BitBucket.
 
 positional arguments:
-  action                Special action to run, e.g. test
-  REPO                  GitHub repository in format owner/name
+  action                Special action to run, e.g. download, install, test
+  <repo or URL>         GitHub/GitLab/BitBucket repository in format
+                        owner/name or any URL that belongs to it
 
 optional arguments:
   -h, --help            show this help message and exit
   --pre                 Include pre-releases in potential versions
-  --verbose
-  -d [DOWNLOAD], --download [DOWNLOAD]
+  --verbose             Will give you idea of what is happening under the hood
+  -d [FILENAME], --download [FILENAME]
+                        Download with custom filename
   --format {version,assets,source,json}
                         Output format
   --assets              Returns assets download URLs for last release
   --source              Returns only source URL for last release
-  --version             show program's version number and exit
   -gt VER, --newer-than VER
                         Output only if last version is newer than given
                         version
   -b MAJOR, --major MAJOR
-                        Only consider releases of specific major version, e.g.
+                        Only consider releases of a specific major version, e.g.
                         2.1.x
   --filter REGEX        Filters --assets result by a regular expression
   -su, --shorter-urls   A tiny bit shorter URLs produced
+  -y, --assumeyes       Automatically answer yes for all questions
+  --version             show program's version number and exit
 ```
 
 
-The `--format` will affect what kind of information from last release and in which format will be 
-displayed, e.g.:
+The `--format` will affect what kind of information from the last release and in which format will
+ be displayed, e.g.:
 
-*   `version` is the default. Just outputs well format version number
-*   `assets` will output newline-separated list of assets URLs (if any), otherwise link to sources archive
+*   `version` is the default. Simply outputs well-formatted version number of the latest release
+*   `assets` will output a newline-separated list of assets URLs (if any), otherwise link to
+ sources archive
 *   `source` will output link to source archive, no matter if the release has some assets added
 *   `json` can be used by external Python modules or for debugging, it is dict/JSON output of an API
  call that satisfied last version checks
@@ -254,13 +258,25 @@ Mercurial repos are rather rare these days, but support has been added primarily
 
 ### Install an RPM asset
 
-If a project provides .rpm assets and your system has `yum`, you can install the project's RPM
-directly, like so:
+If a project provides `.rpm` assets and your system has `yum` or `dnf`, you can install the project's
+ RPM directly, like so:
 
-    lastversion install mailspring
+    sudo lastversion install mailspring
     
 This finds [MailSpring](https://github.com/Foundry376/Mailspring), gets its latest release info, 
-filters assets for `.rpm` and passes it to `yum` via `sudo`. 
+filters assets for `.rpm` and passes it to `yum` / `dnf`. 
+
+You can even set up an auto-updater cron job which will ensure you are on the latest version of a
+ package, like so:
+ 
+```bash
+@daily /usr/bin/lastversion install mailspring -y 2>/dev/null
+```
+
+If the Mailspring GitHub repo posts a release with newer `.rpm`, then it will be automatically
+ installed, making sure you are running the latest and greated Mailspring version.
+  
+You'll even get an email alert after update (standard cron feature).
 
 Needless to say, more often than not such RPM packages have no idea about all potentially missing
 dependencies. Thus, only use `lastversion install ...` if the software is missing from the base
@@ -287,11 +303,14 @@ Automatic builds become easy with:
 ```bash
 CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
 LASTVER=$(lastversion repo/owner -gt ${CURRENTLY_BUILT_VER})
-if [ $? -eq 0 ]; then
+if [[ $? -eq 0 ]]; then
   # LASTVER is newer, update and trigger build
   # ....
 fi
 ```
+
+Here, the `-gt` is actually a switch passed to `lastversion`, which acts in a similar fashion to
+ `-gt` comparison in bash.
 
 There is more to it, if you want to make this reliable.
 See my ranting on 
@@ -347,18 +366,16 @@ Invoke `lastversion.latest` function get version information for a repo.
 ```python
 from lastversion import lastversion
 from packaging import version
-repo = "mautic/mautic"
-release = lastversion.latest(repo, output_format='version', pre_ok=True)
 
-if release is not False:
-    if release.is_prerelease: 
-        print('Found prerelease')
-    if release >= version.parse('1.8.1')
-        print('It is newer')
-    print(str(release))
+latest_mautic_version = lastversion.latest("mautic/mautic", output_format='version', pre_ok=True)
+
+print('Latest Mautic version: {}'.format(str(latest_mautic_version))
+
+if latest_mautic_version >= version.parse('1.8.1')
+    print('It is newer')
 ```
 
-With `output_format='version'`, the function returns a 
+With `output_format='version'` (the default), the function returns a 
 [Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) object, or
  `False`. So you can do things like above, namely version comparison, checking dev status, etc.
 

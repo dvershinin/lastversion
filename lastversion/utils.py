@@ -113,3 +113,16 @@ def download_file(url, local_filename=None):
         pbar.close()
 
     return local_filename
+
+
+def rpm_installed_version(name):
+    try:
+        import rpm
+    except ImportError:
+        return False
+    ts = rpm.TransactionSet()
+    mi = ts.dbMatch('name', name)
+    if mi:
+        for h in mi:
+            return h['version']
+    return None

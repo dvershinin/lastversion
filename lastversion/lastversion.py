@@ -21,7 +21,7 @@ from packaging.version import Version, InvalidVersion
 from .ProjectHolder import ProjectHolder
 from .HolderFactory import HolderFactory
 from .__about__ import __version__
-from .utils import download_file, ApiCredentialsError, BadProjectError
+from .utils import download_file, ApiCredentialsError, BadProjectError, rpm_installed_version
 
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
@@ -85,6 +85,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
         if hasattr(s, 'repo_readme'):
             release['readme'] = s.repo_readme(tag)
         release.update(repo_data)
+        release['assets'] = s.get_assets(release, short_urls, assets_filter)
         return release
 
     if output_format == 'assets':
@@ -117,18 +118,22 @@ def parse_version(tag):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Get latest release from GitHub.',
+    parser = argparse.ArgumentParser(description='Get the latest release from '
+                                                 'GitHub/GitLab/BitBucket.',
                                      prog='lastversion')
     parser.add_argument('action', nargs='?', default='get', help='Special action to run, '
-                                                                 'e.g. download, test')
-    parser.add_argument('repo', metavar='REPO',
-                        help='GitHub repository in format owner/name')
+                                                                 'e.g. download, install, test')
+    parser.add_argument('repo', metavar='<repo or URL>',
+                        help='GitHub/GitLab/BitBucket repository in format owner/name or any URL '
+                             'that belongs to it')
     # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
-    parser.add_argument('--verbose', dest='verbose', action='store_true')
+    parser.add_argument('--verbose', dest='verbose', action='store_true',
+                        help='Will give you idea of what is happening under the hood')
     # no --download = False, --download filename.tar, --download = None
-    parser.add_argument('-d', '--download', dest='download', nargs='?', default=False, const=None)
+    parser.add_argument('-d', '--download', dest='download', nargs='?', default=False, const=None,
+                        metavar='FILENAME', help='Download with custom filename')
     # how / which data of last release we want to present
     # assets will give download urls for assets if available and sources archive otherwise
     # sources will give download urls for sources always
@@ -141,20 +146,22 @@ def main():
                         help='Returns assets download URLs for last release')
     parser.add_argument('--source', dest='source', action='store_true',
                         help='Returns only source URL for last release')
-    parser.add_argument('--version', action='version',
-                        version='%(prog)s {version}'.format(version=__version__))
     parser.add_argument('-gt', '--newer-than', type=check_version, metavar='VER',
                         help="Output only if last version is newer than given version")
     parser.add_argument('-b', '--major', metavar='MAJOR',
-                        help="Only consider releases of specific major "
+                        help="Only consider releases of a specific major "
                              "version, e.g. 2.1.x")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
                                                           "expression")
     parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
                         help='A tiny bit shorter URLs produced')
+    parser.add_argument('-y', '--assumeyes', dest='assumeyes', action='store_true',
+                        help='Automatically answer yes for all questions')
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {version}'.format(version=__version__))
     parser.set_defaults(validate=True, verbose=False, format='version',
                         pre=False, assets=False, newer_than=False, filter=False,
-                        shorter_urls=False, major=None)
+                        shorter_urls=False, major=None, ssumeyes=False)
     args = parser.parse_args()
 
     if args.repo == "self":
@@ -182,7 +189,7 @@ def main():
 
     if args.action == 'install':
         # we can only install assets
-        args.format = 'assets'
+        args.format = 'json'
 
     # imply source download, unless --assets specified
     # --download is legacy flag to specify download action or name of desired download file
@@ -218,19 +225,36 @@ def main():
             sys.exit(0)
 
         if args.action == 'install':
-            rpms = [asset for asset in res if asset.endswith('.rpm')]
-            # if an installator is capable of fetching the URL, pass it directly
-            # otherwise download to temp directory
-            yum = "/usr/bin/yum"
-            # TODO find out why dnf is downloading much slower than lastversion :-\
-            if os.path.exists(yum):
-                if not rpms:
-                    log.error('No assets found to install')
-                    sys.exit(1)
-                for rpm in rpms:
-                    import subprocess
-                    subprocess.call(["/bin/sudo", yum, "install", rpm])
-                    sys.exit(0)
+            rpms = [asset for asset in res['assets'] if asset.endswith('.rpm')]
+            if not rpms:
+                log.error('No assets found to install')
+                sys.exit(1)
+            # prevents downloading large packages if we already have newest installed
+            # consult RPM database  for current version
+            installed_version = rpm_installed_version(args.repo)
+            if installed_version is False:
+                log.warning('Please install lastversion using YUM or DNF so it can check current '
+                            'program version. This is helpful to prevent unnecessary downloads')
+            if installed_version and Version(installed_version) >= Version(res['version']):
+                log.warning('Newest version {} is already installed'.format(installed_version))
+                sys.exit(0)
+            # pass RPM URLs directly to package management program
+            try:
+                import subprocess
+                params = ['yum', 'install']
+                params.extend(rpms)
+                if args.assumeyes:
+                    params.append('-y')
+                subprocess.call(params)
+            except FileNotFoundError:
+                log.critical('Package manager is not found. Only YUM/DNF is supported at this time')
+                sys.exit(1)
+            # if the system has yum, then lastversion has to be installed from yum and
+            # has access to system packages like yum python or dnf python API
+            # if install_with_dnf(rpms) is False or install_with_yum(rpms) is False:
+            #     log.error('Failed talking to either DNF or YUM for package install')
+            #     sys.exit(1)
+            sys.exit(0)
 
         # display version in various formats:
         if args.format == 'assets':
