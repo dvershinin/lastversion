@@ -33,6 +33,14 @@ def test_monit():
     assert output > version.parse("5.25.0")
 
 
+def test_nginx():
+    repo = "https://nginx.org/"
+
+    output = latest(repo, 'version')
+
+    assert output >= version.parse("1.18.0")
+
+
 def test_gperftools():
     repo = "https://github.com/gperftools/gperftools/releases"
 

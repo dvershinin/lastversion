@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.4] - 2020-04-23
+### Fixed
+* Fixed detecting non-GitHub repos and known URLs
+* Improved RPM install by checking with RPM db and avoiding unnecessary downloads absent updates
+
 ## [1.1.3] - 2020-04-15
 ### Fixed
 * Show error when no repo found (no results from search)

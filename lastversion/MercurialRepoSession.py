@@ -17,9 +17,16 @@ class MercurialRepoSession(ProjectHolder):
         }
     }
 
+    KNOWN_REPOS_BY_NAME = {
+        'nginx': KNOWN_REPO_URLS['nginx.org']
+    }
+
     @classmethod
-    def matches_default_hostnames(cls, hostname):
-        return hostname.startswith('hg.')
+    def get_matching_hostname(cls, repo):
+        if repo.startswith('http://hg.') or repo.startswith('https://hg.'):
+            url_parts = repo.split('/')
+            return url_parts[2]
+        return None
 
     def __init__(self, repo, hostname):
         super(MercurialRepoSession, self).__init__()

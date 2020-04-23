@@ -22,24 +22,27 @@ class HolderFactory:
         holder_class = HolderFactory.HOLDERS['github']
         hostname = None
         known_repo = None
-        if repo.startswith(('https://', 'http://')):
-            url_parts = repo.split('/')
-            hostname = url_parts[2]
-            for k, sc in HolderFactory.HOLDERS.items():
-                known_repo = sc.is_with_url(repo)
-                if known_repo:
-                    holder_class = sc
-                    log.info('Using {} adapter'.format(k))
-                    break
-                if sc.matches_default_hostnames(hostname):
-                    holder_class = sc
-                    break
-            repo = "/".join(url_parts[3:3 + sc.REPO_URL_PROJECT_COMPONENTS])
+        for k, sc in HolderFactory.HOLDERS.items():
+            known_repo = sc.is_official_for_repo(repo)
+            if known_repo:
+                holder_class = sc
+                log.info('Using {} adapter'.format(k))
+                break
+            # TODO now easy multiple default hostnames per holder
+            hostname = sc.get_matching_hostname(repo)
+            if hostname:
+                holder_class = sc
+                break
         if known_repo:
             repo = known_repo['repo']
             # known repo tells us hosted domain of e.g. mercurical web
             if 'hostname' in known_repo:
                 hostname = known_repo['hostname']
+        elif repo.startswith(('https://', 'http://')):
+            # parse hostname for passing to whatever holder selected
+            url_parts = repo.split('/')
+            hostname = url_parts[2]
+            repo = "/".join(url_parts[3:3 + holder_class.REPO_URL_PROJECT_COMPONENTS])
         holder = holder_class(repo, hostname)
         if known_repo and 'branches' in known_repo:
             holder.set_branches(known_repo['branches'])

@@ -19,6 +19,7 @@ class ProjectHolder(requests.Session):
     DEFAULT_HOSTNAME = None
     DEFAULT_HOLDER = False
     KNOWN_REPO_URLS = {}
+    KNOWN_REPOS_BY_NAME = {}
     # e.g. owner/project, but mercurial just /project together with hostname
     # adapter array should list how many elements make up "repo", e.g. for hg.nginx.com/repo it
     # is only one instead of 2
@@ -35,16 +36,27 @@ class ProjectHolder(requests.Session):
         self.branches = branches
 
     @classmethod
-    def is_with_url(cls, repo):
-        for url in cls.KNOWN_REPO_URLS:
-            if repo.startswith((url, "https://{}".format(url), "http://{}".format(url))):
-                log.info('{} Starts with {}'.format(repo, url))
-                return cls.KNOWN_REPO_URLS[url]
+    def is_official_for_repo(cls, repo):
+        if repo.startswith(('https://', 'http://')):
+            for url in cls.KNOWN_REPO_URLS:
+                if repo.startswith((url, "https://{}".format(url), "http://{}".format(url))):
+                    log.info('{} Starts with {}'.format(repo, url))
+                    return cls.KNOWN_REPO_URLS[url]
+        else:
+            if repo in cls.KNOWN_REPOS_BY_NAME:
+                log.info('Selecting known repo {}'.format(repo))
+                return cls.KNOWN_REPOS_BY_NAME[repo]
         return False
 
     @classmethod
-    def matches_default_hostnames(cls, hostname):
-        return hostname == cls.DEFAULT_HOSTNAME
+    def get_matching_hostname(cls, repo):
+        if not cls.DEFAULT_HOSTNAME:
+            return None
+        if repo.startswith('http://{}'.format(cls.DEFAULT_HOSTNAME)):
+            return cls.DEFAULT_HOSTNAME
+        if repo.startswith('https://{}'.format(cls.DEFAULT_HOSTNAME)):
+            return cls.DEFAULT_HOSTNAME
+        return None
 
     def matches_major_filter(self, version, major):
         if self.branches and major in self.branches:

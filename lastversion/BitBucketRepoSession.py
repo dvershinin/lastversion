@@ -9,6 +9,10 @@ class BitBucketRepoSession(ProjectHolder):
         'mmonit.com': {'repo': 'tildeslash/monit'}
     }
 
+    KNOWN_REPOS_BY_NAME = {
+        'monit': KNOWN_REPO_URLS['mmonit.com']
+    }
+
     def __init__(self, repo, hostname):
         super(BitBucketRepoSession, self).__init__()
         self.hostname = hostname
