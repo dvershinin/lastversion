@@ -64,7 +64,7 @@ class ProjectHolder(requests.Session):
                 log.info('{} matches major {}'.format(version, self.branches[major]))
                 return True
         elif '{}.'.format(major) in version:
-            log.info('{} is not under the desired major {}'.format(
+            log.info('{} is under the desired major {}'.format(
                 version, major))
             return True
         return False
@@ -72,18 +72,17 @@ class ProjectHolder(requests.Session):
     def sanitize_version(self, version, pre_ok=False, major=None):
         """extract version from tag name"""
         log.info("Checking tag {} as version.".format(version))
-        if major and not self.matches_major_filter(version, major):
-            log.info('{} is not under the desired major {}'.format(
-                version, major))
-            return False
         # many times they would tag foo-1.2.3 which would parse to LegacyVersion
         # we can avoid this, by reassigning to what comes after the dash:
         parts = version.split('-', 1)
+        res = False
         if len(parts) == 2 and parts[0].isalpha():
             version = parts[1]
         # help devel releases to be correctly identified
         # https://www.python.org/dev/peps/pep-0440/#developmental-releases
-        version = re.sub('-devel$', '.dev0', version)
+        version = re.sub('-devel$', '.dev0', version, 1)
+        # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
+        version = re.sub('-p(\\d+)$', '.post\\1', version, 1)
         # release-3_0_2 is often seen on Mercurial holders
         # note that above code removes "release-" already so we are left with "3_0_2"
         if re.search(r'^(?:\d+_)+(?:\d+)', version):
@@ -93,9 +92,9 @@ class ProjectHolder(requests.Session):
             if not v.is_prerelease or pre_ok:
                 log.info("Parsed as Version OK")
                 log.info("String representation of version is {}.".format(v))
-                return v
-            log.info("Parsed as unwanted pre-release version: {}.".format(v))
-            return False
+                res = v
+            else:
+                log.info("Parsed as unwanted pre-release version: {}.".format(v))
         except InvalidVersion:
             log.info("Failed to parse {} as Version.".format(version))
             # attempt to remove extraneous chars and revalidate
@@ -103,10 +102,15 @@ class ProjectHolder(requests.Session):
             if s:
                 version = s.group(1)
                 log.info("Sanitized tag name value to {}.".format(version))
-                if version.endswith('.x'):
-                    # 1.10.x is a dev release without clear version, so even pre ok will not get it
-                    return False
-                # we know regex is valid version format, so no need to try catch
-                return Version(version)
-            log.info("Did not find anything that looks like a version in the tag")
-            return False
+                # 1.10.x is a dev release without clear version, so even pre ok will not get it
+                if not version.endswith('.x'):
+                    # we know regex is valid version format, so no need to try catch
+                    res = Version(version)
+            else:
+                log.info("Did not find anything that looks like a version in the tag")
+        # apply --major filter
+        if res and major and not self.matches_major_filter(version, major):
+            log.info('{} is not under the desired major {}'.format(
+                version, major))
+            res = False
+        return res

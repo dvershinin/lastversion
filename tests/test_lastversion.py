@@ -223,3 +223,19 @@ def test_yml_input():
     assert not v['tag_name'].startswith('v')
     assert v['readme']['path'] == 'README.md'
     assert v['license']['path'] == 'LICENSE'
+
+
+def test_magento2_major():
+    repo = 'magento/magento2'
+
+    v = latest(repo, major='2.3.4')
+
+    assert v == version.parse('2.3.4.post2')
+
+
+def test_magento2_major_tag():
+    repo = 'magento/magento2'
+
+    v = latest(repo, major='2.3.4', output_format='tag')
+
+    assert v == '2.3.4-p2'

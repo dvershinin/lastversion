@@ -94,6 +94,9 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     if output_format == 'source':
         return s.release_download_url(release, short_urls)
 
+    if output_format == 'tag':
+        return tag
+
     return None
 
 
@@ -140,7 +143,7 @@ def main():
     # json always includes "version", "tag_name" etc + whichever json data was
     # used to satisfy lastversion
     parser.add_argument('--format',
-                        choices=['version', 'assets', 'source', 'json'],
+                        choices=['version', 'assets', 'source', 'json', 'tag'],
                         help='Output format')
     parser.add_argument('--assets', dest='assets', action='store_true',
                         help='Returns assets download URLs for last release')
