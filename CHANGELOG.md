@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.5] - 2020-05-04
+### Added
+* Better detection of post-releases, e.g. Magento 2.3.4-p2 is the latest *stable* release for the
+`--major 2.3.4`
+* Added new `--format tag` switch to get just the latest release's tag name. Proven to be useful in
+ some cases
+
 ## [1.1.4] - 2020-04-23
 ### Fixed
 * Fixed detecting non-GitHub repos and known URLs

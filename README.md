@@ -111,7 +111,7 @@ For more options to control output or behavior, see `--help` output:
 
 ```
 usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
-                   [--format {version,assets,source,json}] [--assets]
+                   [--format {version,assets,source,json,tag}] [--assets]
                    [--source] [-gt VER] [-b MAJOR] [--filter REGEX] [-su] [-y]
                    [--version]
                    [action] <repo or URL>
@@ -129,7 +129,7 @@ optional arguments:
   --verbose             Will give you idea of what is happening under the hood
   -d [FILENAME], --download [FILENAME]
                         Download with custom filename
-  --format {version,assets,source,json}
+  --format {version,assets,source,json,tag}
                         Output format
   --assets              Returns assets download URLs for last release
   --source              Returns only source URL for last release
@@ -137,8 +137,8 @@ optional arguments:
                         Output only if last version is newer than given
                         version
   -b MAJOR, --major MAJOR
-                        Only consider releases of a specific major version, e.g.
-                        2.1.x
+                        Only consider releases of a specific major version,
+                        e.g. 2.1.x
   --filter REGEX        Filters --assets result by a regular expression
   -su, --shorter-urls   A tiny bit shorter URLs produced
   -y, --assumeyes       Automatically answer yes for all questions
@@ -155,6 +155,8 @@ The `--format` will affect what kind of information from the last release and in
 *   `source` will output link to source archive, no matter if the release has some assets added
 *   `json` can be used by external Python modules or for debugging, it is dict/JSON output of an API
  call that satisfied last version checks
+*   `tag` will emit just the latest release's tag name, which useful if you're constructing download
+ URL yourself or need the tag name otherwise
 
 An asset is a downloadable file that typically represents an executable, or otherwise 
 "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled 
