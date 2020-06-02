@@ -109,6 +109,12 @@ def check_version(value):
     :rtype:
     """
     try:
+        # TODO use sanitize_version so that we can just pass tags as values
+        # help devel releases to be correctly identified
+        # https://www.python.org/dev/peps/pep-0440/#developmental-releases
+        value = re.sub('-devel$', '.dev0', value, 1)
+        # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
+        value = re.sub('-p(\\d+)$', '.post\\1', value, 1)
         value = Version(value)
     except InvalidVersion:
         raise argparse.ArgumentTypeError("%s is an invalid version value" % value)
