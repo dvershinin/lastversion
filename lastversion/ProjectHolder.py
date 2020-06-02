@@ -25,6 +25,8 @@ class ProjectHolder(requests.Session):
     # is only one instead of 2
     # or a "format" specifier for matching
     REPO_URL_PROJECT_COMPONENTS = 2
+    # if URI starts with project name, 0. Otherwise skip through this many URI dirs
+    REPO_URL_PROJECT_OFFSET = 0
 
     def __init__(self):
         super(ProjectHolder, self).__init__()
@@ -98,15 +100,16 @@ class ProjectHolder(requests.Session):
         except InvalidVersion:
             log.info("Failed to parse {} as Version.".format(version))
             # attempt to remove extraneous chars and revalidate
-            s = re.search(r'([0-9]+([.][0-9x]+)+(rc[0-9]?)?)', version)
-            if s:
-                version = s.group(1)
+            # we use findall for cases where "tag" may be 'foo/2.x/2.45'
+            matches = re.findall(r'([0-9]+([.][0-9x]+)+(rc[0-9]?)?)', version)
+            for s in matches:
+                version = s[0]
                 log.info("Sanitized tag name value to {}.".format(version))
                 # 1.10.x is a dev release without clear version, so even pre ok will not get it
                 if not version.endswith('.x'):
                     # we know regex is valid version format, so no need to try catch
                     res = Version(version)
-            else:
+            if not matches:
                 log.info("Did not find anything that looks like a version in the tag")
         # apply --major filter
         if res and major and not self.matches_major_filter(version, major):

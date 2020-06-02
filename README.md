@@ -6,9 +6,17 @@
 
 A tiny command-line utility that helps to answer a simple question:
 
-> What is the latest *stable* version for a GitHub/GitLab/BitBucket/etc. project?
+> What is the latest *stable* version for a project?
 
 ... and, optionally, download/install it.
+
+Supported project locations:
+
+* GitHub
+* GitLab
+* BitBucket
+* Mercurial
+* SourceForge
 
 GitHub has an API endpoint 
 [here](https://developer.github.com/v3/repos/releases/#get-the-latest-release). 

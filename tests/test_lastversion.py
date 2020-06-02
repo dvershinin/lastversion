@@ -239,3 +239,11 @@ def test_magento2_major_tag():
     v = latest(repo, major='2.3.4', output_format='tag')
 
     assert v == '2.3.4-p2'
+
+
+def test_sf_keepass():
+    repo = 'https://sourceforge.net/projects/keepass'
+
+    v = latest(repo)
+
+    assert v >= version.parse('2.45')

@@ -4,6 +4,7 @@ from .GitHubRepoSession import GitHubRepoSession
 from .GitLabRepoSession import GitLabRepoSession
 from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
+from .SourceForgeRepoSession import SourceForgeRepoSession
 
 
 class HolderFactory:
@@ -12,6 +13,7 @@ class HolderFactory:
         'gitlab': GitLabRepoSession,
         'bitbucket': BitBucketRepoSession,
         'hg': MercurialRepoSession,
+        'sf': SourceForgeRepoSession,
         'local': LocalVersionSession
     }
 
@@ -42,7 +44,8 @@ class HolderFactory:
             # parse hostname for passing to whatever holder selected
             url_parts = repo.split('/')
             hostname = url_parts[2]
-            repo = "/".join(url_parts[3:3 + holder_class.REPO_URL_PROJECT_COMPONENTS])
+            offset = 3 + holder_class.REPO_URL_PROJECT_OFFSET
+            repo = "/".join(url_parts[offset:offset + holder_class.REPO_URL_PROJECT_COMPONENTS])
         holder = holder_class(repo, hostname)
         if known_repo and 'branches' in known_repo:
             holder.set_branches(known_repo['branches'])
