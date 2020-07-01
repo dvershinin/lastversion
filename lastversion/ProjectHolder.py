@@ -83,6 +83,7 @@ class ProjectHolder(requests.Session):
         # help devel releases to be correctly identified
         # https://www.python.org/dev/peps/pep-0440/#developmental-releases
         version = re.sub('-devel$', '.dev0', version, 1)
+        version = re.sub('-test$', '.dev0', version, 1)
         # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
         version = re.sub('-p(\\d+)$', '.post\\1', version, 1)
         # release-3_0_2 is often seen on Mercurial holders
