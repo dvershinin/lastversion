@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.6] - 2020-07-18
+### Added
+* General improvements for releases detection
+* SourceForge projects support
+
 ## [1.1.5] - 2020-05-04
 ### Added
 * Better detection of post-releases, e.g. Magento 2.3.4-p2 is the latest *stable* release for the

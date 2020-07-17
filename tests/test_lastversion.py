@@ -196,14 +196,12 @@ def test_contain_rpm_related_data():
     assert v['license']['path'] == 'LICENSE'
 
 
-# Gitlab is down! Temporary test disablement
-# TODO re-enable
-# def test_gitlab_1():
-#     repo = 'https://gitlab.com/ddcci-driver-linux/ddcci-driver-linux/-/tree/master'
-#
-#     v = latest(repo)
-#
-#     assert v == version.parse("0.3.3")
+def test_gitlab_1():
+    repo = 'https://gitlab.com/ddcci-driver-linux/ddcci-driver-linux/-/tree/master'
+
+    v = latest(repo)
+
+    assert v == version.parse("0.3.3")
 
 
 def test_merc_1():
