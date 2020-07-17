@@ -1,9 +1,7 @@
 import logging as log
 import re
-from .__about__ import __version__
 
 import requests
-
 # this class basically corresponds to something (often a website) which holds
 # projects (usually a bunch). often this is a github-like website, so we subclass session
 # but this also maybe something special, which either way can be used as a source of version
@@ -11,6 +9,8 @@ import requests
 # it is instantantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
 from packaging.version import InvalidVersion, Version
+
+from .__about__ import __version__
 
 
 class ProjectHolder(requests.Session):
@@ -112,6 +112,22 @@ class ProjectHolder(requests.Session):
                     res = Version(version)
             if not matches:
                 log.info("Did not find anything that looks like a version in the tag")
+                # as a last resort, let's try to convert underscores to dots, while stripping out
+                # any "alphanumeric_". many hg repos do this, e.g. PROJECT_1_2_3
+                parts = version.split('_')
+                if len(parts) >= 2 and parts[0].isalpha():
+                    # gets list except first item, joins by dot
+                    version = '.'.join(parts[1:])
+                    try:
+                        v = Version(version)
+                        if not v.is_prerelease or pre_ok:
+                            log.info("Parsed as Version OK")
+                            log.info("String representation of version is {}.".format(v))
+                            res = v
+                        else:
+                            log.info("Parsed as unwanted pre-release version: {}.".format(v))
+                    except InvalidVersion:
+                        log.info('Still not a valid version after applying underscores fix')
         # apply --major filter
         if res and major and not self.matches_major_filter(version, major):
             log.info('{} is not under the desired major {}'.format(
