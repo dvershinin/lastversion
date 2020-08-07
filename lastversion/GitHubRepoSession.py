@@ -80,11 +80,10 @@ class GitHubRepoSession(ProjectHolder):
                             time.sleep(wait_for)
                         self.rate_limited_count = self.rate_limited_count + 1
                         return self.get(url)
-                    else:
-                        raise ApiCredentialsError(
-                            'Exceeded API rate limit after waiting: {}'.format(
-                                r.json()['message'])
-                        )
+                    raise ApiCredentialsError(
+                        'Exceeded API rate limit after waiting: {}'.format(
+                            r.json()['message'])
+                    )
             return self.get(url)
 
         if r.status_code == 403 and url != self.get_rate_limit_url():
