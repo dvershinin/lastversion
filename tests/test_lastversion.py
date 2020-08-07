@@ -256,3 +256,11 @@ def test_squid_underscore_lover():
     v = latest(repo)
 
     assert v >= version.parse('5.0.1')
+
+
+def test_patch_release_for_older_is_not_last():
+    repo = 'https://github.com/lastversion-test-repos/magento2/releases'
+
+    v = latest(repo)
+
+    assert v == version.parse('2.4.0')

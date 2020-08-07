@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.7] - 2020-08-07
+### Added
+* Aggregate older tags, up to one year, for better latest release detection (feed only)
+
 ## [1.1.6] - 2020-07-18
 ### Added
 * General improvements for releases detection

@@ -5,6 +5,7 @@ import time
 
 import feedparser
 from dateutil import parser
+from datetime import timedelta
 
 from .ProjectHolder import ProjectHolder
 from .utils import asset_does_not_belong_to_machine, ApiCredentialsError, BadProjectError
@@ -149,13 +150,11 @@ class GitHubRepoSession(ProjectHolder):
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
         feed = feedparser.parse(r.text)
-        # TODO choose topmost (most recent), but do a doble check whether the edit was released (
-        #  tag api)
         for tag in feed.entries:
             # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
             tag_name = tag['link'].split('/')[-1]
             version = self.sanitize_version(tag_name, pre_ok, major)
-            if version:
+            if version and (not ret or ret['version'] < version):
                 # we always want to return formal release if it exists, cause it has useful data
                 # grab formal release via APi to check for pre-release mark
                 r = self.repo_query('/releases/tags/{}'.format(tag_name))
@@ -166,16 +165,24 @@ class GitHubRepoSession(ProjectHolder):
                             "Found formal release for this tag which is unwanted "
                             "pre-release: {}.".format(version))
                         continue
+                    tag_date = parser.parse(tag['updated'])
+                    if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                        log.info('The version {} is newer, but is too old!'.format(version))
+                        break
                     # use full release info
                     ret = formal_release
                     ret['tag_name'] = tag_name
-                    ret['tag_date'] = parser.parse(tag['updated'])
+                    ret['tag_date'] = tag_date
                     ret['version'] = version
                     ret['type'] = 'feed'
                 else:
+                    tag_date = parser.parse(tag['updated'])
+                    if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                        log.info('The version {} is newer, but is too old!'.format(version))
+                        break
                     ret = tag
                     ret['tag_name'] = tag_name
-                    ret['tag_date'] = parser.parse(tag['updated'])
+                    ret['tag_date'] = tag_date
                     ret['version'] = version
                     ret['type'] = 'feed'
                     # remove keys which are non-jsonable
@@ -183,7 +190,6 @@ class GitHubRepoSession(ProjectHolder):
                     ret.pop('updated_parsed', None)
                     ret.pop('published_parsed', None)
                 log.info("Selected version as current selection: {}.".format(version))
-                break
         # we are good with release from feeds only without looking at the API
         # simply because feeds list stuff in order of recency
         if ret:
