@@ -14,11 +14,11 @@ A tiny command-line utility that helps to answer a simple question:
 
 Supported project locations:
 
-* GitHub
-* GitLab
-* BitBucket
-* Mercurial
-* SourceForge
+*   GitHub
+*   GitLab
+*   BitBucket
+*   Mercurial
+*   SourceForge
 
 GitHub has an API endpoint 
 [here](https://developer.github.com/v3/repos/releases/#get-the-latest-release). 
@@ -38,11 +38,11 @@ Moreover, you might get something like "latest-stable" for a tag name's value.
 In general, quite many project authors complicate things further by:
 
 *   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forgetting to
- mark it as a pre-release
+     mark it as a pre-release
 *   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy 
-like that
+    like that
 *   Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
- consistent about it myself :)
+     consistent about it myself :)
 *   Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) 
@@ -153,20 +153,18 @@ optional arguments:
   -su, --shorter-urls   A tiny bit shorter URLs produced
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
-```
-
 
 The `--format` will affect what kind of information from the last release and in which format will
  be displayed, e.g.:
 
 *   `version` is the default. Simply outputs well-formatted version number of the latest release
 *   `assets` will output a newline-separated list of assets URLs (if any), otherwise link to
- sources archive
+    sources archive
 *   `source` will output link to source archive, no matter if the release has some assets added
 *   `json` can be used by external Python modules or for debugging, it is dict/JSON output of an API
- call that satisfied last version checks
+    call that satisfied last version checks
 *   `tag` will emit just the latest release's tag name, which useful if you're constructing download
- URL yourself or need the tag name otherwise
+    URL yourself or need the tag name otherwise
 
 An asset is a downloadable file that typically represents an executable, or otherwise 
 "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled 
@@ -193,7 +191,7 @@ To disable OS filtering, use `--filter .`, this will match everything.
 You can naturally use `--filter` in place where you would use `grep`, e.g. 
 `lastversion --assets --filter win REPO`
 
-### Use case: How to download latest version of something     
+### Use case: How to download latest version of something
 
 You can also use `lastversion` to download assets/sources for the latest release.
 
@@ -273,8 +271,10 @@ Mercurial repos are rather rare these days, but support has been added primarily
 If a project provides `.rpm` assets and your system has `yum` or `dnf`, you can install the project's
  RPM directly, like so:
 
-    sudo lastversion install mailspring
-    
+```bash
+sudo lastversion install mailspring
+```
+ 
 This finds [MailSpring](https://github.com/Foundry376/Mailspring), gets its latest release info, 
 filters assets for `.rpm` and passes it to `yum` / `dnf`. 
 
