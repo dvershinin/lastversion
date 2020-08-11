@@ -38,11 +38,11 @@ Moreover, you might get something like "latest-stable" for a tag name's value.
 In general, quite many project authors complicate things further by:
 
 *   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forgetting to
-     mark it as a pre-release
+    mark it as a pre-release
 *   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy 
     like that
 *   Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
-     consistent about it myself :)
+    consistent about it myself :)
 *   Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) 

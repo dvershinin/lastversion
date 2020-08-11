@@ -15,6 +15,13 @@ class GitHubRepoSession(ProjectHolder):
     DEFAULT_HOSTNAME = 'github.com'
     DEFAULT_HOLDER = True
 
+    # one-word aliases or simply known popular repos to skip using search API
+    KNOWN_REPOS_BY_NAME = {
+        'php': {'repo': 'php/php-src'},
+        'linux': {'repo': 'torvalds/linux'},
+        'kernel': {'repo': 'torvalds/linux'},
+    }
+
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
         self.api_token = os.getenv("GITHUB_API_TOKEN")
@@ -115,6 +122,59 @@ class GitHubRepoSession(ProjectHolder):
         if r.status_code == 200:
             return r.json()
         return None
+
+    # finding in tags requires paging through ALL of them, because the API does not list them
+    # in order of recency, thus this is very slow
+    # in: current release to be returned, output: newer release to be returned
+    def find_in_tags(self, ret, pre_ok, major):
+        r = self.repo_query('/tags?per_page=100')
+        if r.status_code != 200:
+            return None
+        tags = r.json()
+        while 'next' in r.links.keys():
+            r = self.get(r.links['next']['url'])
+            tags.extend(r.json())
+
+        for t in tags:
+            tag_name = t['name']
+            version = self.sanitize_version(tag_name, pre_ok, major)
+            if not version:
+                continue
+            c = self.repo_query('/git/commits/{}'.format(t['commit']['sha']))
+            d = c.json()['committer']['date']
+            d = parser.parse(d)
+
+            if not ret or version > ret['version'] or d > ret['tag_date']:
+                # rare case: if upstream filed formal pre-release that passes as stable
+                # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
+                # TODO handle API failure here as it may result in "false positive"?
+                release_for_tag = None
+                if not pre_ok:
+                    r = self.repo_query('/releases/tags/{}'.format(tag_name))
+                    if r.status_code == 200:
+                        # noinspection SpellCheckingInspection
+                        if r.json()['prerelease']:
+                            log.info(
+                                "Found formal release for this tag which is unwanted "
+                                "pre-release: {}.".format(version))
+                            continue
+                        else:
+                            release_for_tag = r.json()
+
+                log.info("Setting version as current selection: {}.".format(version))
+                if release_for_tag:
+                    ret = release_for_tag
+                    ret['tag_name'] = tag_name
+                    ret['tag_date'] = parser.parse(release_for_tag['published_at'])
+                    ret['version'] = version
+                    ret['type'] = 'release'
+                else:
+                    ret = t
+                    ret['tag_name'] = tag_name
+                    ret['tag_date'] = d
+                    ret['version'] = version
+                    ret['type'] = 'tag'
+        return ret
 
     def get_latest(self, pre_ok=False, major=None):
         """
@@ -234,47 +294,7 @@ class GitHubRepoSession(ProjectHolder):
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
-        r = self.repo_query('/tags?per_page=100')
-        if r.status_code == 200:
-            for t in r.json():
-                tag_name = t['name']
-                version = self.sanitize_version(tag_name, pre_ok, major)
-                if not version:
-                    continue
-                c = self.repo_query('/git/commits/{}'.format(t['commit']['sha']))
-                d = c.json()['committer']['date']
-                d = parser.parse(d)
-
-                if not ret or version > ret['version'] or d > ret['tag_date']:
-                    # rare case: if upstream filed formal pre-release that passes as stable
-                    # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
-                    # TODO handle API failure here as it may result in "false positive"?
-                    release_for_tag = None
-                    if not pre_ok:
-                        r = self.repo_query('/releases/tags/{}'.format(tag_name))
-                        if r.status_code == 200:
-                            # noinspection SpellCheckingInspection
-                            if r.json()['prerelease']:
-                                log.info(
-                                    "Found formal release for this tag which is unwanted "
-                                    "pre-release: {}.".format(version))
-                                continue
-                            else:
-                                release_for_tag = r.json()
-
-                    log.info("Setting version as current selection: {}.".format(version))
-                    if release_for_tag:
-                        ret = release_for_tag
-                        ret['tag_name'] = tag_name
-                        ret['tag_date'] = parser.parse(release_for_tag['published_at'])
-                        ret['version'] = version
-                        ret['type'] = 'release'
-                    else:
-                        ret = t
-                        ret['tag_name'] = tag_name
-                        ret['tag_date'] = d
-                        ret['version'] = version
-                        ret['type'] = 'tag'
+        ret = self.find_in_tags(ret, pre_ok, major)
 
         return ret
 
