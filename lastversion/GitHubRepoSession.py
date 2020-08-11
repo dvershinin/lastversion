@@ -158,8 +158,7 @@ class GitHubRepoSession(ProjectHolder):
                                 "Found formal release for this tag which is unwanted "
                                 "pre-release: {}.".format(version))
                             continue
-                        else:
-                            release_for_tag = r.json()
+                        release_for_tag = r.json()
 
                 log.info("Setting version as current selection: {}.".format(version))
                 if release_for_tag:
