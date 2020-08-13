@@ -62,10 +62,10 @@ class ProjectHolder(requests.Session):
 
     def matches_major_filter(self, version, major):
         if self.branches and major in self.branches:
-            if re.search(r"{}".format(self.branches[major]), version):
+            if re.search(r"{}".format(self.branches[major]), str(version)):
                 log.info('{} matches major {}'.format(version, self.branches[major]))
                 return True
-        elif '{}.'.format(major) in version:
+        elif str(version).startswith('{}.'.format(major)):
             log.info('{} is under the desired major {}'.format(
                 version, major))
             return True
@@ -129,7 +129,7 @@ class ProjectHolder(requests.Session):
                     except InvalidVersion:
                         log.info('Still not a valid version after applying underscores fix')
         # apply --major filter
-        if res and major and not self.matches_major_filter(version, major):
+        if res and major and not self.matches_major_filter(res, major):
             log.info('{} is not under the desired major {}'.format(
                 version, major))
             res = False

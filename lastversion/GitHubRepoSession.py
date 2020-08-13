@@ -123,6 +123,92 @@ class GitHubRepoSession(ProjectHolder):
             return r.json()
         return None
 
+    # faster tag search: aggregates highest semver between records of 100 (faster search in --major)
+    # much fewer requests
+    def find_in_tags_via_graphql(self, ret, pre_ok, major):
+        query_fmt = """
+        {
+          repository(owner: "%s", name: "%s") {
+            refs(refPrefix: "refs/tags/", first: 100, after: "%s", orderBy: {field:
+            TAG_COMMIT_DATE,
+            direction: DESC}) {
+              edges {
+                node {
+                  name
+                  target {
+                    oid
+                    ... on Tag {
+                      message
+                      commitUrl
+                      tagger {
+                        name
+                        email
+                        date
+                      }
+                    }
+                  }
+                }
+                cursor
+              }
+            }
+          }
+        }
+        """
+        cursor = ''
+
+        while not ret:
+            # testing on php/php-src
+            owner, name = self.repo.split('/')
+            query = query_fmt % (owner, name, cursor)
+            r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
+            if r.status_code != 200:
+                return ret
+            j = r.json()
+            # no tags
+            if not j['data']['repository']['refs']['edges']:
+                break
+            for edge in j['data']['repository']['refs']['edges']:
+                node = edge['node']
+                cursor = edge['cursor']
+                tag_name = node['name']
+                version = self.sanitize_version(tag_name, pre_ok, major)
+                if not version:
+                    continue
+                d = node['target']['tagger']['date']
+                tag_date = parser.parse(d)
+
+                if not ret or version > ret['version'] or tag_date > ret['tag_date']:
+                    # we always want to return formal release if it exists, cause it has useful data
+                    # grab formal release via APi to check for pre-release mark
+                    r = self.repo_query('/releases/tags/{}'.format(tag_name))
+                    if r.status_code == 200:
+                        formal_release = r.json()
+                        if not pre_ok and formal_release['prerelease']:
+                            log.info(
+                                "Found formal release for this tag which is unwanted "
+                                "pre-release: {}.".format(version))
+                            continue
+                        if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                            log.info('The version {} is newer, but is too old!'.format(version))
+                            break
+                        # use full release info
+                        ret = formal_release
+                        ret['tag_name'] = tag_name
+                        ret['tag_date'] = tag_date
+                        ret['version'] = version
+                        ret['type'] = 'graphql'
+                    else:
+                        if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                            log.info('The version {} is newer, but is too old!'.format(version))
+                            break
+                        ret = {
+                            'tag_name': tag_name,
+                            'tag_date': tag_date,
+                            'version': version,
+                            'type': 'graphql'
+                        }
+        return ret
+
     # finding in tags requires paging through ALL of them, because the API does not list them
     # in order of recency, thus this is very slow
     # in: current release to be returned, output: newer release to be returned
@@ -293,7 +379,7 @@ class GitHubRepoSession(ProjectHolder):
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
-        ret = self.find_in_tags(ret, pre_ok, major)
+        ret = self.find_in_tags_via_graphql(ret, pre_ok, major)
 
         return ret
 

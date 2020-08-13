@@ -17,7 +17,7 @@ class BadProjectError(Exception):
 
 # matches os.name to known extensions that are meant *mostly* to run on it, and not other os.name-s
 osExtensions = {
-    'nt': '.exe',
+    'nt': ('.exe', '.msi', '.msi.asc', '.msi.sha256'),
     'posix': ('.tgz', '.tar.gz')
 }
 
