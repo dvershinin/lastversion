@@ -379,7 +379,11 @@ class GitHubRepoSession(ProjectHolder):
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
-        ret = self.find_in_tags_via_graphql(ret, pre_ok, major)
+        if "GITHUB_API_TOKEN" in os.environ:
+            # GraphQL requires auth
+            ret = self.find_in_tags_via_graphql(ret, pre_ok, major)
+        else:
+            ret = self.find_in_tags(ret, pre_ok, major)
 
         return ret
 

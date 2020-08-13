@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.1.8] - 2020-08-13
+### Added
+* Fixed up `--major` constraint to work more correctly
+* Use GraphQL API (GitHub) when deep searching tags is required (faster `--major`)
+* Paginate across tags when a release matching constraints is not present in the feed (GitHub) #12
+* Simple Python interface for update checks: `lastversion.has_update(repo, current_version)`
+* Various fixes
+
 ## [1.1.7] - 2020-08-07
 ### Added
 * Aggregate older tags, up to one year, for better latest release detection (feed only)

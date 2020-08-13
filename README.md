@@ -126,7 +126,7 @@ usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [--version]
                    [action] <repo or URL>
 
-Get the latest release from GitHub/GitLab/BitBucket.
+Find the latest release from GitHub/GitLab/BitBucket.
 
 positional arguments:
   action                Special action to run, e.g. download, install, test
@@ -304,7 +304,7 @@ lastversion test '1.2.x' # > False (no clear version)
 lastversion test '1.2.3-rc1' # > 1.2.3rc1
 ```
 
-### Scripting with lastversion
+### Scripting with `lastversion` in `bash`
 
 #### Check for NEW release
 
@@ -373,7 +373,28 @@ from GitHub.
 
 ## Usage in a Python module
 
-Invoke `lastversion.latest` function get version information for a repo.  
+You can use `lastversion.has_update(...)` to find whether an update for existing version of
+ something is available, simply:
+
+```python
+from lastversion import lastversion
+latest_version = lastversion.has_update(repo="mautic/mautic", current_version='1.2.3')
+if latest_version:
+    print('Newer Mautic version is available: {}'.format(str(latest_version)))
+else:
+    print('No update is available')
+```
+
+The `lastversion.has_update(...)` function accepts any URL from a repository (or its short name
+, e.g. `owner/name`) and you should pass existing/current version.
+
+It will then return either:
+
+*   The [Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) object
+*   `False` if there is no newer version than the one given
+
+Alternatively, invoke `lastversion.latest(...)` function get the latest version information
+ for a repo.  
  
 ```python
 from lastversion import lastversion
@@ -381,9 +402,9 @@ from packaging import version
 
 latest_mautic_version = lastversion.latest("mautic/mautic", output_format='version', pre_ok=True)
 
-print('Latest Mautic version: {}'.format(str(latest_mautic_version))
+print('Latest Mautic version: {}'.format(str(latest_mautic_version)))
 
-if latest_mautic_version >= version.parse('1.8.1')
+if latest_mautic_version >= version.parse('1.8.1'):
     print('It is newer')
 ```
 

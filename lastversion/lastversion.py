@@ -100,6 +100,13 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     return None
 
 
+def has_update(repo, current_version, pre_ok=False):
+    latest_version = latest(repo, output_format='version', pre_ok=pre_ok)
+    if latest_version and latest_version > Version(current_version):
+        return latest_version
+    return False
+
+
 def check_version(value):
     """
     Argument parser helper for --newer-than (-gt) option
@@ -127,8 +134,13 @@ def parse_version(tag):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Get the latest release from '
+    epilog = None
+    if "GITHUB_API_TOKEN" not in os.environ:
+        epilog = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
+                 'https://github.com/dvershinin/lastversion#tips'
+    parser = argparse.ArgumentParser(description='Find the latest release from '
                                                  'GitHub/GitLab/BitBucket.',
+                                     epilog=epilog,
                                      prog='lastversion')
     parser.add_argument('action', nargs='?', default='get', help='Special action to run, '
                                                                  'e.g. download, install, test')
