@@ -153,6 +153,7 @@ optional arguments:
   -su, --shorter-urls   A tiny bit shorter URLs produced
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
+```
 
 The `--format` will affect what kind of information from the last release and in which format will
  be displayed, e.g.:
@@ -328,6 +329,17 @@ There is more to it, if you want to make this reliable.
 See my ranting on 
 [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
 
+#### Check if there is a newer kernel for your Linux machine
+
+```bash
+LATEST_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
+if [[ $? -eq 0 ]]; then
+  echo "I better update my kernel now, because ${LATEST_KERNEL} is there"
+else 
+  echo "My kernel is latest and greatest."
+fi 
+```  
+
 #### Exit Status codes
 
 Exit status codes are the usual means of communicating a command's execution success or failure. 
@@ -417,16 +429,5 @@ The `lastversion.latest` function accepts 3 arguments
 *   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
 *   `format`, which accepts same values as when you run `lastversion` interactively
 *   `pre_ok`, boolean for whether to include pre-releases as potential versions
-
-### Check if there is a newer kernel for your Linux machine
-
-```bash
-LATEST_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
-if [[ $? -eq 0 ]]; then
-  echo "I better update my kernel now, because ${LATEST_KERNEL} is there"
-else 
-  echo "My kernel is latest and greatest."
-fi 
-```  
 
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)
