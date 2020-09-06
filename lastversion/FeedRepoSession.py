@@ -19,7 +19,6 @@ class FeedRepoSession(ProjectHolder):
     # https://alex.miller.im/posts/python-3-feedfinder-rss-detection-from-url/
     def find_feed(self, site):
         from six.moves.urllib.parse import urlparse
-        import feedparser
         from bs4 import BeautifulSoup as bs4
         raw = self.get(site).text
         result = []
