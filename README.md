@@ -12,30 +12,19 @@ A tiny command-line utility that helps to answer a simple question:
 
 ... and, optionally, download/install it.
 
-Supported project locations:
+`lastversion` allows finding well-formatted latest release version of a project from these supported
+ locations:
 
-*   GitHub
+*   [GitHub](https://github.com/dvershinin/lastversion/wiki/GitHub-specifics)
 *   GitLab
 *   BitBucket
 *   Mercurial
 *   SourceForge
+*   Arbitrary software sites which publish release in RSS/ATOM feeds
 
-GitHub has an API endpoint 
-[here](https://developer.github.com/v3/repos/releases/#get-the-latest-release). 
-But if you're here, then you know how it sucks:
+## Why you need `lastversion`
 
-A release would show up in this API response *only* if it was filed formally using the GitHub 
-release interface.
-Sometimes project authors use formal releases, and next thing you know, for the next release 
-they won't.
-There is no consistency in human beings.
-
-OK, you think you could use another API endpoint to 
-[list tags](https://developer.github.com/v3/repos/#list-tags).
-Tags *usually* represent a release, however, the API does not sort them chronologically. 
-Moreover, you might get something like "latest-stable" for a tag name's value.
-
-In general, quite many project authors complicate things further by:
+In general, quite many project authors complicate finding the latest version by:
 
 *   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forgetting to
     mark it as a pre-release
@@ -45,10 +34,12 @@ In general, quite many project authors complicate things further by:
     consistent about it myself :)
 *   Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
+There is no consistency in human beings.
+
 To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) 
 on the command line, you can use `lastversion`.
 
-Its primary use is for build systems - whenever you want to watch specific repositories for released
+Its primary use is for build systems - whenever you want to watch specific projects for released
 versions to build packages automatically.
 Or otherwise require getting the latest version in your automation scripts.
 
@@ -56,7 +47,7 @@ Or otherwise require getting the latest version in your automation scripts.
 
 `lastversion` does a little bit of AI to detect if releasers mistakenly filed a beta version as a 
 stable release.
-It uses both of the API endpoints and incorporates logic for cleaning up human inconsistency from 
+It incorporates logic for cleaning up human inconsistency from 
 version information.
 
 ## Synopsis
@@ -64,10 +55,15 @@ version information.
 ```bash
 lastversion apache/incubator-pagespeed-ngx 
 #> 1.13.35.2
+
 lastversion apache/incubator-pagespeed-ngx -d 
 #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
+
 lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz 
 #> downloads with chosen filename
+
+lastversion https://transmissionbt.com/
+#> 3.0
 ```
 
 ## Installation for CentOS/RHEL 7, 8 or Amazon Linux 2
@@ -122,8 +118,8 @@ For more options to control output or behavior, see `--help` output:
 ```
 usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [--format {version,assets,source,json,tag}] [--assets]
-                   [--source] [-gt VER] [-b MAJOR] [--filter REGEX] [-su] [-y]
-                   [--version]
+                   [--source] [-gt VER] [-b MAJOR] [--only ONLY]
+                   [--filter REGEX] [-su] [-y] [--version]
                    [action] <repo or URL>
 
 Find the latest release from GitHub/GitLab/BitBucket.
@@ -146,13 +142,16 @@ optional arguments:
   -gt VER, --newer-than VER
                         Output only if last version is newer than given
                         version
-  -b MAJOR, --major MAJOR
+  -b MAJOR, --major MAJOR, --branch MAJOR
                         Only consider releases of a specific major version,
                         e.g. 2.1.x
+  --only ONLY           Only consider releases containing this text. Useful
+                        for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
   -su, --shorter-urls   A tiny bit shorter URLs produced
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
+
 ```
 
 The `--format` will affect what kind of information from the last release and in which format will

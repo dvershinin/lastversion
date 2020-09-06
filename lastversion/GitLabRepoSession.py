@@ -1,9 +1,11 @@
-import logging as log  # for verbose output
+import logging
 import os
 
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
+
+log = logging.getLogger(__name__)
 
 
 class GitLabRepoSession(ProjectHolder):
@@ -37,7 +39,7 @@ class GitLabRepoSession(ProjectHolder):
                 version = self.sanitize_version(tag, pre_ok, major)
                 if not version:
                     continue
-                if not ret or version > ret['version']:
+                if not ret or ret and version > ret['version']:
                     log.info("Setting version as current selection: {}.".format(version))
                     ret = t
                     ret['tag_name'] = tag

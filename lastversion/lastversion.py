@@ -6,11 +6,10 @@ License: BSD, see LICENSE for more details.
 
 import argparse
 import json
-import logging as log  # for verbose output
+import logging
 import os
 import re
 import sys
-
 import yaml
 from appdirs import user_cache_dir
 from cachecontrol import CacheControl
@@ -23,12 +22,13 @@ from .HolderFactory import HolderFactory
 from .__about__ import __version__
 from .utils import download_file, ApiCredentialsError, BadProjectError, rpm_installed_version
 
+log = logging.getLogger(__name__)
+
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
-           short_urls=False, major=None):
+           short_urls=False, major=None, only=None):
     cache_dir = user_cache_dir("lastversion")
     log.info("Using cache directory: {}.".format(cache_dir))
-
     repo_data = {}
     if repo.endswith('.yml'):
         with open(repo) as fpi:
@@ -43,7 +43,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
                 repo_data['name'] = name
 
     # find the right hosting for this repo
-    project_holder = HolderFactory.get_instance_for_repo(repo)
+    project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
 
     # we are completely "offline" for 1 hour, not even making conditional requests
     # heuristic=ExpiresAfter(hours=1)   <- make configurable
@@ -169,9 +169,12 @@ def main():
                         help='Returns only source URL for last release')
     parser.add_argument('-gt', '--newer-than', type=check_version, metavar='VER',
                         help="Output only if last version is newer than given version")
-    parser.add_argument('-b', '--major', metavar='MAJOR',
+    parser.add_argument('-b', '--major', '--branch', metavar='MAJOR',
                         help="Only consider releases of a specific major "
                              "version, e.g. 2.1.x")
+    parser.add_argument('--only', metavar='ONLY', help="Only consider releases containing this "
+                                                       "text. Useful for repos with multiple "
+                                                       "projects inside")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
                                                           "expression")
     parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
@@ -188,11 +191,21 @@ def main():
     if args.repo == "self":
         args.repo = "dvershinin/lastversion"
 
+    # instead of using root logger, we use
+    logger = logging.getLogger('lastversion')
+    # create console handler and set level to debug
+    ch = logging.StreamHandler()
+    # create formatter
+    fmt = '%(name)s - %(levelname)s - %(message)s' if args.verbose else '%(levelname)s: %(message)s'
+    formatter = logging.Formatter(fmt)
+    # add formatter to ch
+    ch.setFormatter(formatter)
+    # add ch to logger
+    logger.addHandler(ch)
+
     if args.verbose:
-        log.basicConfig(format="%(levelname)s: %(message)s", level=log.DEBUG)
+        logger.setLevel(logging.DEBUG)
         log.info("Verbose output.")
-    else:
-        log.basicConfig(format="%(levelname)s: %(message)s")
 
     if args.assets:
         args.format = 'assets'
@@ -227,7 +240,7 @@ def main():
     # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
-                     args.shorter_urls, args.major)
+                     args.shorter_urls, args.major, args.only)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
         sys.exit(4)

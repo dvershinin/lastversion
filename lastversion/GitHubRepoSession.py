@@ -1,4 +1,4 @@
-import logging as log  # for verbose output
+import logging
 import os
 import re
 import time
@@ -9,6 +9,8 @@ from datetime import timedelta
 
 from .ProjectHolder import ProjectHolder
 from .utils import asset_does_not_belong_to_machine, ApiCredentialsError, BadProjectError
+
+log = logging.getLogger(__name__)
 
 
 class GitHubRepoSession(ProjectHolder):
@@ -42,6 +44,8 @@ class GitHubRepoSession(ProjectHolder):
         if '/' not in repo:
             r = self.get(
                 '{}/search/repositories?q={}+in:name'.format(self.api_base, repo))
+            if r.status_code != 200:
+                return
             data = r.json()
             if not data['items']:
                 raise BadProjectError(

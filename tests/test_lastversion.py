@@ -264,3 +264,27 @@ def test_patch_release_for_older_is_not_last():
     v = latest(repo)
 
     assert v == version.parse('2.4.0')
+
+
+def test_with_search():
+    repo = 'telize'
+
+    v = latest(repo)
+
+    assert v == version.parse('2.0.0')
+
+
+def test_homepage_github_link_discovery():
+    repo = 'https://transmissionbt.com/'
+
+    v = latest(repo)
+
+    assert v == version.parse('3.0')
+
+
+def test_homepage_feed_discovery():
+    repo = 'https://filezilla-project.org/'
+
+    v = latest(repo, only='FileZilla Client')
+
+    assert v >= version.parse('3.50.0')

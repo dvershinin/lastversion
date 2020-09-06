@@ -1,4 +1,4 @@
-import logging as log
+import logging
 import re
 
 import requests
@@ -6,11 +6,13 @@ import requests
 # projects (usually a bunch). often this is a github-like website, so we subclass session
 # but this also maybe something special, which either way can be used as a source of version
 # information for a project based on its URL or name (see LocalVersionSession)
-# it is instantantiated with a particular project in mind/set, but also has some methods for
+# it is instantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
 from packaging.version import InvalidVersion, Version
 
 from .__about__ import __version__
+
+log = logging.getLogger(__name__)
 
 
 class ProjectHolder(requests.Session):
@@ -31,11 +33,28 @@ class ProjectHolder(requests.Session):
     def __init__(self):
         super(ProjectHolder, self).__init__()
         self.headers.update({'User-Agent': 'lastversion/{}'.format(__version__)})
-        log.info('Using {} project holder'.format(type(self).__name__))
+        log.info('Created instance of {}'.format(type(self).__name__))
         self.branches = None
+        self.only = None
 
     def set_branches(self, branches):
         self.branches = branches
+
+    def set_only(self, only):
+        log.info('Only considering tags with "{}"'.format(only))
+        self.only = only
+
+    @classmethod
+    def get_host_repo_for_link(cls, repo):
+        hostname = None
+        # return repo modified to result of extraction
+        if repo.startswith(('https://', 'http://')):
+            # parse hostname for passing to whatever holder selected
+            url_parts = repo.split('/')
+            hostname = url_parts[2]
+            offset = 3 + cls.REPO_URL_PROJECT_OFFSET
+            repo = "/".join(url_parts[offset:offset + cls.REPO_URL_PROJECT_COMPONENTS])
+        return hostname, repo
 
     @classmethod
     def is_official_for_repo(cls, repo):

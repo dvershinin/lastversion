@@ -1,8 +1,10 @@
 # special case, private use now
 # nginx version is taken as version of stable (written by rpm check script)
 # to /usr/local/share/builder/nginx-stable.ver
-import logging as log  # for verbose output
+import logging
 from .ProjectHolder import ProjectHolder
+
+log = logging.getLogger(__name__)
 
 
 class LocalVersionSession(ProjectHolder):

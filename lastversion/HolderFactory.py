@@ -1,10 +1,16 @@
-import logging as log  # for verbose output
+import logging
+
+from .utils import BadProjectError
+
 from .BitBucketRepoSession import BitBucketRepoSession
 from .GitHubRepoSession import GitHubRepoSession
 from .GitLabRepoSession import GitLabRepoSession
 from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
 from .SourceForgeRepoSession import SourceForgeRepoSession
+from .FeedRepoSession import FeedRepoSession
+
+log = logging.getLogger(__name__)
 
 
 class HolderFactory:
@@ -14,13 +20,28 @@ class HolderFactory:
         'bitbucket': BitBucketRepoSession,
         'hg': MercurialRepoSession,
         'sf': SourceForgeRepoSession,
+        'website-feed': FeedRepoSession,
         'local': LocalVersionSession
     }
 
     @staticmethod
-    # go through subclasses in order to find the one that is hodling a given project
+    def guess_from_homepage(repo, hostname):
+        # repo auto-discovery failed for detected/default provider
+        # now we simply try website provider based on the hostname/RSS feeds in HTML or GitHub links
+        holder = FeedRepoSession(repo, hostname)
+        if not hasattr(holder, 'repo'):
+            # re-use soup from feed holder object
+            log.info('Have not found any RSS feed for the website {}'.format(hostname))
+            github_link = holder.home_soup.select_one("a[href*='github.com']")
+            if github_link:
+                hostname, repo = GitHubRepoSession.get_host_repo_for_link(github_link['href'])
+                holder = GitHubRepoSession(repo, hostname)
+        return holder
+
+    @staticmethod
+    # go through subclasses in order to find the one that is holding a given project
     # repo is either complete URL or a name allowing to identify a single project
-    def get_instance_for_repo(repo):
+    def get_instance_for_repo(repo, only=None):
         holder_class = HolderFactory.HOLDERS['github']
         hostname = None
         known_repo = None
@@ -28,7 +49,7 @@ class HolderFactory:
             known_repo = sc.is_official_for_repo(repo)
             if known_repo:
                 holder_class = sc
-                log.info('Using {} adapter'.format(k))
+                log.info('Trying {} adapter'.format(k))
                 break
             # TODO now easy multiple default hostnames per holder
             hostname = sc.get_matching_hostname(repo)
@@ -37,16 +58,23 @@ class HolderFactory:
                 break
         if known_repo:
             repo = known_repo['repo']
-            # known repo tells us hosted domain of e.g. mercurical web
+            # known repo tells us hosted domain of e.g. mercurial web
             if 'hostname' in known_repo:
                 hostname = known_repo['hostname']
-        elif repo.startswith(('https://', 'http://')):
-            # parse hostname for passing to whatever holder selected
-            url_parts = repo.split('/')
-            hostname = url_parts[2]
-            offset = 3 + holder_class.REPO_URL_PROJECT_OFFSET
-            repo = "/".join(url_parts[offset:offset + holder_class.REPO_URL_PROJECT_COMPONENTS])
+        else:
+            hostname, repo = holder_class.get_host_repo_for_link(repo)
+
         holder = holder_class(repo, hostname)
+        if not hasattr(holder, 'repo') and hostname:
+            holder = HolderFactory.guess_from_homepage(repo, hostname)
+            if not hasattr(holder, 'repo'):
+                raise BadProjectError(
+                    'No project found. Could not guess a repo from homepage'
+                )
         if known_repo and 'branches' in known_repo:
             holder.set_branches(known_repo['branches'])
+        if known_repo and 'only' in known_repo:
+            holder.set_only(known_repo['only'])
+        if only:
+            holder.set_only(only)
         return holder

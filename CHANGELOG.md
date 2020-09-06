@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2020-09-06
+### Added
+* New switch `--only` allows filtering projects in repos with multiple actual projects
+* Ability to sniff version from a software website which publishes releases in RSS/ATOM feeds #23
+* Ability to sniff version by discovering GitHub repository links on a software website #23
+### Fixed
+* No longer messing with root logger, playing safe as a library (opt-in behavior when used as
+ module)
+
 ## [1.1.8] - 2020-08-13
 ### Added
 * Fixed up `--major` constraint to work more correctly
