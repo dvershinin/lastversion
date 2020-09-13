@@ -19,7 +19,7 @@ _version_re = re.compile(r"__version__\s=\s'(.*)'")
 install_requires = ['requests>=2.6.1', 'packaging', 'cachecontrol', 'lockfile', 'appdirs',
                     'feedparser <= 5.2.1; python_version < "3.0.0"',
                     'feedparser; python_version >= "3.0.0"',
-                    'python-dateutil', 'feedparser<=5.2.1', 'PyYAML', 'tqdm',
+                    'python-dateutil', 'PyYAML', 'tqdm',
                     'six', 'beautifulsoup4']
 tests_requires = ["pytest>=4.4.0", "flake8", "pytest-xdist"]
 
