@@ -21,7 +21,14 @@ install_requires = ['requests>=2.6.1', 'packaging', 'cachecontrol', 'lockfile', 
                     'feedparser; python_version >= "3.0.0"',
                     'python-dateutil', 'PyYAML', 'tqdm',
                     'six', 'beautifulsoup4']
-tests_requires = ["pytest>=4.4.0", "flake8", "pytest-xdist"]
+tests_requires = [
+    "pytest>=4.4.0",
+    "flake8",
+    "pytest-xdist",
+    # somhow getting this issue only in Travis, anyway this should fix:
+    # https://github.com/pytest-dev/pytest/issues/6887#issuecomment-600979770
+    "pytest-rerunfailures==9.0"
+]
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
