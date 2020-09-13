@@ -15,8 +15,9 @@ _version_re = re.compile(r"__version__\s=\s'(.*)'")
 
 # require at least requests==2.6.1 due to cachecontrol's bug:
 # https://github.com/ionrock/cachecontrol/issues/137
+# feedparser 6 dropped Python 2 support
 install_requires = ['requests>=2.6.1', 'packaging', 'cachecontrol', 'lockfile', 'appdirs',
-                    'python-dateutil', 'feedparser', 'PyYAML', 'tqdm',
+                    'python-dateutil', 'feedparser<=5.2.1', 'PyYAML', 'tqdm',
                     'six', 'beautifulsoup4']
 tests_requires = ["pytest>=4.4.0", "flake8", "pytest-xdist"]
 
