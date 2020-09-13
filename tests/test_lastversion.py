@@ -119,7 +119,7 @@ def test_naxsi():
 
     output = latest(repo)
 
-    assert output <= version.parse("0.56")
+    assert output <= version.parse("1.0")
 
 
 def test_brotli():
@@ -271,7 +271,7 @@ def test_with_search():
 
     v = latest(repo)
 
-    assert v == version.parse('2.0.0')
+    assert v >= version.parse('3.0.0')
 
 
 def test_homepage_github_link_discovery():

@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 
 import requests
@@ -29,6 +30,12 @@ class ProjectHolder(requests.Session):
     REPO_URL_PROJECT_COMPONENTS = 2
     # if URI starts with project name, 0. Otherwise skip through this many URI dirs
     REPO_URL_PROJECT_OFFSET = 0
+    RELEASE_URL_FORMAT = None
+    SHORT_RELEASE_URL_FORMAT = None
+
+    def set_repo(self, repo):
+        self.repo = repo
+        self.name = repo.split('/')[-1]
 
     def __init__(self):
         super(ProjectHolder, self).__init__()
@@ -36,6 +43,16 @@ class ProjectHolder(requests.Session):
         log.info('Created instance of {}'.format(type(self).__name__))
         self.branches = None
         self.only = None
+        self.hostname = None
+        # identifies project on a given hostname
+        self.repo = None
+        # short name for "repo", useful in URLs
+        self.name = None
+        # in some case we do not specify repo, but feed is discovered, no repo is given then
+        self.feed_url = None
+
+    def is_valid(self):
+        return self.feed_url or self.name
 
     def set_branches(self, branches):
         self.branches = branches
@@ -153,3 +170,24 @@ class ProjectHolder(requests.Session):
                 version, major))
             res = False
         return res
+
+    def _type(self):
+        return self.__class__.__name__
+
+    def release_download_url(self, release, shorter=False):
+        if not self.RELEASE_URL_FORMAT:
+            raise NotImplementedError(
+                'Getting release URL for {} is not implemented'.format(self._type()))
+        ext = 'zip' if os.name == 'nt' else 'tar.gz'
+
+        fmt = self.SHORT_RELEASE_URL_FORMAT if shorter and self.SHORT_RELEASE_URL_FORMAT else \
+            self.RELEASE_URL_FORMAT
+
+        return fmt.format(
+            hostname=self.hostname,
+            repo=self.repo,
+            name=self.name,
+            tag=release['tag_name'],
+            ext=ext,
+            version=release['version']
+        )

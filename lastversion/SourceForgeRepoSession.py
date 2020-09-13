@@ -14,7 +14,7 @@ class SourceForgeRepoSession(ProjectHolder):
     def __init__(self, repo, hostname):
         super(SourceForgeRepoSession, self).__init__()
         self.hostname = hostname
-        self.repo = repo
+        self.set_repo(repo)
 
     def get_latest(self, pre_ok=False, major=None):
         ret = None

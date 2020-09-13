@@ -19,10 +19,26 @@ class GitHubRepoSession(ProjectHolder):
 
     # one-word aliases or simply known popular repos to skip using search API
     KNOWN_REPOS_BY_NAME = {
-        'php': {'repo': 'php/php-src'},
+        'php': {
+            'repo': 'php/php-src',
+            # get URL from official website because it is a "prepared" source
+            'release_url_format': "https://www.php.net/distributions/php-{version}.tar.gz"
+        },
         'linux': {'repo': 'torvalds/linux'},
         'kernel': {'repo': 'torvalds/linux'},
     }
+
+    """ The following format will benefit from:
+    1) not using API, so is not subject to its rate limits
+    2) likely has been accessed by someone in CDN and thus faster
+    3) provides more or less unique filenames once the stuff is downloaded
+    See https://fedoraproject.org/wiki/Packaging:SourceURL#Git_Tags
+    We use variation of this: it does not need a parsed version (thus works for --pre better)
+    and it is not broken on fancy release tags like v1.2.3-stable
+    https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
+    """
+    RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}/{name}-{tag}.{ext}"
+    SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
@@ -51,9 +67,10 @@ class GitHubRepoSession(ProjectHolder):
                 raise BadProjectError(
                     'No project found on GitHub for search query: {}'.format(repo)
                 )
-            self.repo = data['items'][0]['full_name']
+            self.set_repo(data['items'][0]['full_name'])
+            log.info('Using repo {} obtained from search API'.format(self.repo))
         else:
-            self.repo = repo
+            self.set_repo(repo)
         self.rate_limited_count = 0
 
     def get_rate_limit_url(self):
@@ -307,6 +324,7 @@ class GitHubRepoSession(ProjectHolder):
                 # grab formal release via APi to check for pre-release mark
                 r = self.repo_query('/releases/tags/{}'.format(tag_name))
                 if r.status_code == 200:
+                    log.info('Got formal release for tag {}'.format(tag_name))
                     formal_release = r.json()
                     if not pre_ok and formal_release['prerelease']:
                         log.info(
@@ -324,6 +342,7 @@ class GitHubRepoSession(ProjectHolder):
                     ret['version'] = version
                     ret['type'] = 'feed'
                 else:
+                    log.info('No formal release for tag {}'.format(tag_name))
                     tag_date = parser.parse(tag['updated'])
                     if ret and tag_date + timedelta(days=365) < ret['tag_date']:
                         log.info('The version {} is newer, but is too old!'.format(version))
@@ -390,24 +409,6 @@ class GitHubRepoSession(ProjectHolder):
             ret = self.find_in_tags(ret, pre_ok, major)
 
         return ret
-
-    def release_download_url(self, release, shorter=False):
-        """ The following format will benefit from:
-        1) not using API, so is not subject to its rate limits
-        2) likely has been accessed by someone in CDN and thus faster
-        3) provides more or less unique filenames once the stuff is downloaded
-        See https://fedoraproject.org/wiki/Packaging:SourceURL#Git_Tags
-        We use variation of this: it does not need a parsed version (thus works for --pre better)
-        and it is not broken on fancy release tags like v1.2.3-stable
-        https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
-        """
-        ext = 'zip' if os.name == 'nt' else 'tar.gz'
-        tag = release['tag_name']
-        url_format = 'https://{}/{}/archive/{}/{}-{}.{}'
-        if shorter:
-            url_format = 'https://{}/{}/archive/{}.{}'
-            return url_format.format(self.hostname, self.repo, tag, ext)
-        return url_format.format(self.hostname, self.repo, tag, self.repo.split('/')[1], tag, ext)
 
     def get_assets(self, release, short_urls, assets_filter=None):
         urls = []

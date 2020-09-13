@@ -21,7 +21,7 @@ class GitLabRepoSession(ProjectHolder):
             log.info('Using Personal Access token.')
             self.headers.update({'Private-Token': "{}".format(self.pa_token)})
         self.api_base = 'https://{}/api/v4'.format(self.hostname)
-        self.repo = repo
+        self.set_repo(repo)
         self.repo_id = self.repo.replace('/', '%2F')
 
     def repo_query(self, uri):

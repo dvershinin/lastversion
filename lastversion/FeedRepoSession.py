@@ -58,7 +58,7 @@ class FeedRepoSession(ProjectHolder):
         if not feeds:
             return
         self.hostname = hostname
-        self.repo = repo
+        self.set_repo(repo)
         log.info('Using feed URL: {}'.format(feeds[0]))
         self.feed_url = feeds[0]
 

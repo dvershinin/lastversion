@@ -29,7 +29,7 @@ class HolderFactory:
         # repo auto-discovery failed for detected/default provider
         # now we simply try website provider based on the hostname/RSS feeds in HTML or GitHub links
         holder = FeedRepoSession(repo, hostname)
-        if not hasattr(holder, 'repo'):
+        if not holder.is_valid():
             # re-use soup from feed holder object
             log.info('Have not found any RSS feed for the website {}'.format(hostname))
             github_link = holder.home_soup.select_one("a[href*='github.com']")
@@ -65,9 +65,9 @@ class HolderFactory:
             hostname, repo = holder_class.get_host_repo_for_link(repo)
 
         holder = holder_class(repo, hostname)
-        if not hasattr(holder, 'repo') and hostname:
+        if not holder.is_valid() and hostname:
             holder = HolderFactory.guess_from_homepage(repo, hostname)
-            if not hasattr(holder, 'repo'):
+            if not holder.is_valid():
                 raise BadProjectError(
                     'No project found. Could not guess a repo from homepage'
                 )
@@ -77,4 +77,6 @@ class HolderFactory:
             holder.set_only(known_repo['only'])
         if only:
             holder.set_only(only)
+        if known_repo and 'release_url_format' in known_repo:
+            holder.RELEASE_URL_FORMAT = known_repo['release_url_format']
         return holder
