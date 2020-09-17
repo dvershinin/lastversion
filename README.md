@@ -68,15 +68,6 @@ lastversion https://transmissionbt.com/
 
 ## Installation for CentOS/RHEL 7, 8 or Amazon Linux 2
 
-In CentOS 8, you should enable PowerTools repo, first:
-
-```bash
-sudo dnf -y install dnf-plugins-core
-sudo dnf config-manager --enable PowerTools
-```
-
-Then:
-
 ```bash
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
 sudo yum install lastversion
