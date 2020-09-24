@@ -250,6 +250,19 @@ lastversion php/php-src --major 7.2
 
 This will give you current stable version of PHP 7.2.x, e.g. `7.2.28`.
 
+Branch selector is easy to be specified after semicolon, and together with the search API,
+a clean invocation for the same would be:
+
+```bash
+lastversion php:7.2
+```
+
+The branch selector can also be used to get specific release details, e.g.:
+
+```bash
+lastversion php:7.2.33 --assets
+```
+
 #### Special use case: NGINX stable vs mainline branch version
 
 ```bash

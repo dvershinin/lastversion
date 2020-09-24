@@ -105,6 +105,8 @@ class ProjectHolder(requests.Session):
             log.info('{} is under the desired major {}'.format(
                 version, major))
             return True
+        elif str(version) == major:
+            return True
         return False
 
     def sanitize_version(self, version, pre_ok=False, major=None):

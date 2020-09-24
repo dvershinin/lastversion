@@ -191,6 +191,10 @@ def main():
     if args.repo == "self":
         args.repo = "dvershinin/lastversion"
 
+    # "expand" repo:1.2 as repo --branch 1.2
+    if ':' in args.repo:
+        args.repo, args.major = args.repo.split(':')
+
     # instead of using root logger, we use
     logger = logging.getLogger('lastversion')
     # create console handler and set level to debug
