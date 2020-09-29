@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.2] - 2020-09-29
+### Fixed
+* `--format json` and `--format assets` work for Non-GitHub projects 
+
 ## [1.2.1] - 2020-09-29
 ### Added
 * `lastversion repo:branch` syntax, e.g. `lastversion php:7.2` or `lastversion nginx:mainline`
