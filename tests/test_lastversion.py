@@ -119,7 +119,7 @@ def test_naxsi():
 
     output = latest(repo)
 
-    assert output <= version.parse("1.0")
+    assert output >= version.parse("1.1")
 
 
 def test_brotli():
