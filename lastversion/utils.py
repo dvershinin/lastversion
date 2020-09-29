@@ -80,6 +80,21 @@ def asset_does_not_belong_to_machine(asset):
     return False
 
 
+# monkey patching older requests library's response class so it can use context manager
+# https://github.com/psf/requests/issues/4136
+def requests_response_patched_enter(self):
+    return self
+
+
+def requests_response_patched_exit(self, *args):
+    self.close()
+
+
+if not hasattr(requests.Response, '__exit__'):
+    requests.Response.__enter__ = requests_response_patched_enter
+    requests.Response.__exit__ = requests_response_patched_exit
+
+
 def download_file(url, local_filename=None):
     if local_filename is None:
         local_filename = url.split('/')[-1]
