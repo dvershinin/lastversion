@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2020-09-29
+### Added
+* `lastversion repo:branch` syntax, e.g. `lastversion php:7.2` or `lastversion nginx:mainline`
+### Fixed
+* require feedparser version that works with Python 2
+
 ## [1.2.0] - 2020-09-06
 ### Added
 * New switch `--only` allows filtering projects in repos with multiple actual projects
