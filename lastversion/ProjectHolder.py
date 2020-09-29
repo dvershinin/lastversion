@@ -9,6 +9,7 @@ import requests
 # information for a project based on its URL or name (see LocalVersionSession)
 # it is instantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
+from .utils import asset_does_not_belong_to_machine
 from packaging.version import InvalidVersion, Version
 
 from .__about__ import __version__
@@ -193,3 +194,20 @@ class ProjectHolder(requests.Session):
             ext=ext,
             version=release['version']
         )
+
+    def get_assets(self, release, short_urls, assets_filter=None):
+        urls = []
+        if 'assets' in release and release['assets']:
+            for asset in release['assets']:
+                if assets_filter:
+                    if not re.search(assets_filter, asset['name']):
+                        continue
+                else:
+                    if asset_does_not_belong_to_machine(asset['name']):
+                        continue
+                urls.append(asset['browser_download_url'])
+        else:
+            download_url = self.release_download_url(release, short_urls)
+            if not assets_filter or re.search(assets_filter, download_url):
+                urls.append(download_url)
+        return urls

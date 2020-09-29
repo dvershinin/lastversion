@@ -1,14 +1,13 @@
 import logging
 import os
-import re
 import time
+from datetime import timedelta
 
 import feedparser
 from dateutil import parser
-from datetime import timedelta
 
 from .ProjectHolder import ProjectHolder
-from .utils import asset_does_not_belong_to_machine, ApiCredentialsError, BadProjectError
+from .utils import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
 
@@ -409,20 +408,3 @@ class GitHubRepoSession(ProjectHolder):
             ret = self.find_in_tags(ret, pre_ok, major)
 
         return ret
-
-    def get_assets(self, release, short_urls, assets_filter=None):
-        urls = []
-        if 'assets' in release and release['assets']:
-            for asset in release['assets']:
-                if assets_filter:
-                    if not re.search(assets_filter, asset['name']):
-                        continue
-                else:
-                    if asset_does_not_belong_to_machine(asset['name']):
-                        continue
-                urls.append(asset['browser_download_url'])
-        else:
-            download_url = self.release_download_url(release, short_urls)
-            if not assets_filter or re.search(assets_filter, download_url):
-                urls.append(download_url)
-        return urls
