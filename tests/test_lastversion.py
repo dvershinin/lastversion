@@ -301,7 +301,7 @@ def test_main_url():
     )
     out, err = process.communicate()
 
-    assert version.parse(out) >= version.parse("1.13.35.2")
+    assert version.parse(out.decode('utf-8').strip()) >= version.parse("1.13.35.2")
 
 
 def test_main_assets():
@@ -314,4 +314,4 @@ def test_main_assets():
     )
     out, err = process.communicate()
 
-    assert "update.zip" in out
+    assert "update.zip" in str(out)
