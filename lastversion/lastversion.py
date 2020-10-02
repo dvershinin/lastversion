@@ -192,8 +192,13 @@ def main():
         args.repo = "dvershinin/lastversion"
 
     # "expand" repo:1.2 as repo --branch 1.2
-    if ':' in args.repo:
-        args.repo, args.major = args.repo.split(':')
+    if ':' in args.repo and \
+            not (args.repo.startswith(('https://', 'http://')) and args.repo.count(':') == 1):
+        # right split ':' once only to preserve it in protocol of URLs
+        # https://github.com/repo/owner:2.1
+        repo_args = args.repo.rsplit(':', 1)
+        args.repo = repo_args[0]
+        args.major = repo_args[1]
 
     # instead of using root logger, we use
     logger = logging.getLogger('lastversion')

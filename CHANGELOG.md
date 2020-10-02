@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.3] - 2020-10-02
+### Fixed
+* Fixed `lastversion URL` introduced by regression from 1.2.1
+
 ## [1.2.2] - 2020-09-29
 ### Fixed
 * `--format json` and `--format assets` work for Non-GitHub projects 
