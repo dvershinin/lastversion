@@ -1,5 +1,6 @@
 import os
 
+import subprocess
 from packaging import version
 
 from lastversion.ProjectHolder import ProjectHolder
@@ -288,3 +289,29 @@ def test_homepage_feed_discovery():
     v = latest(repo, only='FileZilla Client')
 
     assert v >= version.parse('3.50.0')
+
+
+def test_main_url():
+    repo = 'https://github.com/apache/incubator-pagespeed-ngx'
+
+    process = subprocess.Popen(
+        ['lastversion', repo],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    out, err = process.communicate()
+
+    assert version.parse(out) >= version.parse("1.13.35.2")
+
+
+def test_main_assets():
+    repo = 'mautic/mautic'
+
+    process = subprocess.Popen(
+        ['lastversion', repo, '--format', 'assets'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    out, err = process.communicate()
+
+    assert "update.zip" in out
