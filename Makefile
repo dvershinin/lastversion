@@ -8,4 +8,8 @@ publish: clean
 clean:
 	rm -rf *.egg-info *.egg dist build .pytest_cache
 
+onefile:
+	pyinstaller --onefile cli.py
+	mv dist/cli dist/lastversion
+
 .PHONY: test publish clean
