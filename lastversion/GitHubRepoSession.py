@@ -1,9 +1,11 @@
+import json
 import logging
 import os
 import time
 from datetime import timedelta
 
 import feedparser
+from appdirs import user_cache_dir
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
@@ -39,6 +41,49 @@ class GitHubRepoSession(ProjectHolder):
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}/{name}-{tag}.{ext}"
     SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
+    def find_repo_by_name_only(self, repo):
+        if repo.startswith(('https://', 'http://')):
+            return None
+        cache_repo_names_file = "{}/repos.json".format(user_cache_dir("lastversion"))
+        try:
+            with open(cache_repo_names_file, 'r') as reader:
+                cache = json.load(reader)
+        except (IOError, ValueError):
+            cache = {}
+        try:
+            if repo in cache and time.time() - cache[repo]['updated_at'] < 3600 * 24 * 30:
+                return cache[repo]['repo']
+        except TypeError:
+            pass
+        r = self.get(
+            '{}/search/repositories?q={}+in:name'.format(self.api_base, repo))
+        if r.status_code == 404:
+            # when not found, skip using this holder in the factory by not setting self.repo
+            return None
+        if r.status_code != 200:
+            raise BadProjectError(
+                'Error while identifying full repository on GitHub for search query: {}'.format(
+                    repo
+                )
+            )
+        data = r.json()
+        if not data['items']:
+            raise BadProjectError(
+                'No project found on GitHub for search query: {}'.format(repo)
+            )
+        cache[repo] = {
+            'repo': data['items'][0]['full_name'],
+            'updated_at': int(time.time())
+        }
+        try:
+            with open(cache_repo_names_file, 'w') as writer:
+                writer.write(
+                    json.dumps(cache)
+                )
+        except (IOError, ValueError):
+            pass
+        return data['items'][0]['full_name']
+
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
         self.api_token = os.getenv("GITHUB_API_TOKEN")
@@ -57,16 +102,10 @@ class GitHubRepoSession(ProjectHolder):
         else:
             self.api_base = 'https://api.{}'.format(self.DEFAULT_HOSTNAME)
         if '/' not in repo:
-            r = self.get(
-                '{}/search/repositories?q={}+in:name'.format(self.api_base, repo))
-            if r.status_code != 200:
+            repo = self.find_repo_by_name_only(repo)
+            if not repo:
                 return
-            data = r.json()
-            if not data['items']:
-                raise BadProjectError(
-                    'No project found on GitHub for search query: {}'.format(repo)
-                )
-            self.set_repo(data['items'][0]['full_name'])
+            self.set_repo(repo)
             log.info('Using repo {} obtained from search API'.format(self.repo))
         else:
             self.set_repo(repo)
