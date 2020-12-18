@@ -16,6 +16,7 @@ from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
 # from cachecontrol.heuristics import ExpiresAfter
 from packaging.version import Version, InvalidVersion
+from .GitHubRepoSession import TOKEN_PRO_TIP
 
 from .ProjectHolder import ProjectHolder
 from .HolderFactory import HolderFactory
@@ -136,8 +137,7 @@ def parse_version(tag):
 def main():
     epilog = None
     if "GITHUB_API_TOKEN" not in os.environ:
-        epilog = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
-                 'https://github.com/dvershinin/lastversion#tips'
+        epilog = TOKEN_PRO_TIP
     parser = argparse.ArgumentParser(description='Find the latest release from '
                                                  'GitHub/GitLab/BitBucket.',
                                      epilog=epilog,
@@ -252,6 +252,8 @@ def main():
                      args.shorter_urls, args.major, args.only)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
+        if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ:
+            sys.stderr.write(TOKEN_PRO_TIP + os.linesep)
         sys.exit(4)
 
     if res:

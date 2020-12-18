@@ -13,6 +13,9 @@ from .utils import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
 
+TOKEN_PRO_TIP = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
+                'https://github.com/dvershinin/lastversion#tips'
+
 
 class GitHubRepoSession(ProjectHolder):
     DEFAULT_HOSTNAME = 'github.com'
@@ -86,6 +89,7 @@ class GitHubRepoSession(ProjectHolder):
 
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
+        self.rate_limited_count = 0
         self.api_token = os.getenv("GITHUB_API_TOKEN")
         self.hostname = hostname
         if not self.hostname:
@@ -109,7 +113,6 @@ class GitHubRepoSession(ProjectHolder):
             log.info('Using repo {} obtained from search API'.format(self.repo))
         else:
             self.set_repo(repo)
-        self.rate_limited_count = 0
 
     def get_rate_limit_url(self):
         return '{}/rate_limit'.format(self.api_base)
@@ -130,7 +133,8 @@ class GitHubRepoSession(ProjectHolder):
                             self.rate_limited_count)
                     )
                 remaining = int(r.headers['X-RateLimit-Remaining'])
-                wait_for = int(r.headers['X-RateLimit-Reset']) - time.time()
+                # 3 secs to account for skewed clock between GitHub and client
+                wait_for = int(r.headers['X-RateLimit-Reset']) - time.time() + 3
                 if not remaining:
                     # got 403, likely due to used quota
                     if wait_for < 300:
@@ -141,7 +145,9 @@ class GitHubRepoSession(ProjectHolder):
                             )
                         else:
                             log.warning(
-                                'Waiting {} seconds for API quota reinstatement'.format(wait_for)
+                                'Waiting {} seconds for API quota reinstatement. {}'.format(
+                                    wait_for, TOKEN_PRO_TIP
+                                )
                             )
                             time.sleep(wait_for)
                         self.rate_limited_count = self.rate_limited_count + 1
