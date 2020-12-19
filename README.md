@@ -378,8 +378,9 @@ Thus, `lastversion` makes use of caching API response to be fast and light on Gi
 It does conditional ETag validation, which, as per GitHub API will not count towards rate limit.
 The cache is stored in `~/.cache/lastversion` on Linux systems.
 
-It is *much recommended* to setup your [GitHub API token](https://github.com/settings/tokens) in 
-`~/.bashrc` like this, to increase your rate limit:
+It is *much recommended* to set up your [GitHub API token](https://github.com/settings/tokens).
+Bare API token is enough, you may deselect all permissions. 
+You can then increase your rate limit by adding the following `~/.bashrc` file:
 
 ```bash
 export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
