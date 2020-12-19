@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.4] - 2020-12-19
+### Fixed
+* Fixed waiting API quota reinstatement
+* Cache info about non-existent GitHub repositories
+
 ## [1.2.3] - 2020-10-02
 ### Fixed
 * Fixed `lastversion URL` introduced by regression from 1.2.1
