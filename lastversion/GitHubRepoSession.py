@@ -1,5 +1,6 @@
 import json
 import logging
+import math
 import os
 import time
 from datetime import timedelta
@@ -55,9 +56,15 @@ class GitHubRepoSession(ProjectHolder):
             cache = {}
         try:
             if repo in cache and time.time() - cache[repo]['updated_at'] < 3600 * 24 * 30:
+                log.info("Found {} in repo short name cache".format(repo))
+                if not cache[repo]['repo']:
+                    raise BadProjectError(
+                        'No project found on GitHub for search query: {}'.format(repo)
+                    )
                 return cache[repo]['repo']
         except TypeError:
             pass
+        log.info("Making query against GitHub API to search repo {}".format(repo))
         r = self.get(
             '{}/search/repositories?q={}+in:name'.format(self.api_base, repo))
         if r.status_code == 404:
@@ -70,12 +77,11 @@ class GitHubRepoSession(ProjectHolder):
                 )
             )
         data = r.json()
-        if not data['items']:
-            raise BadProjectError(
-                'No project found on GitHub for search query: {}'.format(repo)
-            )
+        full_name = ''
+        if data['items']:
+            full_name = data['items'][0]['full_name']
         cache[repo] = {
-            'repo': data['items'][0]['full_name'],
+            'repo': full_name,
             'updated_at': int(time.time())
         }
         try:
@@ -85,7 +91,11 @@ class GitHubRepoSession(ProjectHolder):
                 )
         except (IOError, ValueError):
             pass
-        return data['items'][0]['full_name']
+        if not full_name:
+            raise BadProjectError(
+                'No project found on GitHub for search query: {}'.format(repo)
+            )
+        return full_name
 
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
@@ -133,8 +143,9 @@ class GitHubRepoSession(ProjectHolder):
                             self.rate_limited_count)
                     )
                 remaining = int(r.headers['X-RateLimit-Remaining'])
-                # 3 secs to account for skewed clock between GitHub and client
-                wait_for = int(r.headers['X-RateLimit-Reset']) - time.time() + 3
+                # 1 sec to account for skewed clock between GitHub and client
+                wait_for = float(r.headers['X-RateLimit-Reset']) - time.time() + 1.0
+                wait_for = math.ceil(wait_for)
                 if not remaining:
                     # got 403, likely due to used quota
                     if wait_for < 300:
@@ -144,11 +155,10 @@ class GitHubRepoSession(ProjectHolder):
                                 'be reinstated'
                             )
                         else:
-                            log.warning(
-                                'Waiting {} seconds for API quota reinstatement. {}'.format(
-                                    wait_for, TOKEN_PRO_TIP
-                                )
-                            )
+                            w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
+                            if "GITHUB_API_TOKEN" not in os.environ:
+                                w = "{} {}".format(w, TOKEN_PRO_TIP)
+                            log.warning(w)
                             time.sleep(wait_for)
                         self.rate_limited_count = self.rate_limited_count + 1
                         return self.get(url)
