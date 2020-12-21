@@ -13,6 +13,9 @@ log = logging.getLogger(__name__)
 
 
 class GitHubRepoSession(ProjectHolder):
+    """
+    A class to represent a GitHub project holder.
+    """
     DEFAULT_HOSTNAME = 'github.com'
     DEFAULT_HOLDER = True
 
