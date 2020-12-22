@@ -19,6 +19,9 @@ TOKEN_PRO_TIP = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
 
 
 class GitHubRepoSession(ProjectHolder):
+    """
+    A class to represent a GitHub project holder.
+    """
     DEFAULT_HOSTNAME = 'github.com'
     DEFAULT_HOLDER = True
 
