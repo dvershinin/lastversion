@@ -37,11 +37,11 @@
 你都可以用它获取某个项目的版本信息去自动构建你的 packages，
 或者用于在你的脚本中获取某个项目的最新版本。
 
-[就像我这么做]](https://www.getpagespeed.com/redhat)
+[就像我这么做](https://www.getpagespeed.com/redhat)
 
 
 lastversion 使用了一小点 AI 以检测发布者是否将测试版误发布为稳定版，
-也可以可以清理一些版本信息中那些发布者出于个性添加的文本。
+也可以清理一些版本信息中那些带有发布者个性文本。
 
 ## 简介
 
@@ -151,9 +151,6 @@ optional arguments:
 
 ```
 
-The `--format` will affect what kind of information from the last release and in which format will
- be displayed, e.g.:
-
 `--format` 选项将会指定输出的信息的格式，这些信息是关于某个项目的最后一次发布的版本的信息。
 
 *   `version` 为默认值，输出格式最新的，格式良好的版本号。
@@ -165,8 +162,6 @@ The `--format` will affect what kind of information from the last release and in
 `asset` 在本文是指一个可下载的文件，
 一般为可执行文件。例如一个项目发布的时候会连带发布各个平台的可执行程序，让用户无需编译源代码即可使用。
 
-You can display either assets or source URLs of the latest release, by passing the corresponding
- `--format flag`, e.g. `--format source`
 
 你可以查看最新版本的 asset 或源代码文件的 URL 通过选择适当的 `--format flag`。
 
@@ -190,7 +185,7 @@ lastversion --assets mautic/mautic
 lastversion --assets --filter win REPO
 ```
 
-### 用例: 如果下载最新版本
+### 用例: 下载最新版本
 
 你可以使用 `lastversion` 来下载最新版本的 asset 和源代码。
 
@@ -206,7 +201,7 @@ lastversion mautic/mautic --download
 lastversion mautic/mautic --download mautic.tar.gz
 ```  
 
-你也可以使用 `lastversion` 输出源代码或者 asset 的 RUL 并下载他，例如：
+你也可以使用 `lastversion` 输出源代码或者 asset 的 URL 并下载它，例如：
 
 ```bash
 wget $(lastversion --assets mautic/mautic)
@@ -267,8 +262,6 @@ lastversion https://nginx.org --major mainline #> 1.17.9
 ```
 
 上面这行命令其实是检查 `hg.nginx.org`，它是一个 Mercurial 网络仓库。
-    
-Behind the scenes, this checks with `hg.nginx.org` which is a Mercurial web repo.
 
 下面这样也是可以的：
 
@@ -276,7 +269,7 @@ Behind the scenes, this checks with `hg.nginx.org` which is a Mercurial web repo
 lastversion https://hg.example.com/project/
 ```
 
-Mercurial 仓库现在比较少见，`lastversion `支持它主要是为了 NGINX。
+Mercurial 仓库现在比较少见，`lastversion` 支持它主要是为了 NGINX。
 
 ### 安装 RPM 资源
 
@@ -305,7 +298,7 @@ sudo lastversion install mailspring
 不用说都知道，这种方式会导致我们不知道潜在的缺失的依赖。
 所以，只有当 `yum` 库没有你所需要的东西的时候才使用 `lastversion install ...`。
 
-### 测试版本解析器
+### 测试「版本解析器」
 
 `test` 命令可以用来排除故障或者简单地格式化一个版本标签。
 
@@ -337,7 +330,7 @@ fi
 [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
 
 
-#### 检查你的 Linux 是否由更新的内核版本
+#### 检查你的 Linux 是否有更新的内核版本
 
 ```bash
 LATEST_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
@@ -367,11 +360,11 @@ fi
 我们必须获取每个标签的提交日期，并检查它是否真的是最近提交的。
 因此，对于大型仓库来说速度会比较慢，因为这些仓库可能有很多标签。
 
-因此，`lastversion` 会缓存的 API 响应内容提高响应速度，
+因此，`lastversion` 会缓存的 API 响应内容以提高响应速度，
 它做了有条件的 ETag 验证，根据 GitHub API 的规定，ETag 验证不计入速率限制。
-缓存内容存储在 Linux 的系统的 `~/.cache/lastversion`。
+在 Linux 下缓存内容存储在 `~/.cache/lastversion`。
 
-*建议*设置你的[GitHub API token](https://github.com/settings/tokens)。
+*建议*设置你的 [GitHub API token](https://github.com/settings/tokens)。
 仅仅只需要 API token，你可以取消这个 Token 的所有权限，
 然后你可以在 `~/.bashrc` 文件中添加下列内容来提升你的请求速度上限。
 
@@ -386,7 +379,7 @@ export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
 export GITLAB_PA_TOKEN=xxxxxxxxxxxxxxx
 ```
 
-然后运行 `source ~/.bashrc`，之后，`lastversion` 将会使用它来更快地调用 API。
+然后运行 `source ~/.bashrc`，之后，`lastversion` 将会使用 TOKEN 来更快地调用 API。
 
 ## 在 Python 模块中的用法
 
@@ -429,6 +422,6 @@ if latest_mautic_version >= version.parse('1.8.1'):
 
 *   `repo`, 仓库的 URL，或者形如 `用户名/仓库名` 这样的字符串，例如 `https://github.com/dvershinin/lastversion/issues`   
 *   `format`, 它接受的值同 `--help` 所说明的。
-*   `pre_ok`, 布尔值，表示否将预发布版本是否可以作为最新版本。
+*   `pre_ok`, 布尔值，表示预发布版本是否可以作为最新版本。
 
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)
