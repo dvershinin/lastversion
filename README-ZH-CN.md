@@ -109,7 +109,7 @@ lastversion self
 
 你可以通过 `--help` 查看和输出控制（行为）相关的选项。 
 
-```
+```text
 usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [--format {version,assets,source,json,tag}] [--assets]
                    [--source] [-gt VER] [-b MAJOR] [--only ONLY]
@@ -158,7 +158,6 @@ optional arguments:
 
 `asset` 在本文是指一个可下载的文件，
 一般为可执行文件。例如一个项目发布的时候会连带发布各个平台的可执行程序，让用户无需编译源代码即可使用。
-
 
 你可以查看最新版本的 asset 或源代码文件的 URL 通过选择适当的 `--format flag`。
 
