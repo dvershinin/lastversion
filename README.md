@@ -6,6 +6,8 @@
 
 ![Using lastversion in terminal](https://www.getpagespeed.com/img/lastversion.gif)
 
+English | [简体中文](README-ZH-CN.md)
+
 A tiny command-line utility that helps to answer a simple question:
 
 > What is the latest *stable* version for a project?
