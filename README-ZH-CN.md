@@ -21,7 +21,6 @@
 
 ## 为什么需要 `lastversion`？
 
-
 通常情况下，许多项目作者的一些做法会让我们难以寻找一个项目的最新版本。
 
 *   发布一个候选版本的时候忘记将其标记为预发布版本，而是作为一个正式版本去发布。比如版本标签为 `v2.0.1-rc` 但是在发布时并未标记为预发布版本。
@@ -38,7 +37,6 @@
 或者用于在你的脚本中获取某个项目的最新版本。
 
 [就像我这么做](https://www.getpagespeed.com/redhat)
-
 
 lastversion 使用了一小点 AI 以检测发布者是否将测试版误发布为稳定版，
 也可以清理一些版本信息中那些带有发布者个性文本。
@@ -90,7 +88,6 @@ lastversion gperftools/gperftools
 
 如果你想偷懒，不想复制粘贴项目的 URL，
 你可以直接使用项目的名字作为参数，这将会使用仓库搜索 API（速度比较慢）。
-
 
 下面的这条命令可以让你知道 Linux 的最新版本。
 
@@ -172,7 +169,6 @@ lastversion --assets mautic/mautic
 #> https://github.com/mautic/mautic/archive/2.15.1/mautic-2.15.1.tar.gz
 ```
 
-
 默认情况下， `lastversion` 会根据不同的 OS 过滤掉一些 `--assets` 的输出。
 在 Linux 上谁需要 `.exe` 呢？
 
@@ -219,7 +215,6 @@ wget $(lastversion --assets mautic/mautic)
 wget $(lastversion --source mautic/mautic)  
 ```
 
-
 ### 用例: 获取最新版本（含测试版）
 
 `lastversion` 认为最新版本是稳定版本或者没有被标记为测试的版本。
@@ -240,7 +235,6 @@ lastversion php/php-src --major 7.2
 ``` 
 
 这行命令会输出当前的 PHP 稳定的版本，其版本格式为 `7.2.x`。
-
 
 你也可以使用下面这种简单的写法来达到几乎相同的效果，即在冒号后指定主版本。
 
@@ -282,7 +276,6 @@ sudo lastversion install mailspring
 
 上面这行命令从 [MailSpring](https://github.com/Foundry376/Mailspring) 
 的最新版本中找到 `.rpm` 并传递给 `yum` 或 `dnf`。
-
 
 你甚至可以通过 cron 实现自动更新，这将确保你在某个包为最新版本，就像下面这样：
  
@@ -328,7 +321,6 @@ fi
 还有更多内容，如果你想让这变得更靠谱的话，
 请听我唠叨：
 [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
-
 
 #### 检查你的 Linux 是否有更新的内核版本
 
