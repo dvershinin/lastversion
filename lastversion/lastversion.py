@@ -15,7 +15,8 @@ from appdirs import user_cache_dir
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
 # from cachecontrol.heuristics import ExpiresAfter
-from packaging.version import Version, InvalidVersion
+from packaging.version import InvalidVersion
+from .Version import Version
 from .GitHubRepoSession import TOKEN_PRO_TIP
 
 from .ProjectHolder import ProjectHolder

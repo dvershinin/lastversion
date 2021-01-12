@@ -10,7 +10,8 @@ import requests
 # it is instantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
 from .utils import asset_does_not_belong_to_machine
-from packaging.version import InvalidVersion, Version
+from .Version import Version
+from packaging.version import InvalidVersion
 
 from .__about__ import __version__
 
@@ -113,22 +114,7 @@ class ProjectHolder(requests.Session):
     def sanitize_version(self, version, pre_ok=False, major=None):
         """extract version from tag name"""
         log.info("Checking tag {} as version.".format(version))
-        # many times they would tag foo-1.2.3 which would parse to LegacyVersion
-        # we can avoid this, by reassigning to what comes after the dash:
-        parts = version.split('-', 1)
         res = False
-        if len(parts) == 2 and parts[0].isalpha():
-            version = parts[1]
-        # help devel releases to be correctly identified
-        # https://www.python.org/dev/peps/pep-0440/#developmental-releases
-        version = re.sub('-devel$', '.dev0', version, 1)
-        version = re.sub('-test$', '.dev0', version, 1)
-        # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
-        version = re.sub('-p(\\d+)$', '.post\\1', version, 1)
-        # release-3_0_2 is often seen on Mercurial holders
-        # note that above code removes "release-" already so we are left with "3_0_2"
-        if re.search(r'^(?:\d+_)+(?:\d+)', version):
-            version = version.replace('_', '.')
         try:
             v = Version(version)
             if not v.is_prerelease or pre_ok:

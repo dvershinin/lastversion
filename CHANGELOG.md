@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.5] - 2021-01-12
+### Fixed
+* Version checks and output for odd non-semantic tags, e.g. 1.1.1i (OpenSSL)
+
 ## [1.2.4] - 2020-12-19
 ### Fixed
 * Fixed waiting API quota reinstatement
