@@ -24,7 +24,7 @@ install_requires = ['requests>=2.6.1', 'packaging', 'cachecontrol', 'lockfile', 
 tests_requires = [
     "pytest>=4.4.0",
     "flake8",
-    # somhow getting this issue only in Travis, anyway this should fix:
+    # somehow getting this issue only in Travis, anyway this should fix:
     # https://github.com/pytest-dev/pytest/issues/6887#issuecomment-600979770
     "pytest-xdist==1.29.0"
 ]
@@ -43,7 +43,7 @@ setup(
     author="Danila Vershinin",
     author_email="info@getpagespeed.com",
     url="https://github.com/dvershinin/lastversion",
-    description="A CLI tool to fetch last GitHub release version",
+    description="A CLI tool to find the latest stable version of an arbitrary project",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(exclude=["tests"]),
@@ -61,5 +61,6 @@ setup(
         "Intended Audience :: System Administrators",
         "Operating System :: OS Independent",
         "Topic :: Software Development",
+        "Topic :: Utilities"
     ],
 )

@@ -14,8 +14,8 @@ A tiny command-line utility that helps to answer a simple question:
 
 ... and, optionally, download/install it.
 
-`lastversion` allows finding well-formatted latest release version of a project from these supported
- locations:
+`lastversion` allows finding well-formatted the latest release version of a project from these 
+ supported locations:
 
 *   [GitHub](https://github.com/dvershinin/lastversion/wiki/GitHub-specifics)
 *   GitLab
@@ -72,7 +72,7 @@ lastversion https://transmissionbt.com/
 
 ```bash
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
-sudo yum install lastversion
+sudo yum -y install lastversion
 ```
    
 ## Installation for other systems
