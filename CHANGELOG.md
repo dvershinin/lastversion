@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.2.6] - 2021-01-13
+### Fixed
+* Ensure compatibility with older python packaging module found in CentOS 7
+
 ## [1.2.5] - 2021-01-12
 ### Fixed
 * Version checks and output for odd non-semantic tags, e.g. 1.1.1i (OpenSSL)

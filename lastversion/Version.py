@@ -33,6 +33,42 @@ class Version(PackagingVersion):
 
         super(Version, self).__init__(version)
 
+    @property
+    def epoch(self):
+        # type: () -> int
+        _epoch = self._version.epoch  # type: int
+        return _epoch
+
+    @property
+    def release(self):
+        # type: () -> Tuple[int, ...]
+        _release = self._version.release  # type: Tuple[int, ...]
+        return _release
+
+    @property
+    def pre(self):
+        # type: () -> Optional[Tuple[str, int]]
+        _pre = self._version.pre  # type: Optional[Tuple[str, int]]
+        return _pre
+
+    @property
+    def post(self):
+        # type: () -> Optional[Tuple[str, int]]
+        return self._version.post[1] if self._version.post else None
+
+    @property
+    def dev(self):
+        # type: () -> Optional[Tuple[str, int]]
+        return self._version.dev[1] if self._version.dev else None
+
+    @property
+    def local(self):
+        # type: () -> Optional[str]
+        if self._version.local:
+            return ".".join(str(x) for x in self._version.local)
+        else:
+            return None
+
     def __str__(self):
         # type: () -> str
         parts = []
