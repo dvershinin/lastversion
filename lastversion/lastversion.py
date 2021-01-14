@@ -57,9 +57,12 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     if not release:
         return None
 
-    log.info('Located the latest release at: {}'.format(
+    from_type = 'Located the latest release at: {}'.format(
         project_holder.get_canonical_link()
-    ))
+    )
+    if 'type' in release:
+        from_type = '{} via {} mechanism'.format(from_type, release['type'])
+    log.info(from_type)
 
     version = release['version']
     tag = release['tag_name']
