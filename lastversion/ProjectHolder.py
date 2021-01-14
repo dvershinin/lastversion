@@ -197,3 +197,8 @@ class ProjectHolder(requests.Session):
             if not assets_filter or re.search(assets_filter, download_url):
                 urls.append(download_url)
         return urls
+
+    def get_canonical_link(self):
+        if self.feed_url:
+            return self.feed_url
+        return 'https://{}/{}'.format(self.hostname, self.repo)

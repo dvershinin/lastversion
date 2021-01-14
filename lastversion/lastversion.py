@@ -57,6 +57,10 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     if not release:
         return None
 
+    log.info('Located the latest release at: {}'.format(
+        project_holder.get_canonical_link()
+    ))
+
     version = release['version']
     tag = release['tag_name']
 
@@ -87,7 +91,11 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
         if hasattr(s, 'repo_readme'):
             release['readme'] = s.repo_readme(tag)
         release.update(repo_data)
-        release['assets'] = s.get_assets(release, short_urls, assets_filter)
+        try:
+            release['assets'] = s.get_assets(release, short_urls, assets_filter)
+        except NotImplementedError:
+            pass
+        release['from'] = project_holder.get_canonical_link()
         return release
 
     if output_format == 'assets':
