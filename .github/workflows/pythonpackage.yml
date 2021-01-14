@@ -32,4 +32,4 @@ jobs:
       run: |
         pytest -v -n auto
       env:
-        GITHUB_API_TOKEN: ${{ secrets.TEST_TOKEN }}
+        GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
