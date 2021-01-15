@@ -20,6 +20,7 @@ A tiny command-line utility that helps to answer a simple question:
 *   [GitHub](https://github.com/dvershinin/lastversion/wiki/GitHub-specifics)
 *   GitLab
 *   BitBucket
+*   PyPI
 *   Mercurial
 *   SourceForge
 *   Arbitrary software sites which publish release in RSS/ATOM feeds
@@ -121,7 +122,9 @@ For more options to control output or behavior, see `--help` output:
 usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [--format {version,assets,source,json,tag}] [--assets]
                    [--source] [-gt VER] [-b MAJOR] [--only ONLY]
-                   [--filter REGEX] [-su] [-y] [--version]
+                   [--filter REGEX] [-su]
+                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}]
+                   [-y] [--version]
                    [action] <repo or URL>
 
 Find the latest release from GitHub/GitLab/BitBucket.
@@ -151,9 +154,12 @@ optional arguments:
                         for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
   -su, --shorter-urls   A tiny bit shorter URLs produced
+  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}
+                        If the repo argument is one word, specifies where to
+                        look up the project. The default is via internal
+                        lookup or GitHub Search
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
-
 ```
 
 The `--format` will affect what kind of information from the last release and in which format will
@@ -280,6 +286,20 @@ lastversion https://hg.example.com/project/
 ```
     
 Mercurial repos are rather rare these days, but support has been added primarily for NGINX.
+
+#### Special use case: find release of a PyPI project
+
+Most Python libraries/apps are hosted on PyPI. To check versions of a project on PyPI, you can use:
+
+```bash
+lastversion https://pypi.org/project/requests/
+```
+
+If you prefer using shorter repo name, ensure `--at pip` switch, like so:
+
+```bash
+lastversion requests --at pip
+```
 
 ### Install an RPM asset
 
@@ -415,12 +435,26 @@ else:
 The `lastversion.has_update(...)` function accepts any URL from a repository (or its short name
 , e.g. `owner/name`) and you should pass existing/current version.
 
-It will then return either:
+If you are checking version of a project on PyPi, supply an additional `at='pip'` argument,
+in order to avoid passing the full PyPI URI of a project, and remove ambiguity with GitHub hosted
+ projects. For example, checking for newer Requests
+library:
+
+```python
+from lastversion import lastversion
+latest_version = lastversion.has_update(repo="requests", at='pip', current_version='1.2.3')
+if latest_version:
+    print('Newer Requests library is available: {}'.format(str(latest_version)))
+else:
+    print('No update is available')
+```
+
+The `has_update` function returns either:
 
 *   The [Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) object
 *   `False` if there is no newer version than the one given
 
-Alternatively, invoke `lastversion.latest(...)` function get the latest version information
+Alternatively, invoke `lastversion.latest(...)` function to get the latest version information
  for a repo.  
  
 ```python
@@ -444,5 +478,7 @@ The `lastversion.latest` function accepts 3 arguments
 *   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
 *   `format`, which accepts same values as when you run `lastversion` interactively
 *   `pre_ok`, boolean for whether to include pre-releases as potential versions
+*   `at`, specifies project location when using one-word repo names, one of 
+ `github,gitlab,bitbucket,pip,hg,sf,website-feed,local`
 
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)

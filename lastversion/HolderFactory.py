@@ -9,6 +9,7 @@ from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
 from .SourceForgeRepoSession import SourceForgeRepoSession
 from .FeedRepoSession import FeedRepoSession
+from .PypiRepoSession import PypiRepoSession
 
 log = logging.getLogger(__name__)
 
@@ -18,10 +19,12 @@ class HolderFactory:
         'github': GitHubRepoSession,
         'gitlab': GitLabRepoSession,
         'bitbucket': BitBucketRepoSession,
+        'pip': PypiRepoSession,
         'hg': MercurialRepoSession,
         'sf': SourceForgeRepoSession,
         'website-feed': FeedRepoSession,
         'local': LocalVersionSession
+
     }
 
     @staticmethod

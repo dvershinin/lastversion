@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2021-01-16
+### Added
+* `--at` switch (and function argument) to explicitly specify project provider 
+* PyPI support
+
 ## [1.2.6] - 2021-01-13
 ### Fixed
 * Ensure compatibility with older python packaging module found in CentOS 7

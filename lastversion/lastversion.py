@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
-           short_urls=False, major=None, only=None):
+           short_urls=False, major=None, only=None, at=None):
     cache_dir = user_cache_dir("lastversion")
     log.info("Using cache directory: {}.".format(cache_dir))
     repo_data = {}
@@ -45,7 +45,10 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
                 repo_data['name'] = name
 
     # find the right hosting for this repo
-    project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
+    if not at or '/' in repo:
+        project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
+    else:
+        project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
 
     # we are completely "offline" for 1 hour, not even making conditional requests
     # heuristic=ExpiresAfter(hours=1)   <- make configurable
@@ -113,8 +116,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     return None
 
 
-def has_update(repo, current_version, pre_ok=False):
-    latest_version = latest(repo, output_format='version', pre_ok=pre_ok)
+def has_update(repo, current_version, pre_ok=False, at=None):
+    latest_version = latest(repo, output_format='version', pre_ok=pre_ok, at=at)
     if latest_version and latest_version > Version(current_version):
         return latest_version
     return False
@@ -191,13 +194,17 @@ def main():
                                                           "expression")
     parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
                         help='A tiny bit shorter URLs produced')
+    parser.add_argument('--at', dest='at',
+                        help='If the repo argument is one word, specifies where to look up the '
+                             'project. The default is via internal lookup or GitHub Search',
+                        choices=HolderFactory.HOLDERS.keys())
     parser.add_argument('-y', '--assumeyes', dest='assumeyes', action='store_true',
                         help='Automatically answer yes for all questions')
     parser.add_argument('--version', action='version',
                         version='%(prog)s {version}'.format(version=__version__))
     parser.set_defaults(validate=True, verbose=False, format='version',
                         pre=False, assets=False, newer_than=False, filter=False,
-                        shorter_urls=False, major=None, ssumeyes=False)
+                        shorter_urls=False, major=None, assumeyes=False, at=None)
     args = parser.parse_args()
 
     if args.repo == "self":
@@ -261,7 +268,7 @@ def main():
     # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
-                     args.shorter_urls, args.major, args.only)
+                     args.shorter_urls, args.major, args.only, args.at)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
         if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ:

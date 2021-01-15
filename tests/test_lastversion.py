@@ -315,3 +315,17 @@ def test_main_assets():
     out, err = process.communicate()
 
     assert "update.zip" in str(out)
+
+
+def test_pypi_full_url():
+    repo = 'https://pypi.org/project/pylockfile/'
+    v = latest(repo)
+
+    assert v == version.parse('0.0.3.3')
+
+
+def test_project_at_pypi():
+    repo = 'pylockfile'
+    v = latest(repo, at='pip')
+
+    assert v == version.parse('0.0.3.3')
