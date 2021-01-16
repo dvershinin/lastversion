@@ -422,7 +422,7 @@ else:
 
 然后它会返回下面的一个返回值：
 
-*   [Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) 对象
+*   [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 对象
 *   `False` 如果没有更加新的版本
 
 你也可以调用 `lastversion.latest(...)` 函数来获取最新版本的信息。
@@ -439,7 +439,7 @@ if latest_mautic_version >= version.parse('1.8.1'):
     print('It is newer')
 ```
 如果 `output_format='version'`（默认），函数会返回一个 
-[Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) 对象
+[Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 对象
 或者 `False`。所以你可以进行如版本比较等工作。
 
 `lastversion.latest` 函数接受三个参数

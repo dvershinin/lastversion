@@ -451,7 +451,7 @@ else:
 
 The `has_update` function returns either:
 
-*   The [Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) object
+*   The [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) object
 *   `False` if there is no newer version than the one given
 
 Alternatively, invoke `lastversion.latest(...)` function to get the latest version information
@@ -470,7 +470,7 @@ if latest_mautic_version >= version.parse('1.8.1'):
 ```
 
 With `output_format='version'` (the default), the function returns a 
-[Version](https://packaging.pypa.io/en/latest/version/#packaging.version.Version) object, or
+[Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) object, or
  `False`. So you can do things like above, namely version comparison, checking dev status, etc.
 
 The `lastversion.latest` function accepts 3 arguments
