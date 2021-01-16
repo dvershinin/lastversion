@@ -15,6 +15,7 @@
 *   [GitHub](https://github.com/dvershinin/lastversion/wiki/GitHub-specifics)
 *   GitLab
 *   BitBucket
+*   PyPI
 *   Mercurial
 *   SourceForge
 *   任何以 RSS/ATOM 订阅方式发布软件网站。
@@ -113,7 +114,9 @@ lastversion self
 usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [--format {version,assets,source,json,tag}] [--assets]
                    [--source] [-gt VER] [-b MAJOR] [--only ONLY]
-                   [--filter REGEX] [-su] [-y] [--version]
+                   [--filter REGEX] [-su]
+                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}]
+                   [-y] [--version]
                    [action] <repo or URL>
 
 Find the latest release from GitHub/GitLab/BitBucket.
@@ -143,9 +146,12 @@ optional arguments:
                         for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
   -su, --shorter-urls   A tiny bit shorter URLs produced
+  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}
+                        If the repo argument is one word, specifies where to
+                        look up the project. The default is via internal
+                        lookup or GitHub Search
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
-
 ```
 
 `--format` 选项将会指定输出的信息的格式，这些信息是关于某个项目的最后一次发布的版本的信息。
@@ -223,7 +229,7 @@ wget $(lastversion --source mautic/mautic)
 lastversion --pre mautic/mautic 
 #> 2.15.2b0
 ```
-    
+
 ### 用例: 特定分支的版本
 
 一些项目可能会一起在不同的分支上发布稳定版本，
@@ -263,6 +269,20 @@ lastversion https://hg.example.com/project/
 ```
 
 Mercurial 仓库现在比较少见，`lastversion` 支持它主要是为了 NGINX。
+
+#### 特殊用例: 获取 PyPI 项目
+
+大多数 Python 的库和应用程序都托管在 PyPI 上。要获取 PyPI 上项目的版本，你可以执行下面的命令。
+
+```bash
+lastversion https://pypi.org/project/requests/
+```
+
+如果您不想写太长的参数，只想写仓库名的话，可以使用`--at pip`，就像下面这样。
+
+```bash
+lastversion requests --at pip
+```
 
 ### 安装 RPM 资源
 
@@ -385,7 +405,20 @@ else:
     print('No update is available')
 ```
 
-`lastversion.has_update(...)` 函数接受一个仓库的 URL，或者形如 `用户名/仓库名` 这样的字符串，第二个参数为当前版本。 
+`lastversion.has_update(...)` 函数接受一个仓库的 URL，或者形如 `用户名/仓库名` 这样的字符串，第二个参数为当前版本。
+
+如果你要检查 PyPI 上的项目版本，请使用参数 `at='pip'`，
+这样就不用传递一个完整的 PyPI 项目的 URL 了，并且避免错误地从其它平台如 Github 上获取信息。
+下面的示例代码可以检查 `Requests` 最新的版本。
+
+```python
+from lastversion import lastversion
+latest_version = lastversion.has_update(repo="requests", at='pip', current_version='1.2.3')
+if latest_version:
+    print('Newer Requests library is available: {}'.format(str(latest_version)))
+else:
+    print('No update is available')
+```
 
 然后它会返回下面的一个返回值：
 
@@ -411,8 +444,9 @@ if latest_mautic_version >= version.parse('1.8.1'):
 
 `lastversion.latest` 函数接受三个参数
 
-*   `repo`, 仓库的 URL，或者形如 `用户名/仓库名` 这样的字符串，例如 `https://github.com/dvershinin/lastversion/issues`   
-*   `format`, 它接受的值同 `--help` 所说明的。
-*   `pre_ok`, 布尔值，表示预发布版本是否可以作为最新版本。
+*   `repo`，仓库的 URL，或者形如 `用户名/仓库名` 这样的字符串，例如 `https://github.com/dvershinin/lastversion/issues`。
+*   `format`，它接受的值同 `--help` 所说明的。
+*   `pre_ok`，布尔值，表示预发布版本是否可以作为最新版本。
+*   `at`，该项目所在的平台，取值仅可能为`github,gitlab,bitbucket,pip,hg,sf,website-feed,local`。
 
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)
