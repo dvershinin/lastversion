@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2021-01-17
+### Added
+* `output_format='dict` for the `lastversion.latest()` function
+* Honour `GITHUB_TOKEN` env var in addition to `GITHUB_API_TOKEN`
+
 ## [1.3.0] - 2021-01-16
 ### Added
 * `--at` switch (and function argument) to explicitly specify project provider 

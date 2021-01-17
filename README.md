@@ -474,14 +474,26 @@ if latest_mautic_version >= version.parse('1.8.1'):
 
 With `output_format='version'` (the default), the function returns a 
 [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) object, or
- `False`. So you can do things like above, namely version comparison, checking dev status, etc.
+ `None`. So you can do things like above, namely version comparison, checking dev status, etc.
+ 
+With `output_format='dict'`, a dictionary returned with latest release information, or `False`.
+The dictionary keys vary between different project locations (GitHub vs BitBucket, for example),
+but are guaranteed to always have these keys:
+
+*   `version`: [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 
+ object, contains the found release version, e.g. `1.2.3`
+*   `source`: string, identifier of the project source, e.g. `github`, or `gitlab`
+*   `tag_date`: datetime object, the release date, e.g. `2020-12-15 14:41:39`
+*   `from`: string, contains fully qualified URL of the project
+*   `tag_name`: string, version control tag name corresponding to the release
 
 The `lastversion.latest` function accepts 3 arguments
 
 *   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
-*   `format`, which accepts same values as when you run `lastversion` interactively
+*   `format`, which accepts same values as when you run `lastversion` interactively, as well as
+ `dict` to return an dictionary as described above
 *   `pre_ok`, boolean for whether to include pre-releases as potential versions
 *   `at`, specifies project location when using one-word repo names, one of 
- `github,gitlab,bitbucket,pip,hg,sf,website-feed,local`
+ `github`, `gitlab`, `bitbucket`, `pip`, `hg`, `sf`, `website-feed`, `local`
 
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)

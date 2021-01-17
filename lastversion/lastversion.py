@@ -74,12 +74,18 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     if output_format == 'version':
         return version
 
-    if output_format == 'json':
-        release['version'] = str(version)
-        release['tag_date'] = str(release['tag_date'])
+    if output_format in ['json', 'dict']:
+        if output_format == 'dict':
+            release['version'] = version
+            release['tag_date'] = release['tag_date']
+        else:
+            release['version'] = str(version)
+            release['tag_date'] = str(release['tag_date'])
         release['v_prefix'] = tag.startswith("v")
         version_macro = 'upstream_version' if 'module_of' in repo_data else 'version'
         version_macro = '%{{{}}}'.format(version_macro)
+        holder_i = {value: key for key, value in HolderFactory.HOLDERS.items()}
+        release['source'] = holder_i[type(project_holder)]
         release['spec_tag'] = tag.replace(
             str(version),
             version_macro

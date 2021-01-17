@@ -24,7 +24,6 @@ class HolderFactory:
         'sf': SourceForgeRepoSession,
         'website-feed': FeedRepoSession,
         'local': LocalVersionSession
-
     }
 
     @staticmethod
