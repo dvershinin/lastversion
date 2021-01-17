@@ -407,6 +407,9 @@ You can then increase your rate limit by adding the following `~/.bashrc` file:
 ```bash
 export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
 ```
+
+You can use either `GITHUB_API_TOKEN` or `GITHUB_TOKEN` environment variable.
+The former has priority.
     
 For GitLab, you can use a
 [Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html):

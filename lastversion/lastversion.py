@@ -151,7 +151,7 @@ def parse_version(tag):
 
 def main():
     epilog = None
-    if "GITHUB_API_TOKEN" not in os.environ:
+    if "GITHUB_API_TOKEN" not in os.environ and "GITHUB_TOKEN" not in os.environ:
         epilog = TOKEN_PRO_TIP
     parser = argparse.ArgumentParser(description='Find the latest release from '
                                                  'GitHub/GitLab/BitBucket.',
@@ -271,7 +271,8 @@ def main():
                      args.shorter_urls, args.major, args.only, args.at)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
-        if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ:
+        if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ and \
+                "GITHUB_TOKEN" not in os.environ:
             sys.stderr.write(TOKEN_PRO_TIP + os.linesep)
         sys.exit(4)
 

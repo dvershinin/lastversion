@@ -104,6 +104,8 @@ class GitHubRepoSession(ProjectHolder):
         super(GitHubRepoSession, self).__init__()
         self.rate_limited_count = 0
         self.api_token = os.getenv("GITHUB_API_TOKEN")
+        if not self.api_token:
+            self.api_token = os.getenv("GITHUB_TOKEN")
         self.hostname = hostname
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME
@@ -159,7 +161,8 @@ class GitHubRepoSession(ProjectHolder):
                             )
                         else:
                             w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
-                            if "GITHUB_API_TOKEN" not in os.environ:
+                            if "GITHUB_API_TOKEN" not in os.environ \
+                                    and 'GITHUB_TOKEN' not in os.environ:
                                 w = "{} {}".format(w, TOKEN_PRO_TIP)
                             log.warning(w)
                             time.sleep(wait_for)
@@ -459,7 +462,7 @@ class GitHubRepoSession(ProjectHolder):
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
-        if "GITHUB_API_TOKEN" in os.environ:
+        if self.api_token:
             # GraphQL requires auth
             ret = self.find_in_tags_via_graphql(ret, pre_ok, major)
         else:
