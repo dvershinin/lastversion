@@ -382,6 +382,9 @@ fi
 ```bash
 export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
 ```
+
+`GITHUB_API_TOKEN` 和 `GITHUB_TOKEN` 这两个环境变量均可被识别，
+且当两者同时存在时优先使用前者。
     
 对于 GitLab, 你可以使用 
 [Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html):
@@ -440,13 +443,28 @@ if latest_mautic_version >= version.parse('1.8.1'):
 ```
 如果 `output_format='version'`（默认），函数会返回一个 
 [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 对象
-或者 `False`。所以你可以进行如版本比较等工作。
+或者 `none`。所以你可以进行如版本比较等工作。
+
+如果指定参数 `output_format='dict'`，
+函数会返回一个 `dict`（字典）或 `False`，
+如果函数从不同的平台（如 Github 和 BitBucket）获取同一个项目的版本信息，
+那么字典的 `Key`（键）可能会不同，
+但可以保证一定会有下列的 `Key`（键）。
+
+*   `version`：[Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 
+
+ 对象，包含被找到的版本，如 `1.2.3`。
+
+*   `source`：字符串，表示来源平台, 如 `github` 或  `gitlab`。
+*   `tag_date`：`datetime` 对象, 表示发布的时间，如 `2020-12-15 14:41:39`。
+*   `from`：字符串, 项目的完整 URL。
+*   `tag_name`：字符串，版本标签名。
 
 `lastversion.latest` 函数接受三个参数
 
 *   `repo`，仓库的 URL，或者形如 `用户名/仓库名` 这样的字符串，例如 `https://github.com/dvershinin/lastversion/issues`。
-*   `format`，它接受的值同 `--help` 所说明的。
+*   `format`，它接受的值同 `--help` 所说明的一样。不过在 `Python` 代码中还可以指定为 `dict`。
 *   `pre_ok`，布尔值，表示预发布版本是否可以作为最新版本。
-*   `at`，该项目所在的平台，取值仅可能为`github,gitlab,bitbucket,pip,hg,sf,website-feed,local`。
+*   `at`，该项目所在的平台，取值仅可能为`github`，`gitlab`，`bitbucket`，`pip`，`hg`，`sf`，`website-feed`，`local`。
 
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)
