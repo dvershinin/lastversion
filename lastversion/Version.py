@@ -19,6 +19,13 @@ class Version(PackagingVersion):
 
         if len(parts) == 2 and parts[0].isalpha():
             version = parts[1]
+
+        # remove *any* non-digits which appear at the beginning of the version string
+        # e.g. Rhino1_7_13_Release does not even bother to put a delimiter...
+        # such string at the beginning typically do not convey stability level
+        # so we are fine to remove them (unlike the ones in the tail)
+        version = re.sub('^[^0-9]+', '', version, 1)
+
         # help devel releases to be correctly identified
         # https://www.python.org/dev/peps/pep-0440/#developmental-releases
         version = re.sub('-devel$', '.dev0', version, 1)
@@ -30,7 +37,14 @@ class Version(PackagingVersion):
         # note that above code removes "release-" already so we are left with "3_0_2"
         if re.search(r'^(?:\d+_)+(?:\d+)', version):
             version = version.replace('_', '.')
-
+        # finally, split by dot "delimiter", see if there are common words which are definitely removable
+        parts = version.split('.')
+        version = []
+        for p in parts:
+            if p.lower() in ['release']:
+                continue
+            version.append(p)
+        version = '.'.join(version)
         super(Version, self).__init__(version)
 
     @property

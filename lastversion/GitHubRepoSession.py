@@ -255,7 +255,11 @@ class GitHubRepoSession(ProjectHolder):
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
                     continue
-                d = node['target']['tagger']['date']
+                if 'tagger' in node['target']:
+                    d = node['target']['tagger']['date']
+                else:
+                    # no tagger = no commit date, very old/imported tag isn't what we are after in most cases
+                    continue
                 tag_date = parser.parse(d)
 
                 if not ret or version > ret['version'] or tag_date > ret['tag_date']:
