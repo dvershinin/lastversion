@@ -329,3 +329,10 @@ def test_project_at_pypi():
     v = latest(repo, at='pip')
 
     assert v == version.parse('0.0.3.3')
+
+
+def test_tag_mess():
+    repo = 'lastversion-test-repos/rhino'
+    v = latest(repo)
+
+    assert v == version.parse('1.7.13')

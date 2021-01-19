@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2021-01-12
+### Fixed
+* GraphQL method for finding release tags was not reliable on repos
+  with tags having no tagger field
+* Strip all extraneous alphanumerics from beginning of tags to improve 
+  detection
+
 ## [1.3.1] - 2021-01-17
 ### Added
 * `output_format='dict` for the `lastversion.latest()` function
