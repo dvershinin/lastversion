@@ -1,5 +1,7 @@
 site_name: lastversion docs
 site_description: "Automatic documentation from sources, for lastversion."
+site_url:
+repo_url: https://github.com/dvershinin/lastversion
 theme:
   name: "material"
   palette:
@@ -17,13 +19,14 @@ plugins:
           selection:
             new_path_syntax: yes
       watch:
-      - lastversion
+        - lastversion
 nav:
   - Overview: index.md
   - Code Reference:
     - lastversion.py: reference/lastversion.md
     - Version.py: reference/Version.md
   - Changelog: changelog.md
+  - 'Blog': 'https://www.getpagespeed.com/posts'
 markdown_extensions:
   - admonition
   - markdown_include.include

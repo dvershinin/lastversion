@@ -64,12 +64,21 @@ class Version(PackagingVersion):
 
     @property
     def epoch(self):
+        """
+        An integer giving the version epoch of this Version instance
+        """
         # type: () -> int
         _epoch = self._version.epoch  # type: int
         return _epoch
 
     @property
     def release(self):
+        """
+        A tuple of integers giving the components of the release segment
+        of this Version instance; that is, the 1.2.3 part of the version
+        number, including trailing zeroes but not including the epoch or
+        any prerelease/development/postrelease suffixes
+        """
         _release = self._version.release
         return _release
 
