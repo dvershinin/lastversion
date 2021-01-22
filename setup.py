@@ -59,6 +59,7 @@ setup(
     install_requires=install_requires,
     extras_require={
         "tests": install_requires + tests_requires,
+        "docs": docs_requires,
         "build": install_requires + tests_requires + docs_requires,
     },
     tests_require=tests_requires,

@@ -51,7 +51,8 @@ class Version(PackagingVersion):
         # note that above code removes "release-" already so we are left with "3_0_2"
         if re.search(r'^(?:\d+_)+(?:\d+)', version):
             version = version.replace('_', '.')
-        # finally, split by dot "delimiter", see if there are common words which are definitely removable
+        # finally, split by dot "delimiter", see if there are common words which are definitely
+        # removable
         parts = version.split('.')
         version = []
         for p in parts:
@@ -89,8 +90,7 @@ class Version(PackagingVersion):
     def local(self):
         if self._version.local:
             return ".".join(str(x) for x in self._version.local)
-        else:
-            return None
+        return None
 
     def __str__(self):
         # type: () -> str

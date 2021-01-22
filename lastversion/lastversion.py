@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # License: BSD, see LICENSE for more details.
 """
-This is the main module of lastversion package. To use it, import it and invoke any function documented here.
-For example:
+This is the main module of lastversion package. To use it, import it and invoke any function
+documented here. For example:
 
 ```python
 from lastversion import lastversion
@@ -35,6 +35,22 @@ log = logging.getLogger(__name__)
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
            short_urls=False, major=None, only=None, at=None):
+    """Find latest release version for a project.
+
+    Args:
+        repo (str): Repository specifier in any form.
+        output_format (str): Affects return format. Possible values `version`, `json`, `dict`,
+                             `assets`, `source`, `tag`.
+        pre_ok (bool): Specifies whether pre-releases can be accepted as newer version.
+        at (str): Specifies repo hosting more precisely, only useful if repo argument was
+                  specified as one word.
+
+    Returns:
+        Version: Newer version object, if found and `output_format` is `version`.
+    Returns:
+        str: Single string containing tag, if found and `output_format` is `tag`
+
+    """
     cache_dir = user_cache_dir("lastversion")
     log.info("Using cache directory: {}.".format(cache_dir))
     repo_data = {}
@@ -135,7 +151,8 @@ def has_update(repo, current_version, pre_ok=False, at=None):
         repo (str): Repository specifier in any form.
         current_version (str): A version you want to check update for.
         pre_ok (bool): Specifies whether pre-releases can be accepted as newer version.
-        at (str): Specifies repo hosting more precisely, only useful if repo argument was specified as one word.
+        at (str): Specifies repo hosting more precisely, only useful if repo argument was
+                  specified as one word.
 
     Returns:
         Version: Newer version as object, if found. Otherwise, False
@@ -293,9 +310,8 @@ def main():
     # imply source download, unless --assets specified
     # --download is legacy flag to specify download action or name of desired download file
     # --download == None indicates download intent where filename is based on upstream
-    if args.action == 'download':
-        if args.download is False:
-            args.download = None
+    if args.action == 'download' and args.download is False:
+        args.download = None
 
     if args.download is not False:
         args.action = 'download'
@@ -366,9 +382,8 @@ def main():
         else:
             print(res)
             # special exit code "2" is useful for scripting to detect if no newer release exists
-            if args.newer_than:
-                if res <= args.newer_than:
-                    sys.exit(2)
+            if args.newer_than and res <= args.newer_than:
+                sys.exit(2)
     else:
         # empty list returned to --assets, emit 3
         if args.format == 'assets' and res is not False:
