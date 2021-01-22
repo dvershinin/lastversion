@@ -4,13 +4,27 @@ from packaging.version import Version as PackagingVersion
 
 
 class Version(PackagingVersion):
+    """
+    This class abstracts handling of a project's versions. It implements the
+    scheme defined in PEP 440. A `Version` instance is comparison
+    aware and can be compared and sorted using the standard Python interfaces.
 
+    This class is descendant from Version found in packaging.version,
+    and implements some additional, "AI"-like normalization during instantiation.
+
+    Args:
+        version (str): The string representation of a version which will be
+                      parsed and normalized before use.
+    Raises:
+        InvalidVersion: If the ``version`` does not conform to PEP 440 in
+                        any way then this exception will be raised.
+    """
     def fix_letter_post_release(self, match):
         self.fixed_letter_post_release = True
         return match.group(1) + '.post' + str(ord(match.group(2)))
 
     def __init__(self, version):
-
+        # type: (str) -> None
         self.fixed_letter_post_release = False
 
         # many times they would tag foo-1.2.3 which would parse to LegacyVersion

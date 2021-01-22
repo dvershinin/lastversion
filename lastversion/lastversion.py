@@ -1,7 +1,13 @@
+# -*- coding: utf-8 -*-
+# License: BSD, see LICENSE for more details.
 """
-lastversion
-==========
-License: BSD, see LICENSE for more details.
+This is the main module of lastversion package. To use it, import it and invoke any function documented here.
+For example:
+
+```python
+from lastversion import lastversion
+lastversion.has_update(repo='mautic/mautic', current_version='1.2.3')
+```
 """
 
 import argparse
@@ -123,6 +129,18 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
 
 
 def has_update(repo, current_version, pre_ok=False, at=None):
+    """Given an existing version for a repo, checks if there is an update.
+
+    Args:
+        repo (str): Repository specifier in any form.
+        current_version (str): A version you want to check update for.
+        pre_ok (bool): Specifies whether pre-releases can be accepted as newer version.
+        at (str): Specifies repo hosting more precisely, only useful if repo argument was specified as one word.
+
+    Returns:
+        Version: Newer version as object, if found. Otherwise, False
+
+    """
     latest_version = latest(repo, output_format='version', pre_ok=pre_ok, at=at)
     if latest_version and latest_version > Version(current_version):
         return latest_version
@@ -130,6 +148,19 @@ def has_update(repo, current_version, pre_ok=False, at=None):
 
 
 def check_version(value):
+    """Given a version string, raises argparse.ArgumentTypeError if it does not contain any version.
+    In lastversion CLI app, this is used as argument parser helper for --newer-than (-gt) option.
+
+    Args:
+        value (str): Free-format string which is meant to contain user-supplied version
+
+    Raises:
+        argparse.ArgumentTypeError: Exception in case version was not found in the input string
+
+    Returns:
+        Version: Parsed version object
+
+    """
     """
     Argument parser helper for --newer-than (-gt) option
     :param value:

@@ -29,6 +29,13 @@ tests_requires = [
     "pytest-xdist==1.29.0"
 ]
 
+docs_requires = [
+    "mkdocs==1.1.2",
+    "mkdocs-material",
+    "mkdocstrings",
+    "markdown-include"
+]
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
@@ -46,12 +53,13 @@ setup(
     description="A CLI tool to find the latest stable version of an arbitrary project",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(exclude=["tests"]),
+    packages=find_packages(exclude=["tests", "docs"]),
     zip_safe=False,
     license="BSD",
     install_requires=install_requires,
     extras_require={
         "tests": install_requires + tests_requires,
+        "build": install_requires + tests_requires + docs_requires,
     },
     tests_require=tests_requires,
     include_package_data=True,

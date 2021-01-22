@@ -1,0 +1,36 @@
+site_name: lastversion docs
+site_description: "Automatic documentation from sources, for lastversion."
+theme:
+  name: "material"
+  palette:
+    scheme: slate
+    primary: teal
+    accent: purple
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          setup_commands:
+            - import sys
+            - sys.path.append("docs")
+          selection:
+            new_path_syntax: yes
+      watch:
+      - lastversion
+nav:
+  - Overview: index.md
+  - Code Reference:
+    - lastversion.py: reference/lastversion.md
+    - Version.py: reference/Version.md
+  - Changelog: changelog.md
+markdown_extensions:
+  - admonition
+  - markdown_include.include
+  - pymdownx.emoji
+  - pymdownx.magiclink
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.tasklist
+  - toc:
+      permalink: "¤"
