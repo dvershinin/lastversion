@@ -8,6 +8,8 @@ theme:
     scheme: slate
     primary: teal
     accent: purple
+  features:
+    - navigation.expand
 plugins:
   - search
   - mkdocstrings:
@@ -37,3 +39,5 @@ markdown_extensions:
   - pymdownx.tasklist
   - toc:
       permalink: "¤"
+extra:
+  generator: false

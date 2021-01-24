@@ -382,45 +382,52 @@ class GitHubRepoSession(ProjectHolder):
         for tag in feed.entries:
             # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
             tag_name = tag['link'].split('/')[-1]
+            log.info('Checking tag {}'.format(tag_name))
             version = self.sanitize_version(tag_name, pre_ok, major)
-            if version and (not ret or ret['version'] < version):
-                # we always want to return formal release if it exists, cause it has useful data
-                # grab formal release via APi to check for pre-release mark
-                r = self.repo_query('/releases/tags/{}'.format(tag_name))
-                if r.status_code == 200:
-                    log.info('Got formal release for tag {}'.format(tag_name))
-                    formal_release = r.json()
-                    if not pre_ok and formal_release['prerelease']:
-                        log.info(
-                            "Found formal release for this tag which is unwanted "
-                            "pre-release: {}.".format(version))
-                        continue
-                    tag_date = parser.parse(tag['updated'])
-                    if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                        log.info('The version {} is newer, but is too old!'.format(version))
-                        break
-                    # use full release info
-                    ret = formal_release
-                    ret['tag_name'] = tag_name
-                    ret['tag_date'] = tag_date
-                    ret['version'] = version
-                    ret['type'] = 'feed'
-                else:
-                    log.info('No formal release for tag {}'.format(tag_name))
-                    tag_date = parser.parse(tag['updated'])
-                    if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                        log.info('The version {} is newer, but is too old!'.format(version))
-                        break
-                    ret = tag
-                    ret['tag_name'] = tag_name
-                    ret['tag_date'] = tag_date
-                    ret['version'] = version
-                    ret['type'] = 'feed'
-                    # remove keys which are non-jsonable
-                    # TODO use those (pop returns them)
-                    ret.pop('updated_parsed', None)
-                    ret.pop('published_parsed', None)
-                log.info("Selected version as current selection: {}.".format(version))
+            if not version:
+                log.info('We did not find a valid version in {} tag')
+                continue
+            if ret and ret['version'] >= version:
+                log.info('Tag {} does not contain newer version than we already found')
+                continue
+            # we always want to return formal release if it exists, cause it has useful data
+            # grab formal release via APi to check for pre-release mark
+            r = self.repo_query('/releases/tags/{}'.format(tag_name))
+            if r.status_code == 200:
+                log.info('Got formal release for tag {}'.format(tag_name))
+                formal_release = r.json()
+                if not pre_ok and formal_release['prerelease']:
+                    log.info(
+                        "Found formal release for this tag which is unwanted "
+                        "pre-release: {}.".format(version))
+                    continue
+                tag_date = parser.parse(tag['updated'])
+                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                    log.info('The version {} is newer, but is too old!'.format(version))
+                    break
+                # use full release info
+                ret = formal_release
+                ret['tag_name'] = tag_name
+                ret['tag_date'] = tag_date
+                ret['version'] = version
+                ret['type'] = 'feed'
+            else:
+                log.info('No formal release for tag {}'.format(tag_name))
+                tag_date = parser.parse(tag['updated'])
+                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                    log.info('The version {} is newer, but is too old!'.format(version))
+                    break
+                ret = tag
+                ret['tag_name'] = tag_name
+                ret['tag_date'] = tag_date
+                ret['version'] = version
+                ret['type'] = 'feed'
+                # remove keys which are non-jsonable
+                # TODO use those (pop returns them)
+                ret.pop('updated_parsed', None)
+                ret.pop('published_parsed', None)
+            log.info("Selected version as current selection: {}.".format(version))
+
         # we are good with release from feeds only without looking at the API
         # simply because feeds list stuff in order of recency
         if ret:
