@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class ProjectHolder(requests.Session):
+    """Generic project holder class abstracts a web-accessible project storage."""
     # web accessible project holders may have single well-known domain usable by everyone
     # in case of GitHub, that is github.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
@@ -187,9 +188,8 @@ class ProjectHolder(requests.Session):
             for asset in release['assets']:
                 if assets_filter and not re.search(assets_filter, asset['name']):
                     continue
-                else:
-                    if asset_does_not_belong_to_machine(asset['name']):
-                        continue
+                if asset_does_not_belong_to_machine(asset['name']):
+                    continue
                 urls.append(asset['browser_download_url'])
         else:
             download_url = self.release_download_url(release, short_urls)

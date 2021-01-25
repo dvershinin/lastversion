@@ -11,6 +11,7 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
 def test_tdesktop():
+    """Test Telegram Desktop at GitHub."""
     repo = "https://github.com/telegramdesktop/tdesktop/releases"
 
     output = latest(repo, 'version', False)
@@ -19,6 +20,7 @@ def test_tdesktop():
 
 
 def test_mautic_pre():
+    """Test Mautic."""
     repo = "mautic/mautic"
 
     output = latest(repo, 'version', True)
@@ -27,6 +29,7 @@ def test_mautic_pre():
 
 
 def test_monit():
+    """Test Monit."""
     repo = "https://mmonit.com/monit/dist/monit-5.26.0.tar.gz"
 
     output = latest(repo, 'version')
@@ -35,6 +38,7 @@ def test_monit():
 
 
 def test_nginx():
+    """Test NGINX."""
     repo = "https://nginx.org/"
 
     output = latest(repo, 'version')
@@ -43,6 +47,7 @@ def test_nginx():
 
 
 def test_gperftools():
+    """Test gperftools."""
     repo = "https://github.com/gperftools/gperftools/releases"
 
     output = latest(repo)
@@ -51,6 +56,7 @@ def test_gperftools():
 
 
 def test_symfony():
+    """Test Symfony."""
     repo = "https://github.com/symfony/symfony/releases"
 
     output = latest(repo)
@@ -59,6 +65,7 @@ def test_symfony():
 
 
 def test_ngx_pagespeed():
+    """Test ngx_pagespeed."""
     repo = "apache/incubator-pagespeed-ngx"
 
     output = latest(repo, output_format='version')
@@ -67,6 +74,7 @@ def test_ngx_pagespeed():
 
 
 def test_wp_cli():
+    """Test WP-CLI."""
     repo = "wp-cli/wp-cli"
 
     output = latest(repo)
@@ -75,6 +83,7 @@ def test_wp_cli():
 
 
 def test_libvmod_xcounter():
+    """Test GitHub libvmod-xcounter."""
     repo = "https://github.com/xcir/libvmod-xcounter"
 
     output = latest(repo)
@@ -83,6 +92,7 @@ def test_libvmod_xcounter():
 
 
 def test_datadog_agent():
+    """Test datadog-agent at GitHub."""
     repo = "DataDog/datadog-agent"
 
     output = latest(repo)
@@ -92,6 +102,7 @@ def test_datadog_agent():
 
 
 def test_grafana():
+    """Test Grafana at GitHub."""
     repo = "grafana/grafana"
 
     output = latest(repo)
@@ -100,6 +111,7 @@ def test_grafana():
 
 
 def test_roer():
+    """Test a GitHub project."""
     repo = "spinnaker/roer"
 
     output = latest(repo)
@@ -108,6 +120,7 @@ def test_roer():
 
 
 def test_ndk():
+    """Test a GitHub project."""
     repo = "https://github.com/simplresty/ngx_devel_kit"
 
     output = latest(repo)
@@ -116,6 +129,7 @@ def test_ndk():
 
 
 def test_naxsi():
+    """Test a GitHub project."""
     repo = "https://github.com/nbs-system/naxsi/releases"
 
     output = latest(repo)
@@ -124,6 +138,7 @@ def test_naxsi():
 
 
 def test_brotli():
+    """Test ngx_brotli GitHub project."""
     repo = "https://github.com/eustas/ngx_brotli/releases"
 
     output = latest(repo)
@@ -132,6 +147,10 @@ def test_brotli():
 
 
 def test_changed_format():
+    """
+    Test a repo which changed tag format from v20150121 to v2.0.1.
+    Disregard "higher" number by checking that v20150121 release is too old.
+    """
     repo = "https://github.com/nginx-shib/nginx-http-shibboleth/releases"
 
     output = latest(repo)
@@ -140,6 +159,7 @@ def test_changed_format():
 
 
 def test_major():
+    """Test major selection."""
     repo = "https://github.com/SpiderLabs/ModSecurity"
 
     output = latest(repo, major='2.9')
@@ -148,6 +168,7 @@ def test_major():
 
 
 def test_version_parse_with_dot_x():
+    """Test version parsing to fail on wildcard type of version string."""
     v = '1.19.x'
 
     h = ProjectHolder()
@@ -156,6 +177,7 @@ def test_version_parse_with_dot_x():
 
 
 def test_version_parse_dev():
+    """Test version parsing to detect rc1 type suffix as a pre-release."""
     v = '1.19rc1'
 
     h = ProjectHolder()
@@ -166,6 +188,7 @@ def test_version_parse_dev():
 
 
 def test_version_parse_dev2():
+    """Test version parsing to detect -rc.2 type suffix as a pre-release."""
     v = '7.18.1-rc.2'
 
     h = ProjectHolder()
@@ -186,6 +209,7 @@ def test_version_parse_dev3():
 
 
 def test_contain_rpm_related_data():
+    """Test that json/dict output contains RPM-related keys."""
     repo = 'dvershinin/lastversion'
 
     v = latest(repo, output_format='json')
@@ -198,6 +222,7 @@ def test_contain_rpm_related_data():
 
 
 def test_gitlab_1():
+    """Test specifying a deep-level link at GitLab."""
     repo = 'https://gitlab.com/ddcci-driver-linux/ddcci-driver-linux/-/tree/master'
 
     v = latest(repo)
@@ -206,6 +231,7 @@ def test_gitlab_1():
 
 
 def test_merc_1():
+    """Test a Mercurial repo."""
     repo = 'https://hg.dillo.org/dillo/'
 
     v = latest(repo)
@@ -214,6 +240,7 @@ def test_merc_1():
 
 
 def test_yml_input():
+    """Test passing a yml file as repo argument."""
     repo = os.path.dirname(os.path.abspath(__file__)) + '/geoip2.yml'
 
     v = latest(repo, output_format='json')
@@ -228,6 +255,7 @@ def test_yml_input():
 
 
 def test_magento2_major():
+    """Test major selection and returning version."""
     repo = 'magento/magento2'
 
     v = latest(repo, major='2.3.4')
@@ -236,6 +264,7 @@ def test_magento2_major():
 
 
 def test_magento2_major_tag():
+    """Test major selection and returning tag."""
     repo = 'magento/magento2'
 
     v = latest(repo, major='2.3.4', output_format='tag')
@@ -244,6 +273,7 @@ def test_magento2_major_tag():
 
 
 def test_sf_keepass():
+    """Test a SourceForge project."""
     repo = 'https://sourceforge.net/projects/keepass'
 
     v = latest(repo)
@@ -252,6 +282,7 @@ def test_sf_keepass():
 
 
 def test_squid_underscore_lover():
+    """Test a repo with tags like SQUID_5_0_1."""
     repo = 'https://github.com/squid-cache/squid/releases'
 
     v = latest(repo)
@@ -260,6 +291,10 @@ def test_squid_underscore_lover():
 
 
 def test_patch_release_for_older_is_not_last():
+    """
+    Test a repo where a patch for older release is topmost.
+    Aggregating versions should return newer release instead of patched release.
+    """
     repo = 'https://github.com/lastversion-test-repos/magento2/releases'
 
     v = latest(repo)
@@ -268,6 +303,7 @@ def test_patch_release_for_older_is_not_last():
 
 
 def test_with_search():
+    """Test using GitHub search API by specifying one word in repo."""
     repo = 'telize'
 
     v = latest(repo)
@@ -284,6 +320,7 @@ def test_homepage_github_link_discovery():
 
 
 def test_homepage_feed_discovery():
+    """Test with a project through website feed discovery."""
     repo = 'https://filezilla-project.org/'
 
     v = latest(repo, only='FileZilla Client')
@@ -292,6 +329,7 @@ def test_homepage_feed_discovery():
 
 
 def test_main_url():
+    """Test CLI with full URL at GitHub."""
     repo = 'https://github.com/apache/incubator-pagespeed-ngx'
 
     process = subprocess.Popen(
@@ -305,6 +343,7 @@ def test_main_url():
 
 
 def test_main_assets():
+    """Test CLI with --format assets."""
     repo = 'mautic/mautic'
 
     process = subprocess.Popen(
@@ -318,6 +357,7 @@ def test_main_assets():
 
 
 def test_pypi_full_url():
+    """Test with full PyPi URL."""
     repo = 'https://pypi.org/project/pylockfile/'
     v = latest(repo)
 
@@ -325,6 +365,7 @@ def test_pypi_full_url():
 
 
 def test_project_at_pypi():
+    """Test project at Pypi with short name."""
     repo = 'pylockfile'
     v = latest(repo, at='pip')
 
@@ -332,6 +373,7 @@ def test_project_at_pypi():
 
 
 def test_tag_mess():
+    """Test repository with tags like Rhino1_7_13_Release."""
     repo = 'lastversion-test-repos/rhino'
     v = latest(repo)
 
