@@ -19,9 +19,7 @@ TOKEN_PRO_TIP = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
 
 
 class GitHubRepoSession(ProjectHolder):
-    """
-    A class to represent a GitHub project holder.
-    """
+    """A class to represent a GitHub project holder."""
 
     DEFAULT_HOSTNAME = 'github.com'
     DEFAULT_HOLDER = True
@@ -352,7 +350,7 @@ class GitHubRepoSession(ProjectHolder):
         """
         Gets latest release satisfying "prereleases are OK" or major/branch constraints
         Strives to fetch formal API release if it exists, because it has useful information
-        like assets
+        like assets.
         """
         # data of selected tag, always contains ['version', 'tag_name', 'tag_date', 'type'] will
         # be returned

@@ -103,16 +103,16 @@ class ProjectHolder(requests.Session):
                 re.search(r"{}".format(self.branches[major]), str(version)):
             log.info('{} matches major {}'.format(version, self.branches[major]))
             return True
-        elif str(version).startswith('{}.'.format(major)):
+        if str(version).startswith('{}.'.format(major)):
             log.info('{} is under the desired major {}'.format(
                 version, major))
             return True
-        elif str(version) == major:
+        if str(version) == major:
             return True
         return False
 
     def sanitize_version(self, version, pre_ok=False, major=None):
-        """extract version from tag name"""
+        """Extract version from tag name."""
         log.info("Sanitizing string {} as a satisfying version.".format(version))
         res = False
         try:

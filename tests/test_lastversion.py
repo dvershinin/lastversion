@@ -280,7 +280,7 @@ def test_homepage_github_link_discovery():
 
     v = latest(repo)
 
-    assert v == version.parse('3.0')
+    assert v >= version.parse('3.0')
 
 
 def test_homepage_feed_discovery():
@@ -339,7 +339,8 @@ def test_tag_mess():
 
 
 def test_dict_output():
+    """Test dict output."""
     repo = 'SiliconLabs/uC-OS2'
     v = latest(repo, output_format='dict')
 
-    assert v['version'] == version.parse('2.93.0')
+    assert v['version'] >= version.parse('2.93.0')
