@@ -22,6 +22,7 @@ class GitHubRepoSession(ProjectHolder):
     """
     A class to represent a GitHub project holder.
     """
+
     DEFAULT_HOSTNAME = 'github.com'
     DEFAULT_HOLDER = True
 
@@ -258,13 +259,14 @@ class GitHubRepoSession(ProjectHolder):
                 if 'tagger' in node['target']:
                     d = node['target']['tagger']['date']
                 else:
-                    # no tagger = no commit date, very old/imported tag isn't what we are after in most cases
+                    # no tagger = no commit date, very old/imported tag isn't what
+                    # we are after in most cases
                     continue
                 tag_date = parser.parse(d)
 
                 if not ret or version > ret['version'] or tag_date > ret['tag_date']:
-                    # we always want to return formal release if it exists, cause it has useful data
-                    # grab formal release via APi to check for pre-release mark
+                    # we always want to return formal release if it exists, cause it has useful
+                    # data grab formal release via APi to check for pre-release mark
                     r = self.repo_query('/releases/tags/{}'.format(tag_name))
                     if r.status_code == 200:
                         formal_release = r.json()

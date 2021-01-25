@@ -99,10 +99,10 @@ class ProjectHolder(requests.Session):
         return None
 
     def matches_major_filter(self, version, major):
-        if self.branches and major in self.branches:
-            if re.search(r"{}".format(self.branches[major]), str(version)):
-                log.info('{} matches major {}'.format(version, self.branches[major]))
-                return True
+        if self.branches and major in self.branches and \
+                re.search(r"{}".format(self.branches[major]), str(version)):
+            log.info('{} matches major {}'.format(version, self.branches[major]))
+            return True
         elif str(version).startswith('{}.'.format(major)):
             log.info('{} is under the desired major {}'.format(
                 version, major))
@@ -185,9 +185,8 @@ class ProjectHolder(requests.Session):
         urls = []
         if 'assets' in release and release['assets']:
             for asset in release['assets']:
-                if assets_filter:
-                    if not re.search(assets_filter, asset['name']):
-                        continue
+                if assets_filter and not re.search(assets_filter, asset['name']):
+                    continue
                 else:
                     if asset_does_not_belong_to_machine(asset['name']):
                         continue

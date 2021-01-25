@@ -336,3 +336,10 @@ def test_tag_mess():
     v = latest(repo)
 
     assert v == version.parse('1.7.13')
+
+
+def test_dict_output():
+    repo = 'SiliconLabs/uC-OS2'
+    v = latest(repo, output_format='dict')
+
+    assert v['version'] == version.parse('2.93.0')

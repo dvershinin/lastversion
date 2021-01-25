@@ -4,3 +4,4 @@
 /*.egg-info
 /.pytest_cache
 *.pyc
+/site/
