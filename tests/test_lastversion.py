@@ -199,6 +199,7 @@ def test_version_parse_dev2():
 
 
 def test_version_parse_dev3():
+    """Test parsing stable version leaves pre-release flag false."""
     v = '7.18.1'
 
     h = ProjectHolder()
@@ -312,6 +313,7 @@ def test_with_search():
 
 
 def test_homepage_github_link_discovery():
+    """Test with discovering github repo from project own website."""
     repo = 'https://transmissionbt.com/'
 
     v = latest(repo)

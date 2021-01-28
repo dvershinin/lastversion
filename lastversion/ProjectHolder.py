@@ -20,6 +20,7 @@ log = logging.getLogger(__name__)
 
 class ProjectHolder(requests.Session):
     """Generic project holder class abstracts a web-accessible project storage."""
+
     # web accessible project holders may have single well-known domain usable by everyone
     # in case of GitHub, that is github.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
@@ -37,6 +38,7 @@ class ProjectHolder(requests.Session):
     SHORT_RELEASE_URL_FORMAT = None
 
     def set_repo(self, repo):
+        """Set repo ID property of project holder instance."""
         self.repo = repo
         self.name = repo.split('/')[-1]
 
@@ -55,17 +57,21 @@ class ProjectHolder(requests.Session):
         self.feed_url = None
 
     def is_valid(self):
+        """Check if project holder is valid instance."""
         return self.feed_url or self.name
 
     def set_branches(self, branches):
+        """Sets project holder's branches."""
         self.branches = branches
 
     def set_only(self, only):
+        """Sets "only" tag selector for this holder."""
         log.info('Only considering tags with "{}"'.format(only))
         self.only = only
 
     @classmethod
     def get_host_repo_for_link(cls, repo):
+        """Return hostname and repo from a link."""
         hostname = None
         # return repo modified to result of extraction
         if repo.startswith(('https://', 'http://')):
@@ -78,6 +84,7 @@ class ProjectHolder(requests.Session):
 
     @classmethod
     def is_official_for_repo(cls, repo):
+        """Check if repo is a known repo for this type of project holder."""
         if repo.startswith(('https://', 'http://')):
             for url in cls.KNOWN_REPO_URLS:
                 if repo.startswith((url, "https://{}".format(url), "http://{}".format(url))):
@@ -91,6 +98,7 @@ class ProjectHolder(requests.Session):
 
     @classmethod
     def get_matching_hostname(cls, repo):
+        """Find matching hostname between repo and holder's default hostname."""
         if not cls.DEFAULT_HOSTNAME:
             return None
         if repo.startswith('http://{}'.format(cls.DEFAULT_HOSTNAME)):
@@ -162,9 +170,11 @@ class ProjectHolder(requests.Session):
         return res
 
     def _type(self):
+        """Get project holder's class name."""
         return self.__class__.__name__
 
     def release_download_url(self, release, shorter=False):
+        """Get release download URL."""
         if not self.RELEASE_URL_FORMAT:
             raise NotImplementedError(
                 'Getting release URL for {} is not implemented'.format(self._type()))

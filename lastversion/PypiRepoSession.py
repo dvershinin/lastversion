@@ -43,6 +43,7 @@ class PypiRepoSession(ProjectHolder):
             )
 
     def release_download_url(self, release, shorter=False):
+        """Get release download URL."""
         for f in release['files']:
             if f['packagetype'] == 'sdist':
                 return f['url']

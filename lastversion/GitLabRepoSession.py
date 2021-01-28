@@ -51,6 +51,7 @@ class GitLabRepoSession(ProjectHolder):
         return ret
 
     def release_download_url(self, release, shorter=False):
+        """Get release download URL."""
         if shorter:
             log.info('Shorter URLs are not supported for GitLab yet')
         # https://gitlab.com/onedr0p/sonarr-episode-prune/-/archive/v3.0.0/sonarr-episode-prune-v3.0.0.tar.gz
