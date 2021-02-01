@@ -242,7 +242,7 @@ class GitHubRepoSession(ProjectHolder):
             query = query_fmt % (owner, name, cursor)
             r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
             if r.status_code != 200:
-                logger.info(f"query returned non 200 response code {r.status_code}")
+                logger.info("query returned non 200 response code {}".format(r.status_code))
                 return ret
             j = r.json()
             # no tags
