@@ -382,6 +382,9 @@ class GitHubRepoSession(ProjectHolder):
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
         feed = feedparser.parse(r.text)
+        if 'bozo' in feed and feed['bozo'] == 1 and 'bozo_exception' in feed:
+            exc = feed.bozo_exception
+            log.info("Failed to parse feed: {}".format(exc.getMessage()))
         for tag in feed.entries:
             # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
             tag_name = tag['link'].split('/')[-1]
