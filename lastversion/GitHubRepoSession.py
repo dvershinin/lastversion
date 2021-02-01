@@ -388,7 +388,7 @@ class GitHubRepoSession(ProjectHolder):
             log.info('Checking tag {}'.format(tag_name))
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
-                log.info('We did not find a valid version in {} tag')
+                log.info('We did not find a valid version in {} tag'.format(tag_name))
                 continue
             if ret and ret['version'] >= version:
                 log.info(
