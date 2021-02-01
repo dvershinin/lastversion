@@ -133,6 +133,7 @@ class GitHubRepoSession(ProjectHolder):
 
     def get(self, url, **kwargs):
         r = super(GitHubRepoSession, self).get(url, **kwargs)
+        log.info('Got HTTP status code {} from {}'.format(r.status_code, url))
         if r.status_code == 401:
             if self.api_token:
                 raise ApiCredentialsError('API request was denied despite using an API token. '
@@ -390,7 +391,9 @@ class GitHubRepoSession(ProjectHolder):
                 log.info('We did not find a valid version in {} tag')
                 continue
             if ret and ret['version'] >= version:
-                log.info('Tag {} does not contain newer version than we already found')
+                log.info(
+                    'Tag {} does not contain newer version than we already found'.format(tag_name)
+                )
                 continue
             # we always want to return formal release if it exists, cause it has useful data
             # grab formal release via APi to check for pre-release mark
