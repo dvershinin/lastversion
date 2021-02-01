@@ -242,6 +242,7 @@ class GitHubRepoSession(ProjectHolder):
             query = query_fmt % (owner, name, cursor)
             r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
             if r.status_code != 200:
+                log.info("query returned non 200 response code {}".format(r.status_code))
                 return ret
             j = r.json()
             # no tags
@@ -259,6 +260,7 @@ class GitHubRepoSession(ProjectHolder):
                 else:
                     # no tagger = no commit date, very old/imported tag isn't what
                     # we are after in most cases
+                    log.info("no tagger = no commit date, very old/imported tag isn't what")
                     continue
                 tag_date = parser.parse(d)
 
