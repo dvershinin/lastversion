@@ -209,31 +209,58 @@ class GitHubRepoSession(ProjectHolder):
     def find_in_tags_via_graphql(self, ret, pre_ok, major):
         query_fmt = """
         {
+          rateLimit {
+            cost
+            remaining
+          }
           repository(owner: "%s", name: "%s") {
-            refs(refPrefix: "refs/tags/", first: 100, after: "%s", orderBy: {field:
-            TAG_COMMIT_DATE,
-            direction: DESC}) {
+            tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s", 
+              orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {
               edges {
+                cursor,
                 node {
-                  name
-                  target {
-                    oid
-                    ... on Tag {
-                      message
-                      commitUrl
-                      tagger {
-                        name
-                        email
-                        date
-                      }
-                    }
-                  }
+                  ...refInfo
                 }
-                cursor
               }
             }
           }
         }
+        
+        fragment refInfo on Ref {
+          name
+          target {
+            sha: oid
+            commitResourcePath
+            __typename
+            ... on Tag {
+              target {
+                ... on Commit {
+                  ...commitInfo
+                }
+              }
+              tagger {
+                name
+                email
+                date
+              }
+            }
+            ... on Commit {
+              ...commitInfo
+            }
+          }
+        }
+        
+        fragment commitInfo on Commit {
+          zipballUrl
+          tarballUrl
+          author {
+            name
+            email
+            date
+          }
+        }
+        
+        
         """
         cursor = ''
 
@@ -242,14 +269,15 @@ class GitHubRepoSession(ProjectHolder):
             owner, name = self.repo.split('/')
             query = query_fmt % (owner, name, cursor)
             r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
+            log.info('Requested graphql with cursor "{}"'.format(cursor))
             if r.status_code != 200:
                 log.info("query returned non 200 response code {}".format(r.status_code))
                 return ret
             j = r.json()
             # no tags
-            if not j['data']['repository']['refs']['edges']:
+            if not j['data']['repository']['tags']['edges']:
                 break
-            for edge in j['data']['repository']['refs']['edges']:
+            for edge in j['data']['repository']['tags']['edges']:
                 node = edge['node']
                 cursor = edge['cursor']
                 tag_name = node['name']
@@ -257,12 +285,13 @@ class GitHubRepoSession(ProjectHolder):
                 if not version:
                     continue
                 if 'tagger' in node['target']:
+                    # use date of annotated tag as it better corresponds to "release date"
+                    log.info('Using annotated tag date')
                     d = node['target']['tagger']['date']
                 else:
-                    # no tagger = no commit date, very old/imported tag isn't what
-                    # we are after in most cases
-                    log.info("no tagger = no commit date, very old/imported tag isn't what")
-                    continue
+                    # using commit date because the tag is not annotated
+                    log.info('Using commit date')
+                    d = node['target']['author']['date']
                 tag_date = parser.parse(d)
 
                 if not ret or version > ret['version'] or tag_date > ret['tag_date']:
@@ -381,7 +410,21 @@ class GitHubRepoSession(ProjectHolder):
         r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
-        feed = feedparser.parse(r.text)
+        if r.status_code == 404:
+            # #44: in some network locations, GitHub returns 404 (as opposed to 301 redirect) for the renamed
+            # repositories /releases.atom. When we get a 404, we lazily load repo info via API, and hopefully
+            # get redirect there as well as the new repo full name
+            r = self.repo_query('')
+            if r.status_code == 200:
+                repo_data = r.json()
+                if self.repo != repo_data['full_name']:
+                    log.info('Detected name change from {} to {}'.format(self.repo, repo_data['full_name']))
+                    self.set_repo(repo_data['full_name'])
+                    # request the feed from the new location
+                    self.cookies.clear()
+                    r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
+        feed_txt = r.text
+        feed = feedparser.parse(feed_txt)
         if 'bozo' in feed and feed['bozo'] == 1 and 'bozo_exception' in feed:
             exc = feed.bozo_exception
             log.info("Failed to parse feed: {}".format(exc.getMessage()))

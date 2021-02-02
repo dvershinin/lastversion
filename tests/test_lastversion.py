@@ -388,3 +388,11 @@ def test_dict_output():
     v = latest(repo, output_format='dict')
 
     assert v['version'] >= version.parse('2.93.0')
+
+
+def test_major_graphql():
+    """Test deep major select using graphql."""
+    repo = 'php/php-src'
+    v = latest(repo, major='5.6')
+
+    assert v == version.parse('5.6.40')
