@@ -268,14 +268,19 @@ class GitHubRepoSession(ProjectHolder):
             # testing on php/php-src
             owner, name = self.repo.split('/')
             query = query_fmt % (owner, name, cursor)
+            log.info('Running query {}'.format(query))
             r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
             log.info('Requested graphql with cursor "{}"'.format(cursor))
             if r.status_code != 200:
                 log.info("query returned non 200 response code {}".format(r.status_code))
                 return ret
             j = r.json()
-            # no tags
+            if 'errors' in j and j['errors'][0]['type'] == 'NOT_FOUND':
+                raise BadProjectError(
+                    'No such project found on GitHub: {}'.format(self.repo)
+                )
             if not j['data']['repository']['tags']['edges']:
+                log.info('No tags in GraphQL response: {}'.format(r.text))
                 break
             for edge in j['data']['repository']['tags']['edges']:
                 node = edge['node']
@@ -378,6 +383,50 @@ class GitHubRepoSession(ProjectHolder):
                     ret['type'] = 'tag'
         return ret
 
+    def get_releases_feed_contents(self, rename_checked=False):
+        """
+        Fetch contents of repository's releases.atom feed.
+        # The releases.atom and tags.atom don't differ much except releases having more data.
+        # The releases.atom feed includes non-formal releases which are just tags, so we are good.
+        # Based on testing, edited old releases don't jump forward in the list and stay behind (good).
+        # The only downside is they don't bear pre-release mark (unlike API), and have limited data.
+        # We work around these by checking pre-release flag and get full release data via API.
+        """
+        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
+        # API requests are varied by cookie, we don't want serializer for cache fail because of that
+        self.cookies.clear()
+        if r.status_code == 404 and not rename_checked:
+            # #44: in some network locations, GitHub returns 404 (as opposed to 301 redirect) for the renamed
+            # repositories /releases.atom. When we get a 404, we lazily load repo info via API, and hopefully
+            # get redirect there as well as the new repo full name
+            r = self.repo_query('')
+            if r.status_code == 200:
+                repo_data = r.json()
+                if self.repo != repo_data['full_name']:
+                    log.info('Detected name change from {} to {}'.format(self.repo, repo_data['full_name']))
+                    self.set_repo(repo_data['full_name'])
+                    # request the feed from the new location
+                    return self.get_releases_feed_contents(rename_checked=False)
+        if r.status_code == 200:
+            return r.text
+        return None
+
+    def get_releases_feed_entries(self):
+        """Get an array of releases.atom feed entries."""
+        feed_contents = self.get_releases_feed_contents()
+        if not feed_contents:
+            log.info('The releases.atom feed failed to be fetched!')
+            return []
+        feed = feedparser.parse(feed_contents)
+        if 'bozo' in feed and feed['bozo'] == 1 and 'bozo_exception' in feed:
+            exc = feed.bozo_exception
+            log.info("Failed to parse feed: {}".format(exc.getMessage()))
+            return []
+        if not feed.entries:
+            log.info('Feed has no elements. Empty repo???')
+            return []
+        return feed.entries
+
     def get_latest(self, pre_ok=False, major=None):
         """
         Gets latest release satisfying "prereleases are OK" or major/branch constraints
@@ -402,35 +451,8 @@ class GitHubRepoSession(ProjectHolder):
         # * marked pre-release in releases endpoints
         # * has a beta-like, non-version tag name
 
-        # releases.atom and tags.atom don't differ much except releases having more data
-        # yes, releases.atom include non-formal releases which are just tags, so we are good
-        # based on testing, edited old releases don't jump forward and stay behind so they are great
-        # the only downside is they don't bear pre-release mark (unlike API), and limited data
-        # we work around both so we are fine to to use them for speed!
-        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
-        # API requests are varied by cookie, we don't want serializer for cache fail because of that
-        self.cookies.clear()
-        if r.status_code == 404:
-            # #44: in some network locations, GitHub returns 404 (as opposed to 301 redirect) for the renamed
-            # repositories /releases.atom. When we get a 404, we lazily load repo info via API, and hopefully
-            # get redirect there as well as the new repo full name
-            r = self.repo_query('')
-            if r.status_code == 200:
-                repo_data = r.json()
-                if self.repo != repo_data['full_name']:
-                    log.info('Detected name change from {} to {}'.format(self.repo, repo_data['full_name']))
-                    self.set_repo(repo_data['full_name'])
-                    # request the feed from the new location
-                    self.cookies.clear()
-                    r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
-        feed_txt = r.text
-        feed = feedparser.parse(feed_txt)
-        if 'bozo' in feed and feed['bozo'] == 1 and 'bozo_exception' in feed:
-            exc = feed.bozo_exception
-            log.info("Failed to parse feed: {}".format(exc.getMessage()))
-        if not feed.entries:
-            log.info('Feed has no elements. Empty repo???')
-        for tag in feed.entries:
+        feed_entries = self.get_releases_feed_entries()
+        for tag in feed_entries:
             # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
             tag_name = tag['link'].split('/')[-1]
             log.info('Checking tag {}'.format(tag_name))
