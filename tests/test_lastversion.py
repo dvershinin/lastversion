@@ -1,10 +1,14 @@
 import os
 
 import subprocess
+
+import pytest
 from packaging import version
 
 from lastversion.ProjectHolder import ProjectHolder
 from lastversion.lastversion import latest
+
+from lastversion.utils import BadProjectError
 
 # change dir to tests directory to make relative paths possible
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -396,3 +400,16 @@ def test_major_graphql():
     v = latest(repo, major='5.6')
 
     assert v == version.parse('5.6.40')
+
+
+def test_raises_bad_project_error_while_graphql():
+    """
+    Test getting BadProjectError while in graphql.
+    When a bad project is passed as owner/name, we don't fail on 404 while getting releases.atom
+    as we're still hoping to get something with graphql.
+    So graphql response should be checked and BadProjectError raised so that we can communicate
+    that the repo argument passed was invalid.
+    """
+    with pytest.raises(BadProjectError):
+        repo = 'SiliconLabs/uC-OS'
+        latest(repo)
