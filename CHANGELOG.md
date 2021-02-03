@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.3] - 2021-02-03
+### Added
+* More requests logging in `--verbose` mode
+* Log failed feed parsing
+* Raising `BadProjectError` from GraphQL find method if repo arg is invalid
+### Fixed
+* Work around GitHub servers' inconsistency with feed redirects #44
+* Using all tags in GraphQL find method, instead of annotated only #44
+
 ## [1.3.2] - 2021-01-12
 ### Fixed
 * GraphQL method for finding release tags was not reliable on repos
