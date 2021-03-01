@@ -28,6 +28,7 @@ nav:
     - lastversion.py: reference/lastversion.md
     - Version.py: reference/Version.md
   - Changelog: changelog.md
+  - License: license.md
   - 'Blog': 'https://www.getpagespeed.com/posts'
 markdown_extensions:
   - admonition
@@ -37,6 +38,8 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed
   - pymdownx.tasklist
+  - pymdownx.snippets:
+      check_paths: true
   - toc:
       permalink: "¤"
 extra:

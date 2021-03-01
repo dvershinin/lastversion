@@ -1,0 +1,3 @@
+# bootstrap docs
+steps:
+- sed -i 's@README.md@index.md@' README-ZH-CN.md

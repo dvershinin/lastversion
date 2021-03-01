@@ -1,1 +1,1 @@
-../README-ZH-CN.md
+{!README-ZH-CN.md!}
