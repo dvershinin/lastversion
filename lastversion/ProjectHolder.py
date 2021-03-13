@@ -198,7 +198,7 @@ class ProjectHolder(requests.Session):
             for asset in release['assets']:
                 if assets_filter and not re.search(assets_filter, asset['name']):
                     continue
-                if asset_does_not_belong_to_machine(asset['name']):
+                if not assets_filter and asset_does_not_belong_to_machine(asset['name']):
                     continue
                 urls.append(asset['browser_download_url'])
         else:
