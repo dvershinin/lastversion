@@ -5,6 +5,9 @@ import sys
 
 import requests
 import tqdm
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class ApiCredentialsError(Exception):
@@ -98,35 +101,39 @@ if not hasattr(requests.Response, '__exit__'):
 def download_file(url, local_filename=None):
     if local_filename is None:
         local_filename = url.split('/')[-1]
-    # NOTE the stream=True parameter below
-    with requests.get(url, stream=True) as r:
-        r.raise_for_status()
-        # content-length may be empty, default to 0
-        file_size = int(r.headers.get('Content-Length', 0))
-        bar_size = 1024
-        # fetch 8 KB at a time
-        chunk_size = 8192
-        # how many bars are there in a chunk?
-        chunk_bar_size = chunk_size / bar_size
-        # bars are by KB
-        num_bars = int(file_size / bar_size)
+    try:
+        # NOTE the stream=True parameter below
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            # content-length may be empty, default to 0
+            file_size = int(r.headers.get('Content-Length', 0))
+            bar_size = 1024
+            # fetch 8 KB at a time
+            chunk_size = 8192
+            # how many bars are there in a chunk?
+            chunk_bar_size = chunk_size / bar_size
+            # bars are by KB
+            num_bars = int(file_size / bar_size)
 
-        pbar = tqdm.tqdm(
-            disable=None,  # disable on non-TTY
-            total=num_bars,
-            unit='KB',
-            desc='Downloading {}'.format(local_filename),
-            leave=True  # progressbar stays
-        )
-        with open(local_filename, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=chunk_size):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-                    # we fetch 8 KB, so we update progress by +8x
-                    pbar.update(chunk_bar_size)
-        pbar.set_description('Downloaded {}'.format(local_filename))
-        pbar.close()
-
+            pbar = tqdm.tqdm(
+                disable=None,  # disable on non-TTY
+                total=num_bars,
+                unit='KB',
+                desc='Downloading {}'.format(local_filename),
+                leave=True  # progressbar stays
+            )
+            with open(local_filename, 'wb') as f:
+                for chunk in r.iter_content(chunk_size=chunk_size):
+                    if chunk:  # filter out keep-alive new chunks
+                        f.write(chunk)
+                        # we fetch 8 KB, so we update progress by +8x
+                        pbar.update(chunk_bar_size)
+            pbar.set_description('Downloaded {}'.format(local_filename))
+            pbar.close()
+    except KeyboardInterrupt:
+        os.remove(local_filename)
+        log.warning('Cancelled')
+        os._exit(1)
     return local_filename
 
 
