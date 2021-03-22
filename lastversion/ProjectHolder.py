@@ -21,6 +21,9 @@ log = logging.getLogger(__name__)
 class ProjectHolder(requests.Session):
     """Generic project holder class abstracts a web-accessible project storage."""
 
+    """List of odd repos where last char is part of version not beta level."""
+    LAST_CHAR_FIX_REQUIRED_ON = []
+
     # web accessible project holders may have single well-known domain usable by everyone
     # in case of GitHub, that is github.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
@@ -125,7 +128,8 @@ class ProjectHolder(requests.Session):
         log.info("Sanitizing string {} as a satisfying version.".format(version))
         res = False
         try:
-            v = Version(version)
+            char_fix_required = self.repo in self.LAST_CHAR_FIX_REQUIRED_ON
+            v = Version(version, char_fix_required = char_fix_required)
             if not v.is_prerelease or pre_ok:
                 log.info("Parsed as Version OK")
                 log.info("String representation of version is {}.".format(v))

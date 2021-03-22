@@ -10,6 +10,7 @@ from .lastversion import main
 from .lastversion import check_version
 from .lastversion import has_update
 from .lastversion import latest
+from .lastversion import __self__
 from .__about__ import (
     __version__,
 )

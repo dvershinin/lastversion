@@ -1,6 +1,6 @@
 import re
 
-from packaging.version import Version as PackagingVersion
+from packaging.version import Version as PackagingVersion, InvalidVersion
 
 
 class Version(PackagingVersion):
@@ -23,30 +23,42 @@ class Version(PackagingVersion):
         self.fixed_letter_post_release = True
         return match.group(1) + '.post' + str(ord(match.group(2)))
 
-    def __init__(self, version):
+    def __init__(self, version, char_fix_required=False):
         # type: (str) -> None
         self.fixed_letter_post_release = False
 
         # many times they would tag foo-1.2.3 which would parse to LegacyVersion
         # we can avoid this, by reassigning to what comes after the dash:
-        parts = version.split('-', 1)
+        parts = version.split('-')
 
-        if len(parts) == 2 and parts[0].isalpha():
-            version = parts[1]
+        # TODO test v5.12-rc1-dontuse -> v5.12.rc1
+        # go through parts separated by dot, detect beta level, and weed out numberless info:
+        parts_n = []
+        for part in parts:
+            # help devel releases to be correctly identified
+            # https://www.python.org/dev/peps/pep-0440/#developmental-releases
+            if part in ['devel', 'test', 'dev']:
+                part = 'dev0'
+            else:
+                # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
+                # p12 => post12
+                part = re.sub('^p(\\d+)$', 'post\\1', part, 1)
+            if not part.isalpha():
+                parts_n.append(part)
 
+        if not parts_n:
+            raise InvalidVersion("Invalid version: '{0}'".format(version))
         # remove *any* non-digits which appear at the beginning of the version string
         # e.g. Rhino1_7_13_Release does not even bother to put a delimiter...
         # such string at the beginning typically do not convey stability level
         # so we are fine to remove them (unlike the ones in the tail)
-        version = re.sub('^[^0-9]+', '', version, 1)
+        parts_n[0] = re.sub('^[^0-9]+', '', parts_n[0], 1)
 
-        # help devel releases to be correctly identified
-        # https://www.python.org/dev/peps/pep-0440/#developmental-releases
-        version = re.sub('-devel$', '.dev0', version, 1)
-        version = re.sub('-test$', '.dev0', version, 1)
-        # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
-        version = re.sub('-p(\\d+)$', '.post\\1', version, 1)
-        version = re.sub('(\\d)([a-z])$', self.fix_letter_post_release, version, 1)
+        # go back to full string parse out
+        version = ".".join(parts_n)
+
+        if char_fix_required:
+            version = re.sub('(\\d)([a-z])$', self.fix_letter_post_release, version, 1)
         # release-3_0_2 is often seen on Mercurial holders
         # note that above code removes "release-" already so we are left with "3_0_2"
         if re.search(r'^(?:\d+_)+(?:\d+)', version):

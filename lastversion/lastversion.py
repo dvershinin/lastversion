@@ -22,15 +22,17 @@ from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
 # from cachecontrol.heuristics import ExpiresAfter
 from packaging.version import InvalidVersion
+
+from .argparse_version import VersionAction
 from .Version import Version
 from .GitHubRepoSession import TOKEN_PRO_TIP
 
 from .ProjectHolder import ProjectHolder
 from .HolderFactory import HolderFactory
-from .__about__ import __version__
 from .utils import download_file, ApiCredentialsError, BadProjectError, rpm_installed_version
 
 log = logging.getLogger(__name__)
+__self__ = "dvershinin/lastversion"
 
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
@@ -254,15 +256,14 @@ def main():
                         choices=HolderFactory.HOLDERS.keys())
     parser.add_argument('-y', '--assumeyes', dest='assumeyes', action='store_true',
                         help='Automatically answer yes for all questions')
-    parser.add_argument('--version', action='version',
-                        version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('--version', action=VersionAction)
     parser.set_defaults(validate=True, verbose=False, format='version',
                         pre=False, assets=False, newer_than=False, filter=False,
                         shorter_urls=False, major=None, assumeyes=False, at=None)
     args = parser.parse_args()
 
     if args.repo == "self":
-        args.repo = "dvershinin/lastversion"
+        args.repo = __self__
 
     # "expand" repo:1.2 as repo --branch 1.2
     if ':' in args.repo and \
@@ -299,9 +300,14 @@ def main():
         args.filter = re.compile(args.filter)
 
     if args.action == 'test':
-        print(parse_version(args.repo))
-        # TODO dynamic exit status
-        sys.exit(0)
+        v = parse_version(args.repo)
+        if not v:
+            print('Failed to parse as a valid version')
+            sys.exit(1)
+        else:
+            print("Parsed as: {}".format(v))
+            print("Stable: {}".format(not v.is_prerelease))
+            sys.exit(0)
 
     if args.action == 'install':
         # we can only install assets

@@ -6,6 +6,7 @@ import pytest
 from packaging import version
 
 from lastversion.ProjectHolder import ProjectHolder
+from lastversion.Version import Version
 from lastversion.lastversion import latest
 
 from lastversion.utils import BadProjectError
@@ -413,3 +414,30 @@ def test_raises_bad_project_error_while_graphql():
     with pytest.raises(BadProjectError):
         repo = 'SiliconLabs/uC-OS'
         latest(repo)
+
+
+def test_rc_detection_anywhere():
+    tag = "v5.12-rc1-dontuse"
+    v = Version(tag)
+    assert v == version.parse('5.12.rc1')
+
+
+def test_patch_detection_anywhere():
+    tag = "blah-2.3.4-p2-ok"
+    v = Version(tag)
+    assert v == version.parse('2.3.4.post2')
+
+
+def test_last_b_is_beta():
+    tag = "1.1.1b"
+    v = Version(tag)
+    assert v == version.parse('1.1.1b')
+    assert v.is_prerelease
+
+
+def test_last_b_belongs_to_version():
+    # this fix is required for OpenSSL-like repos, are there any other?
+    tag = "1.1.1b"
+    v = Version(tag, char_fix_required=True)
+    assert str(v) == '1.1.1b'
+    assert not v.is_prerelease

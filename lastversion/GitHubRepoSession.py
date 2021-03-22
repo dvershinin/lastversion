@@ -33,7 +33,16 @@ class GitHubRepoSession(ProjectHolder):
         },
         'linux': {'repo': 'torvalds/linux'},
         'kernel': {'repo': 'torvalds/linux'},
+        'openssl': {'repo': 'openssl/openssl'}
     }
+
+    """
+    The last alphanumeric after digits is part of version scheme, not beta level.
+    E.g. 1.1.1b is not beta. Hard-coding such odds repos is required.
+    """
+    LAST_CHAR_FIX_REQUIRED_ON = [
+        'openssl/openssl'
+    ]
 
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
@@ -204,9 +213,20 @@ class GitHubRepoSession(ProjectHolder):
             return r.json()
         return None
 
-    # faster tag search: aggregates highest semver between records of 100 (faster search in --major)
-    # much fewer requests
     def find_in_tags_via_graphql(self, ret, pre_ok, major):
+        """GraphQL allows for faster search across many tags.
+        We aggregate the highest semantic version among batches of 100 records.
+        In this way --major filtering results in much fewer requests compared to traditional API
+        use.
+
+        Args:
+            ret (dict): currently selected release object
+            pre_ok (bool): whether betas are acceptable
+            major (str): the major filter
+
+        Returns: currently selected release object
+
+        """
         query_fmt = """
         {
           rateLimit {
@@ -214,7 +234,7 @@ class GitHubRepoSession(ProjectHolder):
             remaining
           }
           repository(owner: "%s", name: "%s") {
-            tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s", 
+            tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s",
               orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {
               edges {
                 cursor,
