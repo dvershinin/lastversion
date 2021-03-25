@@ -47,9 +47,8 @@ class FeedRepoSession(ProjectHolder):
                 possible_feeds.append(base + '/' + href.lstrip('/'))
         for url in list(set(possible_feeds)):
             f = feedparser.parse(url)
-            if len(f.entries) > 0:
-                if url not in result:
-                    result.append(url)
+            if len(f.entries) > 0 and url not in result:
+                result.append(url)
         return result
 
     def __init__(self, repo, hostname):

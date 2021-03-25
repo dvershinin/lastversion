@@ -6,6 +6,8 @@ from .ProjectHolder import ProjectHolder
 
 
 class SourceForgeRepoSession(ProjectHolder):
+    """SourceForce project holder."""
+
     REPO_URL_PROJECT_COMPONENTS = 1
     DEFAULT_HOSTNAME = 'sourceforge.net'
     # For project URLs, e.g. https://sourceforge.net/projects/keepass/
