@@ -423,7 +423,8 @@ class GitHubRepoSession(ProjectHolder):
             if r.status_code == 200:
                 repo_data = r.json()
                 if self.repo != repo_data['full_name']:
-                    log.info('Detected name change from {} to {}'.format(self.repo, repo_data['full_name']))
+                    log.info('Detected name change from {} to {}'.format(self.repo,
+                                                                         repo_data['full_name']))
                     self.set_repo(repo_data['full_name'])
                     # request the feed from the new location
                     return self.get_releases_feed_contents(rename_checked=False)

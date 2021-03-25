@@ -3,6 +3,10 @@ import os
 import re
 
 import requests
+from packaging.version import InvalidVersion
+
+from .Version import Version
+from .__about__ import __version__
 # this class basically corresponds to something (often a website) which holds
 # projects (usually a bunch). often this is a github-like website, so we subclass session
 # but this also maybe something special, which either way can be used as a source of version
@@ -10,10 +14,6 @@ import requests
 # it is instantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
 from .utils import asset_does_not_belong_to_machine
-from .Version import Version
-from packaging.version import InvalidVersion
-
-from .__about__ import __version__
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class ProjectHolder(requests.Session):
         res = False
         try:
             char_fix_required = self.repo in self.LAST_CHAR_FIX_REQUIRED_ON
-            v = Version(version, char_fix_required = char_fix_required)
+            v = Version(version, char_fix_required=char_fix_required)
             if not v.is_prerelease or pre_ok:
                 log.info("Parsed as Version OK")
                 log.info("String representation of version is {}.".format(v))

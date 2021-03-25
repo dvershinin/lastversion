@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # License: BSD, see LICENSE for more details.
 """
-This is the main module of lastversion package. To use it, import it and invoke any function
-documented here. For example:
+This is the main module of lastversion package.
+To use it, import it and invoke any function documented here. For example:
 
 ```python
 from lastversion import lastversion
@@ -16,6 +16,7 @@ import logging
 import os
 import re
 import sys
+
 import yaml
 from appdirs import user_cache_dir
 from cachecontrol import CacheControl
@@ -23,12 +24,11 @@ from cachecontrol.caches.file_cache import FileCache
 # from cachecontrol.heuristics import ExpiresAfter
 from packaging.version import InvalidVersion
 
-from .argparse_version import VersionAction
-from .Version import Version
 from .GitHubRepoSession import TOKEN_PRO_TIP
-
-from .ProjectHolder import ProjectHolder
 from .HolderFactory import HolderFactory
+from .ProjectHolder import ProjectHolder
+from .Version import Version
+from .argparse_version import VersionAction
 from .utils import download_file, ApiCredentialsError, BadProjectError, rpm_installed_version
 
 log = logging.getLogger(__name__)
@@ -201,11 +201,13 @@ def check_version(value):
 
 
 def parse_version(tag):
+    """Parse version to Version object."""
     h = ProjectHolder()
     return h.sanitize_version(tag, pre_ok=True)
 
 
 def main():
+    """The entrypoint to CLI app."""
     epilog = None
     if "GITHUB_API_TOKEN" not in os.environ and "GITHUB_TOKEN" not in os.environ:
         epilog = TOKEN_PRO_TIP

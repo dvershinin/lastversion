@@ -6,16 +6,16 @@ License: BSD, see LICENSE for more details.
 
 __author__ = "Danila Vershinin"
 
-from .lastversion import main
-from .lastversion import check_version
-from .lastversion import has_update
-from .lastversion import latest
-from .lastversion import __self__
+import logging
+
 from .__about__ import (
     __version__,
 )
-
-import logging
+from .lastversion import __self__
+from .lastversion import check_version
+from .lastversion import has_update
+from .lastversion import latest
+from .lastversion import main
 
 # https://realpython.com/python-logging-source-code/#library-vs-application-logging-what-is-nullhandler
 # when used as library, we default to opt-in approach, whereas library user have to enable logging

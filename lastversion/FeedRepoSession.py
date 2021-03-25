@@ -1,6 +1,7 @@
-import feedparser
 import datetime
 import logging
+
+import feedparser
 
 from .ProjectHolder import ProjectHolder
 

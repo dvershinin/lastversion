@@ -417,18 +417,21 @@ def test_raises_bad_project_error_while_graphql():
 
 
 def test_rc_detection_anywhere():
+    """Test rc indicator detected in middle too."""
     tag = "v5.12-rc1-dontuse"
     v = Version(tag)
     assert v == version.parse('5.12.rc1')
 
 
 def test_patch_detection_anywhere():
+    """Test patch/post detection in middle."""
     tag = "blah-2.3.4-p2-ok"
     v = Version(tag)
     assert v == version.parse('2.3.4.post2')
 
 
 def test_last_b_is_beta():
+    """Test trailing beta status detection."""
     tag = "1.1.1b"
     v = Version(tag)
     assert v == version.parse('1.1.1b')
@@ -436,7 +439,10 @@ def test_last_b_is_beta():
 
 
 def test_last_b_belongs_to_version():
-    # this fix is required for OpenSSL-like repos, are there any other?
+    """
+    Test no beta flag if desired by specific repos scheme.
+    This fix is required for OpenSSL-like repos, are there any other? Probably not.
+    """
     tag = "1.1.1b"
     v = Version(tag, char_fix_required=True)
     assert str(v) == '1.1.1b'

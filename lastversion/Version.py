@@ -19,6 +19,7 @@ class Version(PackagingVersion):
         InvalidVersion: If the ``version`` does not conform to PEP 440 in
                         any way then this exception will be raised.
     """
+
     def fix_letter_post_release(self, match):
         self.fixed_letter_post_release = True
         return match.group(1) + '.post' + str(ord(match.group(2)))

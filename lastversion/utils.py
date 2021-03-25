@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 import re
@@ -5,7 +6,6 @@ import sys
 
 import requests
 import tqdm
-import logging
 
 log = logging.getLogger(__name__)
 

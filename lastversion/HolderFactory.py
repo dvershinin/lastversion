@@ -1,15 +1,14 @@
 import logging
 
-from .utils import BadProjectError
-
 from .BitBucketRepoSession import BitBucketRepoSession
+from .FeedRepoSession import FeedRepoSession
 from .GitHubRepoSession import GitHubRepoSession
 from .GitLabRepoSession import GitLabRepoSession
 from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
-from .SourceForgeRepoSession import SourceForgeRepoSession
-from .FeedRepoSession import FeedRepoSession
 from .PypiRepoSession import PypiRepoSession
+from .SourceForgeRepoSession import SourceForgeRepoSession
+from .utils import BadProjectError
 
 log = logging.getLogger(__name__)
 

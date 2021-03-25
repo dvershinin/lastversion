@@ -1,6 +1,7 @@
-from argparse import SUPPRESS, Action
-import lastversion
 import sys as _sys
+from argparse import SUPPRESS, Action
+
+import lastversion
 from .__about__ import __version__
 
 

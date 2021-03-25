@@ -2,6 +2,7 @@
 # nginx version is taken as version of stable (written by rpm check script)
 # to /usr/local/share/builder/nginx-stable.ver
 import logging
+
 from .ProjectHolder import ProjectHolder
 
 log = logging.getLogger(__name__)
