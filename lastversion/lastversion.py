@@ -326,10 +326,16 @@ def main():
         if args.format != 'assets':
             args.format = 'source'
 
+    base_compare = parse_version(args.repo)
+    if args.newer_than and base_compare:
+        print(max([args.newer_than, base_compare]))
+        sys.exit(2 if base_compare <= args.newer_than else 0)
+
+    res = None
     # other action are either getting release or doing something with release (extend get action)
     try:
-        res = latest(args.repo, args.format, args.pre, args.filter,
-                     args.shorter_urls, args.major, args.only, args.at)
+            res = latest(args.repo, args.format, args.pre, args.filter,
+                         args.shorter_urls, args.major, args.only, args.at)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
         if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ and \
