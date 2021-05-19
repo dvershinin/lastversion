@@ -40,6 +40,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     """Find latest release version for a project.
 
     Args:
+        only (str): Only consider tags with this text. Useful for repos with multiple projects
         repo (str): Repository specifier in any form.
         output_format (str): Affects return format. Possible values `version`, `json`, `dict`,
                              `assets`, `source`, `tag`.

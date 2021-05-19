@@ -100,9 +100,9 @@ def test_datadog_agent():
     """Test datadog-agent at GitHub."""
     repo = "DataDog/datadog-agent"
 
-    output = latest(repo)
+    # Example of a multiple project repo, look for Data Cluster Agent only
+    output = latest(repo, only="dca")
 
-    # TODO deal with projects like this (dca- and non-dca tags are different subprojects)
     assert output >= version.parse("1.7.0")
 
 
