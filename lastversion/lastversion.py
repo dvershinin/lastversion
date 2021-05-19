@@ -223,10 +223,8 @@ def main():
     # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
-    # parser.add_argument('--verbose', dest='verbose', action='store_true',
-    #                     help='Will give you idea of what is happening under the hood')
     parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help='Will give you idea of what is happening under the hood, '
+                        help='Will give you an idea of what is happening under the hood, '
                              '-vv to increase verbosity level')
     # no --download = False, --download filename.tar, --download = None
     parser.add_argument('-d', '--download', dest='download', nargs='?', default=False, const=None,

@@ -130,7 +130,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --pre                 Include pre-releases in potential versions
-  --verbose             Will give you idea of what is happening under the hood
+  --verbose             Will give you an idea of what is happening under the hood
   -d [FILENAME], --download [FILENAME]
                         Download with custom filename
   --format {version,assets,source,json,tag}

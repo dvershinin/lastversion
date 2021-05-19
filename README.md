@@ -24,7 +24,7 @@ A tiny command-line utility that helps to answer a simple question:
 *   PyPI
 *   Mercurial
 *   SourceForge
-*   Arbitrary software sites which publish release in RSS/ATOM feeds
+*   Arbitrary software sites which publish releases in RSS/ATOM feeds
 
 ## Why you need `lastversion`
 
@@ -40,8 +40,8 @@ In general, quite many project authors complicate finding the latest version by:
 
 There is no consistency in human beings.
 
-To deal with all this mess and simply get well-formatted, last *stable* version (or download URL!) 
-on the command line, you can use `lastversion`.
+To deal with all this mess and simply get a well-formatted, last *stable* version (or download
+ URL!) on the command line, you can use `lastversion`.
 
 Its primary use is for build systems - whenever you want to watch specific projects for released
 versions to build packages automatically.
@@ -94,13 +94,13 @@ e.g.:
 lastversion https://github.com/gperftools/gperftools
 ```
 
-Equivalently accepted invocation with same output is:
+Equivalently accepted invocation with the same output is:
 
 ```bash
 lastversion gperftools/gperftools
 ```    
 
-If you're lazy to even copy paste a project's URL, you can just type its name as argument, which 
+If you're lazy to even copy-paste a project's URL, you can just type its name as argument, which 
 will use repository search API (slower).
 Helps to answer what is the latest Linux version:
 
@@ -138,7 +138,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --pre                 Include pre-releases in potential versions
-  --verbose             Will give you idea of what is happening under the hood
+  --verbose             Will give you an idea of what is happening under the hood
   -d [FILENAME], --download [FILENAME]
                         Download with custom filename
   --format {version,assets,source,json,tag}
@@ -192,7 +192,7 @@ lastversion --assets mautic/mautic
 #> https://github.com/mautic/mautic/archive/2.15.1/mautic-2.15.1.tar.gz
 ```
 
-By default, `lastversion` filters output of `--assets` to be OS specific. Who needs `.exe` on Linux?
+By default, `lastversion` filters output of `--assets` to be OS-specific. Who needs `.exe` on Linux?
 
 To override this behavior, you can use `--filter`, which has a regular expression as its argument.
 To disable OS filtering, use `--filter .`, this will match everything.
@@ -200,7 +200,7 @@ To disable OS filtering, use `--filter .`, this will match everything.
 You can naturally use `--filter` in place where you would use `grep`, e.g. 
 `lastversion --assets --filter win REPO`
 
-### Use case: How to download latest version of something
+### Use case: How to download the latest version of something
 
 You can also use `lastversion` to download assets/sources for the latest release.
 
@@ -228,7 +228,7 @@ This will download all assets of the newest stable Mautic, which are 2 zip files
 How this works: `lastversion` outputs all asset URLs, each on a new line, and `wget` is smart 
 enough to download each URL. Magic :)
 
-For releases which have no assets added, it will download source archive.  
+For releases that have no assets added, it will download the source archive.  
 
 To always download source, use `--source` instead:
 
@@ -236,9 +236,9 @@ To always download source, use `--source` instead:
 wget $(lastversion --source mautic/mautic)  
 ```
 
-### Use case: Get last version (betas are fine)
+### Use case: Get the last version (betas are fine)
 
-We consider latest release is the one which is stable / not marked as beta.
+We consider the latest release is the one that is stable / not marked as beta.
 If you think otherwise, then pass `--pre` switch and if the latest version of repository is a 
 pre-release, then you'll get its version instead:
 
@@ -286,9 +286,9 @@ Those are supported as well, e.g.
 lastversion https://hg.example.com/project/
 ```
     
-Mercurial repos are rather rare these days, but support has been added primarily for NGINX.
+Mercurial repositories are rather rare these days, but support has been added primarily for NGINX.
 
-#### Special use case: find release of a PyPI project
+#### Special use case: find the release of a PyPI project
 
 Most Python libraries/apps are hosted on PyPI. To check versions of a project on PyPI, you can use:
 
@@ -296,7 +296,7 @@ Most Python libraries/apps are hosted on PyPI. To check versions of a project on
 lastversion https://pypi.org/project/requests/
 ```
 
-If you prefer using shorter repo name, ensure `--at pip` switch, like so:
+If you prefer using a shorter repo name, ensure `--at pip` switch, like so:
 
 ```bash
 lastversion requests --at pip
@@ -322,7 +322,7 @@ You can even set up an auto-updater cron job which will ensure you are on the la
 ```
 
 If the Mailspring GitHub repo posts a release with newer `.rpm`, then it will be automatically
- installed, making sure you are running the latest and greated Mailspring version.
+ installed, making sure you are running the latest and greatest Mailspring version.
   
 You'll even get an email alert after update (standard cron feature).
 
@@ -437,7 +437,7 @@ else:
 ```
 
 The `lastversion.has_update(...)` function accepts any URL from a repository (or its short name
-, e.g. `owner/name`) and you should pass existing/current version.
+, e.g. `owner/name`) and you should pass an existing/current version.
 
 If you are checking version of a project on PyPi, supply an additional `at='pip'` argument,
 in order to avoid passing the full PyPI URI of a project, and remove ambiguity with GitHub hosted
@@ -483,7 +483,7 @@ but are guaranteed to always have these keys:
 
 *   `version`: [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 
  object, contains the found release version, e.g. `1.2.3`
-*   `source`: string, identifier of the project source, e.g. `github`, or `gitlab`
+*   `source`: string, the identifier of the project source, e.g. `github`, or `gitlab`
 *   `tag_date`: datetime object, the release date, e.g. `2020-12-15 14:41:39`
 *   `from`: string, contains fully qualified URL of the project
 *   `tag_name`: string, version control tag name corresponding to the release
@@ -491,8 +491,8 @@ but are guaranteed to always have these keys:
 The `lastversion.latest` function accepts 3 arguments
 
 *   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
-*   `format`, which accepts same values as when you run `lastversion` interactively, as well as
- `dict` to return an dictionary as described above
+*   `format`, which accepts the same values as when you run `lastversion` interactively, as well as
+ `dict` to return a dictionary as described above
 *   `pre_ok`, boolean for whether to include pre-releases as potential versions
 *   `at`, specifies project location when using one-word repo names, one of 
  `github`, `gitlab`, `bitbucket`, `pip`, `hg`, `sf`, `website-feed`, `local`
