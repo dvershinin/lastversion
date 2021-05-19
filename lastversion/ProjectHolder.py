@@ -123,6 +123,13 @@ class ProjectHolder(requests.Session):
             return True
         return False
 
+    def matches_only(self, version):
+        if not self.only:
+            return True
+        if self.only in version:
+            log.info('{} does not match the "only" constraint')
+        return False
+
     def sanitize_version(self, version, pre_ok=False, major=None):
         """Extract version from tag name."""
         log.info("Sanitizing string {} as a satisfying version.".format(version))

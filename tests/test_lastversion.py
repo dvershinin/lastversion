@@ -103,7 +103,7 @@ def test_datadog_agent():
     # Example of a multiple project repo, look for Data Cluster Agent only
     output = latest(repo, only="dca")
 
-    assert output >= version.parse("1.7.0")
+    assert output >= version.parse("1.4.0")
 
 
 def test_grafana():
