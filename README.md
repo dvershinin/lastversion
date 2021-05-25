@@ -342,6 +342,18 @@ lastversion test '1.2.3-rc1' # > 1.2.3rc1
 
 ### Scripting with `lastversion` in `bash`
 
+#### Compare arbitrary versions
+
+Use `lastversion` for easy comparison of versions on the command line.
+Compare two versions, the command will output the highest version:
+
+```bash
+lastversion 1.2.3 -gt 1.2.4
+#> 1.2.4
+```
+
+See exit codes below, to find whether the first argument is a higher version, or the second.
+
 #### Check for NEW release
 
 When you're building some upstream package, and you did this before, there is a known "last build" 

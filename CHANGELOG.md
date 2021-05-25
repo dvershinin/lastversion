@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.4] - 2021-05-25
+### Added
+* Arbitrary versions comparison in CLI: `lastversion 1.2.3 -gt 1.2.4`
+* `lastversion --version` reports available updates for `lastversion`
+* Clean up cancelled download on Ctrl+C
+
 ## [1.3.3] - 2021-02-03
 ### Added
 * More requests logging in `--verbose` mode
