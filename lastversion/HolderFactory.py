@@ -3,6 +3,7 @@ import logging
 from .BitBucketRepoSession import BitBucketRepoSession
 from .FeedRepoSession import FeedRepoSession
 from .GitHubRepoSession import GitHubRepoSession
+from .HelmChartRepoSession import HelmChartRepoSession
 from .GitLabRepoSession import GitLabRepoSession
 from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
@@ -22,7 +23,8 @@ class HolderFactory:
         'hg': MercurialRepoSession,
         'sf': SourceForgeRepoSession,
         'website-feed': FeedRepoSession,
-        'local': LocalVersionSession
+        'local': LocalVersionSession,
+        'github_helm': HelmChartRepoSession
     }
 
     @staticmethod

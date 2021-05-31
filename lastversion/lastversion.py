@@ -57,7 +57,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     cache_dir = user_cache_dir("lastversion")
     log.info("Using cache directory: {}.".format(cache_dir))
     repo_data = {}
-    if repo.endswith('.yml'):
+
+    if repo.endswith('.yml') and not repo.startswith(('http://', 'https://')):
         with open(repo) as fpi:
             repo_data = yaml.safe_load(fpi)
             if 'repo' in repo_data:
@@ -74,6 +75,9 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
         project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
     else:
         project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
+
+    if repo.startswith('https://github.com/') and repo.endswith('Chart.yaml'):
+        project_holder = HolderFactory.HOLDERS['github_helm'](repo)
 
     # we are completely "offline" for 1 hour, not even making conditional requests
     # heuristic=ExpiresAfter(hours=1)   <- make configurable
@@ -341,8 +345,8 @@ def main():
     res = None
     # other action are either getting release or doing something with release (extend get action)
     try:
-            res = latest(args.repo, args.format, args.pre, args.filter,
-                         args.shorter_urls, args.major, args.only, args.at)
+        res = latest(args.repo, args.format, args.pre, args.filter,
+                     args.shorter_urls, args.major, args.only, args.at)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
         if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ and \
