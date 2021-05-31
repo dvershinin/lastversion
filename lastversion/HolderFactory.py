@@ -24,7 +24,7 @@ class HolderFactory:
         'sf': SourceForgeRepoSession,
         'website-feed': FeedRepoSession,
         'local': LocalVersionSession,
-        'github_helm': HelmChartRepoSession
+        'helm_chart': HelmChartRepoSession
     }
 
     @staticmethod

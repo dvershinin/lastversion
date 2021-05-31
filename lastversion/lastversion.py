@@ -70,14 +70,14 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
                 repo = repo_data['repo']
                 repo_data['name'] = name
 
-    # find the right hosting for this repo
-    if not at or '/' in repo:
-        project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
-    else:
-        project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
+    if repo.startswith(('http://', 'https://')) and repo.endswith('Chart.yaml'):
+        at = 'helm_chart'
 
-    if repo.startswith('https://github.com/') and repo.endswith('Chart.yaml'):
-        project_holder = HolderFactory.HOLDERS['github_helm'](repo)
+    if at:
+        project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
+    else:
+        # find the right hosting for this repo
+        project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
 
     # we are completely "offline" for 1 hour, not even making conditional requests
     # heuristic=ExpiresAfter(hours=1)   <- make configurable
