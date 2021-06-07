@@ -450,18 +450,14 @@ def test_last_b_belongs_to_version():
 
 
 def test_char_yml_direct():
-    """
-    Test URL with Chart.yaml
-    """
+    """Test URL with Chart.yaml."""
     repo = "https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core/Chart.yaml"
     v = latest(repo)
     assert v >= version.parse('1.0.0')
 
 
 def test_char_yml_indirect_hint():
-    """
-    Test URL with Chart.yaml
-    """
+    """Test URL with Chart.yaml"""
     repo = "https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core"
     v = latest(repo, at='helm_chart')
     assert v >= version.parse('1.0.0')
