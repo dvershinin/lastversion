@@ -169,7 +169,7 @@ def test_major():
 
     output = latest(repo, major='2.9')
 
-    assert output == version.parse("2.9.3")
+    assert output >= version.parse("2.9.4")
 
 
 def test_version_parse_with_dot_x():
