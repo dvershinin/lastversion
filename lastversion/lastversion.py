@@ -35,11 +35,14 @@ log = logging.getLogger(__name__)
 __self__ = "dvershinin/lastversion"
 
 
-def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
+def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
            short_urls=False, major=None, only=None, at=None):
     """Find latest release version for a project.
 
     Args:
+        major (str): Only consider versions which are "descendants" of this major version string
+        short_urls (bool): Whether we should try to return shorter URLs for release data
+        assets_filter (str): Regular expression for filtering assets for the latest release
         only (str): Only consider tags with this text. Useful for repos with multiple projects
         repo (str): Repository specifier in any form.
         output_format (str): Affects return format. Possible values `version`, `json`, `dict`,
@@ -344,7 +347,6 @@ def main():
         print(max([args.newer_than, base_compare]))
         sys.exit(2 if base_compare <= args.newer_than else 0)
 
-    res = None
     # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
