@@ -132,7 +132,7 @@ class ProjectHolder(requests.Session):
             return False
         return True
 
-    def sanitize_version(self, version_s, pre_ok=False, major=None, only=None):
+    def sanitize_version(self, version_s, pre_ok=False, major=None):
         """Extract version from tag name."""
         log.info("Sanitizing string {} as a satisfying version.".format(version_s))
         res = False
