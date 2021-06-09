@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.3.5] - 2021-06-09
+### Added
+* Ability to parse/check Helm chart repository metadata #50
+### Fixed
+* Ensure the `--only` switch works consistently across different project hosting
+
 ## [1.3.4] - 2021-05-25
 ### Added
 * Arbitrary versions comparison in CLI: `lastversion 1.2.3 -gt 1.2.4`
