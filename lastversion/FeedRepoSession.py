@@ -72,8 +72,6 @@ class FeedRepoSession(ProjectHolder):
         feed = feedparser.parse(r.text)
         for tag in feed.entries:
             tag_name = tag['title']
-            if self.only and self.only not in tag_name:
-                continue
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue

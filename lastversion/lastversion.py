@@ -73,11 +73,13 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     if repo.startswith(('http://', 'https://')) and repo.endswith('Chart.yaml'):
         at = 'helm_chart'
 
-    if at:
-        project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
-    else:
+    if (not at or '/' in repo) and at != 'helm_chart':
         # find the right hosting for this repo
         project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
+    else:
+        project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
+
+    project_holder.set_only(only)
 
     # we are completely "offline" for 1 hour, not even making conditional requests
     # heuristic=ExpiresAfter(hours=1)   <- make configurable
@@ -89,8 +91,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=False,
     if not release:
         return None
 
-    from_type = 'Located the latest release at: {}'.format(
-        project_holder.get_canonical_link()
+    from_type = 'Located the latest release tag {} at: {}'.format(
+        release['tag_name'], project_holder.get_canonical_link()
     )
     if 'type' in release:
         from_type = '{} via {} mechanism'.format(from_type, release['type'])

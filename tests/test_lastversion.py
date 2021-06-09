@@ -461,3 +461,10 @@ def test_char_yml_indirect_hint():
     repo = "https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core"
     v = latest(repo, at='helm_chart')
     assert v >= version.parse('1.0.0')
+
+
+def test_at_with_url_github():
+    """Test direct URL spec with --at."""
+    repo = "https://github.com/dvershinin/lastversion"
+    v = latest(repo, at='github')
+    assert v >= version.parse('1.3.4')

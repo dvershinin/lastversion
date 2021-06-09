@@ -69,8 +69,9 @@ class ProjectHolder(requests.Session):
 
     def set_only(self, only):
         """Sets "only" tag selector for this holder."""
-        log.info('Only considering tags with "{}"'.format(only))
         self.only = only
+        if only:
+            log.info('Only considering tags with "{}"'.format(only))
 
     @classmethod
     def get_host_repo_for_link(cls, repo):
@@ -123,48 +124,50 @@ class ProjectHolder(requests.Session):
             return True
         return False
 
-    def matches_only(self, version):
+    def matches_only(self, version_s):
         if not self.only:
             return True
-        if self.only in version:
-            log.info('{} does not match the "only" constraint')
-        return False
+        if self.only not in version_s:
+            log.info('"{}" does not match the "only" constraint "{}"'.format(version_s, self.only))
+            return False
+        return True
 
-    def sanitize_version(self, version, pre_ok=False, major=None):
+    def sanitize_version(self, version_s, pre_ok=False, major=None, only=None):
         """Extract version from tag name."""
-        log.info("Sanitizing string {} as a satisfying version.".format(version))
+        log.info("Sanitizing string {} as a satisfying version.".format(version_s))
         res = False
+        if not self.matches_only(version_s):
+            return res
         try:
             char_fix_required = self.repo in self.LAST_CHAR_FIX_REQUIRED_ON
-            v = Version(version, char_fix_required=char_fix_required)
+            v = Version(version_s, char_fix_required=char_fix_required)
             if not v.is_prerelease or pre_ok:
-                log.info("Parsed as Version OK")
-                log.info("String representation of version is {}.".format(v))
+                log.info("Parsed as Version OK. String representation: {}.".format(v))
                 res = v
             else:
                 log.info("Parsed as unwanted pre-release version: {}.".format(v))
         except InvalidVersion:
-            log.info("Failed to parse {} as Version.".format(version))
+            log.info("Failed to parse {} as Version.".format(version_s))
             # attempt to remove extraneous chars and revalidate
             # we use findall for cases where "tag" may be 'foo/2.x/2.45'
-            matches = re.findall(r'([0-9]+([.][0-9x]+)+(rc[0-9]?)?)', version)
+            matches = re.findall(r'([0-9]+([.][0-9x]+)+(rc[0-9]?)?)', version_s)
             for s in matches:
-                version = s[0]
-                log.info("Sanitized tag name value to {}.".format(version))
+                version_s = s[0]
+                log.info("Sanitized tag name value to {}.".format(version_s))
                 # 1.10.x is a dev release without clear version, so even pre ok will not get it
-                if not version.endswith('.x'):
+                if not version_s.endswith('.x'):
                     # we know regex is valid version format, so no need to try catch
-                    res = Version(version)
+                    res = Version(version_s)
             if not matches:
                 log.info("Did not find anything that looks like a version in the tag")
                 # as a last resort, let's try to convert underscores to dots, while stripping out
                 # any "alphanumeric_". many hg repos do this, e.g. PROJECT_1_2_3
-                parts = version.split('_')
+                parts = version_s.split('_')
                 if len(parts) >= 2 and parts[0].isalpha():
                     # gets list except first item, joins by dot
-                    version = '.'.join(parts[1:])
+                    version_s = '.'.join(parts[1:])
                     try:
-                        v = Version(version)
+                        v = Version(version_s)
                         if not v.is_prerelease or pre_ok:
                             log.info("Parsed as Version OK")
                             log.info("String representation of version is {}.".format(v))
@@ -176,7 +179,7 @@ class ProjectHolder(requests.Session):
         # apply --major filter
         if res and major and not self.matches_major_filter(res, major):
             log.info('{} is not under the desired major {}'.format(
-                version, major))
+                version_s, major))
             res = False
         return res
 
