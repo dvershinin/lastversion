@@ -19,29 +19,29 @@ class BadProjectError(Exception):
 
 
 # matches os.name to known extensions that are meant *mostly* to run on it, and not other os.name-s
-osExtensions = {
+os_extensions = {
     'nt': ('.exe', '.msi', '.msi.asc', '.msi.sha256'),
     'posix': ('.tgz', '.tar.gz')
 }
 
+extension_distros = {
+    'deb': ['ubuntu', 'debian'],
+    'rpm': ['rhel', 'centos', 'fedora', 'amazon', 'cloudlinux'],
+    'apk': ['alpine'],
+    'darwin': ['dmg']
+}
+
 # matches *start* of sys.platform value to words in asset name
-pfMarkers = {
+platform_markers = {
     'win': ['windows', 'win'],
     'linux': ['linux'],
     'darwin': ['osx', 'darwin'],
     'freebsd': ['freebsd', 'netbsd', 'openbsd']
 }
 
-# matches platform.dist() ('redhat', '8.0', 'Ootpa') to words in asset name
-# TODO use https://pypi.org/project/distro/
-distroMarkers = {
-    'centos': ['centos'],
-    'redhat': ['centos', 'redhat']
-}
-
 # this is all too simple for now
-nonAmd64Markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7',
-                   'mips64', 'ppc64', 'mips64le', 'ppc64le']
+non_amd64_markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'armv7l',
+                   'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64']
 
 
 def asset_does_not_belong_to_machine(asset):
@@ -56,22 +56,27 @@ def asset_does_not_belong_to_machine(asset):
     # replace underscore with dash so that our shiny word boundary regexes won't break
     asset = asset.replace('_', '-')
     # bail if asset's extension "belongs" to other OS-es (simple)
-    for osName, osExts in osExtensions.items():
-        if os.name != osName and asset.endswith(osExts):
+    for os_name, ext in os_extensions.items():
+        if os.name != os_name and asset.endswith(ext):
             return True
-    # bail if asset's platform words belong to other platforms
-    for pf, pfWords in pfMarkers.items():
+    for pf, pf_words in platform_markers.items():
         if not sys.platform.startswith(pf):
-            for pfWord in pfWords:
+            for pfWord in pf_words:
                 r = re.compile(r'\b{}(\d+)?\b'.format(pfWord), flags=re.IGNORECASE)
                 matches = r.search(asset)
                 if matches:
                     return True
+    if sys.platform == 'linux':
+        import distro
+        # Weeding out non-matching Linux distros
+        for ext, ext_distros in extension_distros.items():
+            if asset.endswith("." + ext) and distro.id() not in ext_distros:
+                return True
     # weed out non-64 bit stuff from x86_64 bit OS
     # caution: may be false positive with 32 bit Python on 64 bit OS
     if platform.machine() in ['x86_64', 'AMD64']:
-        for nonAmd64Word in nonAmd64Markers:
-            r = re.compile(r'\b{}\b'.format(nonAmd64Word), flags=re.IGNORECASE)
+        for non_amd64_word in non_amd64_markers:
+            r = re.compile(r'\b{}\b'.format(non_amd64_word), flags=re.IGNORECASE)
             matches = r.search(asset)
             if matches:
                 return True
@@ -79,7 +84,6 @@ def asset_does_not_belong_to_machine(asset):
             matches = r.search(asset)
             if matches:
                 return True
-    # TODO weed out non-matching distros
     return False
 
 
@@ -99,6 +103,16 @@ if not hasattr(requests.Response, '__exit__'):
 
 
 def download_file(url, local_filename=None):
+    """Download a URL to the given filename.
+
+    Args:
+        url (str): URL to download from
+        local_filename (str): Destination filename
+
+    Returns:
+        str: Destination filename, on success
+
+    """
     if local_filename is None:
         local_filename = url.split('/')[-1]
     try:
@@ -138,6 +152,14 @@ def download_file(url, local_filename=None):
 
 
 def rpm_installed_version(name):
+    """Get the installed version of a package with the given name.
+
+    Args:
+        name (str): Package name
+
+    Returns:
+        string: Version of the installed packaged, or None
+    """
     try:
         import rpm
     except ImportError:

@@ -20,7 +20,8 @@ install_requires = ['requests>=2.6.1', 'packaging', 'cachecontrol', 'lockfile', 
                     'feedparser <= 5.2.1; python_version < "3.0.0"',
                     'feedparser; python_version >= "3.0.0"',
                     'python-dateutil', 'PyYAML', 'tqdm',
-                    'six', 'beautifulsoup4']
+                    'six', 'beautifulsoup4',
+                    'distro']
 tests_requires = [
     "pytest>=4.4.0",
     "flake8",
