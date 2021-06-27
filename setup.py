@@ -21,8 +21,7 @@ install_requires = ['requests>=2.6.1', 'packaging', 'cachecontrol', 'lockfile', 
                     'feedparser; python_version >= "3.0.0"',
                     'python-dateutil', 'PyYAML', 'tqdm',
                     'six', 'beautifulsoup4',
-                    'distro',
-                    'wptools']
+                    'distro']
 tests_requires = [
     "pytest>=4.4.0",
     "flake8",
