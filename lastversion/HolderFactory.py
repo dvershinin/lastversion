@@ -9,6 +9,7 @@ from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
 from .PypiRepoSession import PypiRepoSession
 from .SourceForgeRepoSession import SourceForgeRepoSession
+from .WikipediaRepoSession import WikipediaRepoSession
 from .utils import BadProjectError
 
 log = logging.getLogger(__name__)
@@ -24,7 +25,8 @@ class HolderFactory:
         'sf': SourceForgeRepoSession,
         'website-feed': FeedRepoSession,
         'local': LocalVersionSession,
-        'helm_chart': HelmChartRepoSession
+        'helm_chart': HelmChartRepoSession,
+        'wiki': WikipediaRepoSession
     }
 
     @staticmethod

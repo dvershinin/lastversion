@@ -120,11 +120,11 @@ usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [-y] [--version]
                    [action] <repo or URL>
 
-Find the latest release from GitHub/GitLab/BitBucket.
+Find the latest software release.
 
 positional arguments:
   action                Special action to run, e.g. download, install, test
-  <repo or URL>         GitHub/GitLab/BitBucket repository in format
+  <repo or URL>         GitHub/GitLab/BitBucket/etc. repository in format
                         owner/name or any URL that belongs to it
 
 optional arguments:

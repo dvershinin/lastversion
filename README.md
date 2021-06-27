@@ -15,7 +15,7 @@ A tiny command-line utility that helps to answer a simple question:
 
 ... and, optionally, download/install it.
 
-`lastversion` allows finding well-formatted the latest release version of a project from these 
+`lastversion` allows finding well-formatted, the latest release version of a project from these 
  supported locations:
 
 *   [GitHub](https://github.com/dvershinin/lastversion/wiki/GitHub-specifics)
@@ -24,6 +24,7 @@ A tiny command-line utility that helps to answer a simple question:
 *   PyPI
 *   Mercurial
 *   SourceForge
+*   Wikipedia    
 *   Arbitrary software sites which publish releases in RSS/ATOM feeds
 
 ## Why you need `lastversion`
@@ -128,11 +129,11 @@ usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [-y] [--version]
                    [action] <repo or URL>
 
-Find the latest release from GitHub/GitLab/BitBucket.
+Find the latest software release.
 
 positional arguments:
   action                Special action to run, e.g. download, install, test
-  <repo or URL>         GitHub/GitLab/BitBucket repository in format
+  <repo or URL>         GitHub/GitLab/BitBucket/etc. repository in format
                         owner/name or any URL that belongs to it
 
 optional arguments:
@@ -272,7 +273,29 @@ The branch selector can also be used to get specific release details, e.g.:
 lastversion php:7.2.33 --assets
 ```
 
-#### Special use case: NGINX stable vs mainline branch version
+### Use case: version of an operating system
+
+The operating systems are usually *not* versioned through GitHub releases or such.
+It is a challenge to get the last stable version of an OS other than from its website,
+or other announcement channels.
+
+An easy compromise that `lastversion` does about this, is hardcoding well-known OS names, and using
+Wikipedia behind the scenes:
+
+```bash 
+lastversion rocky #> 8.4
+lastversion windows #> 10.0.19043.1081
+lastversion ios #> 14.6
+```
+
+You can supply a fully-qualified URL to a Wikipedia page for an OS/software project to get version
+from there, e.g.:
+
+```bash
+lastversion https://en.wikipedia.org/wiki/Rocky_Linux #> 8.4
+```
+
+### Special use case: NGINX stable vs mainline branch version
 
 ```bash
 lastversion https://nginx.org --major stable #> 1.16.1
@@ -288,7 +311,7 @@ lastversion https://hg.example.com/project/
     
 Mercurial repositories are rather rare these days, but support has been added primarily for NGINX.
 
-#### Special use case: find the release of a PyPI project
+### Special use case: find the release of a PyPI project
 
 Most Python libraries/apps are hosted on PyPI. To check versions of a project on PyPI, you can use:
 

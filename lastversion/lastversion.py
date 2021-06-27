@@ -221,14 +221,13 @@ def main():
     epilog = None
     if "GITHUB_API_TOKEN" not in os.environ and "GITHUB_TOKEN" not in os.environ:
         epilog = TOKEN_PRO_TIP
-    parser = argparse.ArgumentParser(description='Find the latest release from '
-                                                 'GitHub/GitLab/BitBucket.',
+    parser = argparse.ArgumentParser(description='Find the latest software release.',
                                      epilog=epilog,
                                      prog='lastversion')
     parser.add_argument('action', nargs='?', default='get', help='Special action to run, '
                                                                  'e.g. download, install, test')
     parser.add_argument('repo', metavar='<repo or URL>',
-                        help='GitHub/GitLab/BitBucket repository in format owner/name or any URL '
+                        help='GitHub/GitLab/BitBucket/etc. repository in format owner/name or any URL '
                              'that belongs to it')
     # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',

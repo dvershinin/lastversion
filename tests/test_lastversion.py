@@ -468,3 +468,17 @@ def test_at_with_url_github():
     repo = "https://github.com/dvershinin/lastversion"
     v = latest(repo, at='github')
     assert v >= version.parse('1.3.4')
+
+
+def test_wiki_known_ios():
+    """Test iOS version."""
+    repo = 'ios'
+    v = latest(repo)
+    assert v >= version.parse('14.6')
+
+
+def test_wiki_direct_url_meego():
+    """Test Meego version."""
+    repo = 'https://en.wikipedia.org/wiki/MeeGo'
+    v = latest(repo)
+    assert v == version.parse('1.2.0.10')

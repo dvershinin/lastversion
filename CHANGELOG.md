@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2021-06-27
+### Added
+* Now it's easy get OS versions. Just run `lastversion ubuntu` or something
+
 ## [1.3.5] - 2021-06-09
 ### Added
 * Ability to parse/check Helm chart repository metadata #50
