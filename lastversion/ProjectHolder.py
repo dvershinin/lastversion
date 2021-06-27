@@ -95,9 +95,9 @@ class ProjectHolder(requests.Session):
                     log.info('{} Starts with {}'.format(repo, url))
                     return cls.KNOWN_REPO_URLS[url]
         else:
-            if repo in cls.KNOWN_REPOS_BY_NAME:
+            if repo.lower() in cls.KNOWN_REPOS_BY_NAME:
                 log.info('Selecting known repo {}'.format(repo))
-                return cls.KNOWN_REPOS_BY_NAME[repo]
+                return cls.KNOWN_REPOS_BY_NAME[repo.lower()]
         return False
 
     @classmethod

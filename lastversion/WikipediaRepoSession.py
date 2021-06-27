@@ -82,7 +82,7 @@ class WikipediaRepoSession(ProjectHolder):
                 # remove alphas from beginning
                 tag_name = remove_words(release_data.text).split('/')[0]
                 tag['title'] = release_data.text
-                log.info('Pre-parsed title: {}'.format(tag['title']))
+                # log.info('Pre-parsed title: {}'.format(tag['title']))
                 tag['tag_date'] = published
                 break
         if not tag_name:
