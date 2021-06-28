@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from dateutil import parser
 from bs4 import BeautifulSoup
 import logging
@@ -81,12 +83,15 @@ class WikipediaRepoSession(ProjectHolder):
                     t.decompose()
                 # remove alphas from beginning
                 tag_name = remove_words(release_data.text).split('/')[0]
-                tag['title'] = release_data.text
-                # log.info('Pre-parsed title: {}'.format(tag['title']))
+                # Remove unicode stuff (for Python 2)
+                tag['title'] = release_data.text.encode("ascii", "ignore").decode()
+                log.info('Pre-parsed title: {}'.format(tag['title']))
                 tag['tag_date'] = published
                 break
         if not tag_name:
             return None
+        # Remove unicode stuff (for Python 2)
+        tag_name = tag_name.encode("ascii", "ignore").decode()
         version = self.sanitize_version(tag_name, pre_ok, major)
         if not version:
             return None
