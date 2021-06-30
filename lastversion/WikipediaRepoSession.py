@@ -22,6 +22,9 @@ class WikipediaRepoSession(ProjectHolder):
         'rocky': {
             'repo': 'Rocky_Linux',
         },
+        'rockylinux': {
+            'repo': 'Rocky_Linux',
+        },
         'fedora': {
             'repo': 'Fedora_(operating_system)'
         },
@@ -48,6 +51,9 @@ class WikipediaRepoSession(ProjectHolder):
         },
         'windows': {
             'repo': 'Microsoft_Windows'
+        },
+        'osx': {
+            'repo': 'MacOS'
         }
     }
 
