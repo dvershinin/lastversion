@@ -1,6 +1,7 @@
 from .ProjectHolder import ProjectHolder
 import logging
 import yaml
+from six.moves.urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
 
@@ -18,8 +19,9 @@ class HelmChartRepoSession(ProjectHolder):
         # https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core/Chart.yaml
         # https://raw.githubusercontent.com/bitnami/charts/master/bitnami/aspnet-core/Chart.yaml
         url = self.url
-        if url.startswith('https://github.com'):
-            url = self.url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+        host = urlparse(url).hostname
+        if host in ['github.com']:
+            url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
         r = self.get(url)
         chart_data = yaml.safe_load(r.text)
         return {
