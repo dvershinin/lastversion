@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2021-07-08
+### Fixed
+* `--download` option works for asset downloads, as long as there is one asset
+
 ## [1.4.0] - 2021-06-27
 ### Added
 * Now it's easy get OS versions. Just run `lastversion ubuntu` or something

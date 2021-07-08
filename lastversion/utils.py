@@ -41,7 +41,7 @@ platform_markers = {
 
 # this is all too simple for now
 non_amd64_markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'armv7l',
-                   'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64']
+                     'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64']
 
 
 def asset_does_not_belong_to_machine(asset):

@@ -280,7 +280,6 @@ class GitHubRepoSession(ProjectHolder):
           }
         }
         
-        
         """
         cursor = ''
 
