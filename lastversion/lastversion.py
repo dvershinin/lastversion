@@ -224,11 +224,10 @@ def main():
     parser = argparse.ArgumentParser(description='Find the latest software release.',
                                      epilog=epilog,
                                      prog='lastversion')
-    parser.add_argument('action', nargs='?', default='get', help='Special action to run, '
-                                                                 'e.g. download, install, test')
+    parser.add_argument('action', nargs='?', default='get',
+                        help='Special action to run, e.g. download, install, test')
     parser.add_argument('repo', metavar='<repo or URL>',
-                        help='GitHub/GitLab/BitBucket/etc. repository in format owner/name or any URL '
-                             'that belongs to it')
+                        help='Repository in format owner/name or any URL that belongs to it')
     # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
@@ -363,11 +362,13 @@ def main():
             if args.format == 'source':
                 # there is only one source, but we need an array
                 res = [res]
+            download_name = None
+            # save with custom filename, if there's one file to download
+            if len(res) == 1:
+                download_name = args.download
             for url in res:
                 log.info("Downloading {} ...".format(url))
-                # there can be many assets, so we do not "rename" them
-                # there can be only one source, so we allow passing custom filename for it
-                download_file(url, args.download if args.format == 'source' else None)
+                download_file(url, download_name)
             sys.exit(0)
 
         if args.action == 'install':
