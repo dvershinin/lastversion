@@ -89,10 +89,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
             upstream_name = None
             current_version = None
             for l in f.readlines():
-                if l.startswith('%global upstream_version'):
-                    # influences %spec_tag to use %upstream_version instead of %version
-                    repo_data['module_of'] = True
-                elif l.startswith('%global upstream_github'):
+                if l.startswith('%global upstream_github'):
                     upstream_github = l.split(' ')[2].strip()
                 elif l.startswith('%global upstream_name'):
                     upstream_name = l.split(' ')[2].strip()
@@ -100,6 +97,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                     name = l.split('Name:')[1].strip()
                 elif l.startswith('%global upstream_version '):
                     current_version = l.split(' ')[2].strip()
+                    # influences %spec_tag to use %upstream_version instead of %version
+                    repo_data['module_of'] = True
                 elif l.startswith('Version:') and not current_version:
                     current_version = l.split('Version:')[1].strip()
             if not upstream_github:
@@ -112,8 +111,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 if current_version != 'x':
                     repo_data['current_version'] = Version(current_version)
             except InvalidVersion:
-                log.critical('Failed to parse current version from .spec file. Tried {}'.format(
-                    current_version))
+                log.critical('Failed to parse current version in {}. Tried {}'.format(
+                    repo, current_version))
                 sys.exit(1)
             if upstream_name:
                 repo_data['name'] = upstream_name
