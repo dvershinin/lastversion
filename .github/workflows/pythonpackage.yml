@@ -57,5 +57,7 @@ jobs:
         name: brotli.spec
     - name: Build updated specs
       run: |
-        mv /__w/lastversion/lastversion/*.spec /sources/
+        mkdir -p /github/home/rpmbuild/SPECS/
+        ls -al *
+        mv *.spec /sources/
         build
