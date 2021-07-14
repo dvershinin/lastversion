@@ -56,4 +56,7 @@ jobs:
       with:
         name: brotli.spec
     - name: Build updated specs
-      run: build
+      run: |
+        mkdir /sources
+        mv /__w/lastversion/lastversion/*.spec /sources/
+        build
