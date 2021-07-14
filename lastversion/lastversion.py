@@ -273,8 +273,6 @@ def get_rpm_packager():
                     return ln.split('%packager')[1].strip()
     except IOError:
         log.warning("~/.rpmmacros does not exist. Changelog will not be generated")
-    finally:
-        f.close()
     return None
 
 
