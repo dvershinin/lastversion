@@ -68,7 +68,7 @@ jobs:
         mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
         mv *.spec /sources/
         build
-  build-nginx-module-immutanle-rpm:
+  build-nginx-module-immutable-rpm:
     needs: build
     runs-on: ubuntu-latest
     container: getpagespeed/rpmbuilder:centos-8
@@ -83,5 +83,5 @@ jobs:
         mv *.spec /sources/
         yum -y install lastversion
         NGINX_VER=$(lastversion nginx)
-        echo "main_version ${NGINX_VER}" >> ~/.rpmmacros
+        echo "nginx_version ${NGINX_VER}" >> ~/.rpmmacros
         build
