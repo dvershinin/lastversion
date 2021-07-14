@@ -463,8 +463,8 @@ You can use `lastversion.has_update(...)` to find whether an update for existing
  something is available, simply:
 
 ```python
-from lastversion import lastversion
-latest_version = lastversion.has_update(repo="mautic/mautic", current_version='1.2.3')
+from lastversion import has_update
+latest_version = has_update(repo="mautic/mautic", current_version='1.2.3')
 if latest_version:
     print('Newer Mautic version is available: {}'.format(str(latest_version)))
 else:
@@ -480,8 +480,8 @@ in order to avoid passing the full PyPI URI of a project, and remove ambiguity w
 library:
 
 ```python
-from lastversion import lastversion
-latest_version = lastversion.has_update(repo="requests", at='pip', current_version='1.2.3')
+from lastversion import has_update
+latest_version = has_update(repo="requests", at='pip', current_version='1.2.3')
 if latest_version:
     print('Newer Requests library is available: {}'.format(str(latest_version)))
 else:
@@ -497,10 +497,10 @@ Alternatively, invoke `lastversion.latest(...)` function to get the latest versi
  for a repo.  
  
 ```python
-from lastversion import lastversion
+from lastversion import latest
 from packaging import version
 
-latest_mautic_version = lastversion.latest("mautic/mautic", output_format='version', pre_ok=True)
+latest_mautic_version = latest("mautic/mautic", output_format='version', pre_ok=True)
 
 print('Latest Mautic version: {}'.format(str(latest_mautic_version)))
 
