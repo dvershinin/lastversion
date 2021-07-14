@@ -31,7 +31,7 @@ tests_requires = [
 ]
 
 docs_requires = [
-    "mkdocs==1.1.2",
+    "mkdocs==1.2.1",
     "mkdocs-material",
     "mkdocstrings",
     "markdown-include"
