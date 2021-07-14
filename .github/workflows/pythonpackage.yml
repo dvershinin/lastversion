@@ -21,6 +21,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e .[tests]
+    - name: Update spec
+      run: |
+        cd tests
+        lastversion brotli.spec
+        lastversion nginx-module-immutable.spec
+        if lastversion libmozjpeg.spec
+          exit 1
+        fi
+        rm -rf libmozjpeg.spec
+    - name: Build updated specs
+      uses: docker://getpagespeed/rpmbuilder:centos-8
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -33,11 +44,3 @@ jobs:
         pytest -v -n auto
       env:
         GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Update spec
-      run: |
-        cd tests
-        lastversion brotli.spec
-        lastversion nginx-module-immutable.spec
-        lastversion libmozjpeg.spec
-    - name: Build updated specs
-      uses: docker://getpagespeed/rpmbuilder:centos-8
