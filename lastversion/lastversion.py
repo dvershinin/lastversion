@@ -265,11 +265,16 @@ def parse_version(tag):
 
 
 def get_rpm_packager():
-    rpmmacros = expanduser("~") + "/.rpmmacros"
-    with open(rpmmacros) as f:
-        for ln in f.readlines():
-            if ln.startswith('%packager'):
-                return ln.split('%packager')[1].strip()
+    try:
+        rpmmacros = expanduser("~") + "/.rpmmacros"
+        with open(rpmmacros) as f:
+            for ln in f.readlines():
+                if ln.startswith('%packager'):
+                    return ln.split('%packager')[1].strip()
+    except IOError:
+        log.warning("~/.rpmmacros does not exist. Changelog will not be generated")
+    finally:
+        f.close()
     return None
 
 
