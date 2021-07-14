@@ -37,7 +37,7 @@ jobs:
       run: |
         cd tests
         lastversion brotli.spec
-        lastversion nginx-module-immutanle
+        lastversion nginx-module-immutable.spec
         lastversion libmozjpeg.spec
     - name: Build updated specs
       uses: docker://getpagespeed/rpmbuilder:centos-8
