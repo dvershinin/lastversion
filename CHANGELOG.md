@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.2] - 2021-07-15
+### Added
+* Experimental: updating .spec files for RPM auto-builds #26
+
 ## [1.4.1] - 2021-07-08
 ### Fixed
 * `--download` option works for asset downloads, as long as there is one asset
