@@ -81,7 +81,5 @@ jobs:
       run: |
         mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
         mv *.spec /sources/
-        yum -y install lastversion
-        NGINX_VER=$(lastversion nginx)
-        echo "nginx_version ${NGINX_VER}" >> ~/.rpmmacros
+        yum -y install nginx-devel
         build
