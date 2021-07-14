@@ -30,7 +30,8 @@ jobs:
           exit 1
         fi
         rm -rf libmozjpeg.spec
-        mv *.spec ../
+        mkdir /sources
+        mv *.spec /sources/*
     - name: Build updated specs
       uses: docker://getpagespeed/rpmbuilder:centos-8
     - name: Lint with flake8
