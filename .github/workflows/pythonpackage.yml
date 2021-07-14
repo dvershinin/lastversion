@@ -33,3 +33,11 @@ jobs:
         pytest -v -n auto
       env:
         GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Update spec
+      run: |
+        cd tests
+        lastversion tests/brotli.spec
+        lastversion tests/nginx-module-immutanle
+        lastversion tests/libmozjpeg.spec
+    - name: Build updated specs
+      uses: docker://getpagespeed/rpmbuilder:centos-8

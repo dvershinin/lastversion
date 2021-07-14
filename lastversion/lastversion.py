@@ -19,6 +19,7 @@ import sys
 
 import yaml
 from appdirs import user_cache_dir
+from os.path import expanduser
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
 # from cachecontrol.heuristics import ExpiresAfter
@@ -96,14 +97,14 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 elif l.startswith('%global upstream_name'):
                     upstream_name = l.split(' ')[2].strip()
                 elif l.startswith('Name:'):
-                    name = l.split(' ')[1].strip()
+                    name = l.split('Name:')[1].strip()
                 elif l.startswith('%global upstream_version '):
                     current_version = l.split(' ')[2].strip()
                 elif l.startswith('Version:') and not current_version:
-                    current_version = l.split(' ')[1].strip()
+                    current_version = l.split('Version:')[1].strip()
             if not upstream_github:
                 log.critical('%upstream_github macro not found. Please prepare your spec file '
-                             'using instructions: ')
+                             'using instructions: https://github.com/dvershinin/lastversion/wiki/Preparing-RPM-spec-files')
             if not current_version:
                 log.critical('Did not find neither Version: nor %upstream_version in the spec file')
                 sys.exit(1)
@@ -121,7 +122,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 repo_data['name'] = name
                 repo_data['spec_name'] = '%{name}'
             repo = "{}/{}".format(upstream_github, repo_data['name'])
-
+            log.info('Discovered GitHub repo {} from .spec file'.format(repo))
 
     if (not at or '/' in repo) and at != 'helm_chart':
         # find the right hosting for this repo
@@ -263,13 +264,39 @@ def parse_version(tag):
     return h.sanitize_version(tag, pre_ok=True)
 
 
-def update_spec(repo, res):
+def get_rpm_packager():
+    rpmmacros = expanduser("~") + "/.rpmmacros"
+    with open(rpmmacros) as f:
+        for ln in f.readlines():
+            if ln.startswith('%packager'):
+                return ln.split('%packager')[1].strip()
+    return None
+
+
+def update_spec(repo, res, sem='minor'):
     if 'current_version' not in res or res['current_version'] < res['version']:
-        log.warning('Updating spec {}'.format(repo))
+        log.info('Updating spec {} with semantic {}'.format(repo, sem))
+        if 'current_version' in res and len(res['version'].release) >= 3:
+            current_major = res['current_version'].release[0]
+            latest_major = res['version'].release[0]
+            current_minor = res['current_version'].release[1]
+            latest_minor = res['version'].release[1]
+            if sem in ['minor', 'patch']:
+                fail_fmt = 'Latest v{} fails semantic {} constraint against current v{}'
+                if latest_major != current_major:
+                    log.warning(
+                        fail_fmt.format(res['version'], sem, res['current_version']))
+                    sys.exit(4)
+                if sem == 'patch' and latest_minor != current_minor:
+                    log.warning(
+                        fail_fmt.format(res['version'], sem, res['current_version']))
+                    sys.exit(4)
     else:
-        log.warning('No newer version than already present in spec file')
+        log.info('No newer version than already present in spec file')
+        sys.exit(2)
     # update %lastversion_tag and %lastversion_dir, Version (?), Release
     out = []
+    packager = get_rpm_packager()
     with open(repo) as f:
         for ln in f.readlines():
             if ln.startswith('%global lastversion_tag '):
@@ -280,11 +307,28 @@ def update_spec(repo, res):
             elif ln.startswith('%global upstream_version '):
                 out.append('%global upstream_version {}'.format(res['version']))
             elif ln.startswith('Version:') and ('module_of' not in res or not res['module_of']):
-                out.append('Version: {}'.format(res['version']))
+                version_tag_regex = r'^Version:(\s+)(\S+)'
+                m = re.match(version_tag_regex, ln)
+                out.append('Version:' + m.group(1) + str(res['version']))
+            elif ln.startswith('%changelog') and packager:
+                import datetime
+                today = datetime.date.today()
+                today = today.strftime('%a %b %d %Y')
+                out.append(ln.rstrip())
+                out.append('* {} {}'.format(today, packager))
+                out.append('- upstream release v{}'.format(res['version']))
+                out.append("\n")
+            elif ln.startswith('Release:'):
+                release_tag_regex = r'^Release:(\s+)(\S+)'
+                m = re.match(release_tag_regex, ln)
+                release = m.group(2)
+                from string import digits
+                release = release.lstrip(digits)
+                out.append('Release:' + m.group(1) + '1' + release)
             else:
                 out.append(ln.rstrip())
-    print("\n".join(out))
-
+    with open(repo, "w") as f:
+        f.write("\n".join(out))
 
 
 def main():
@@ -302,6 +346,8 @@ def main():
     # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
+    parser.add_argument('--sem', dest='sem', choices=['major', 'minor', 'patch'],
+                        help='Semantic version constraint against compared version')
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='Will give you an idea of what is happening under the hood, '
                              '-vv to increase verbosity level')
@@ -399,11 +445,16 @@ def main():
     if args.action == 'install':
         # we can only install assets
         args.format = 'json'
-    
+
     if args.repo.endswith('.spec'):
         args.action = 'update-spec'
         args.format = 'dict'
 
+    if not args.sem:
+        if args.action == 'update-spec':
+            args.sem = 'minor'
+        else:
+            args.sem = 'any'
     # imply source download, unless --assets specified
     # --download is legacy flag to specify download action or name of desired download file
     # --download == None indicates download intent where filename is based on upstream
@@ -433,7 +484,7 @@ def main():
 
     if res:
         if args.action == 'update-spec':
-            return update_spec(args.repo, res)
+            return update_spec(args.repo, res, sem=args.sem)
         if args.action == 'download':
             # download command
             if args.format == 'source':

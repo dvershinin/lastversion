@@ -17,9 +17,9 @@
 %global python3_pkgversion 3
 %endif
 
-Name: brotli
-Version: 2.0.0
-Release: 1%{?dist}
+Name:           brotli
+Version:        x
+Release:        1%{?dist}
 Summary:        Lossless compression algorithm
 
 License:        MIT
@@ -76,7 +76,7 @@ This package installs a Python 3 module.
 
 %package -n %{name}-devel
 Summary:        Lossless compression algorithm (development files)
-Requires: %{name}%{?_isa} = %{version}-%{release} 
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description -n %{name}-devel
 Brotli is a generic-purpose lossless compression algorithm that compresses
@@ -180,6 +180,34 @@ cd ..
 
 
 %changelog
+* Wed Jul 14 2021 Danila Vershinin <info@getpagespeed.com>
+- upstream release v1.0.9
+
+
+* Wed Jul 14 2021 Danila Vershinin <info@getpagespeed.com>
+- upstream release v1.0.9
+
+
+* Wed Jul 14 2021 Danila Vershinin <info@getpagespeed.com>
+- upstream release v1.0.9
+
+
+* Wed Jul 14 2021 Danila Vershinin <info@getpagespeed.com>
+- upstream release v1.0.9
+
+
+* Wed Jul 14 2021 Danila Vershinin <info@getpagespeed.com>
+- upstream release v1.0.9
+
+
+* Wed Jul 14 2021 Danila Vershinin <info@getpagespeed.com>
+- upstream release v1.0.9
+
+
+* Wed Jul 14 2021 Danila Vershinin <info@getpagespeed.com>
+- upstream release v1.0.9
+
+
 * Thu Aug 27 2020 Danila Vershinin <info@getpagespeed.com> 1.0.8-1
 - release 1.0.8
 
