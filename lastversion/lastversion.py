@@ -76,6 +76,53 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
     if repo.startswith(('http://', 'https://')) and repo.endswith('Chart.yaml'):
         at = 'helm_chart'
 
+    if repo.endswith('.spec'):
+        # repo is specified inside the .spec file
+        # github repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
+        # no upstream_github global means that the spec was not prepared for lastversion
+        # optional: use of spec_tag macros if the source is from GitHub. in edge cases we check
+        # new version via GitHub, but prepared sources are elsewhere
+        with open(repo) as f:
+            name = None
+            upstream_github = None
+            upstream_name = None
+            current_version = None
+            for l in f.readlines():
+                if l.startswith('%global upstream_version'):
+                    # influences %spec_tag to use %upstream_version instead of %version
+                    repo_data['module_of'] = True
+                elif l.startswith('%global upstream_github'):
+                    upstream_github = l.split(' ')[2].strip()
+                elif l.startswith('%global upstream_name'):
+                    upstream_name = l.split(' ')[2].strip()
+                elif l.startswith('Name:'):
+                    name = l.split(' ')[1].strip()
+                elif l.startswith('%global upstream_version '):
+                    current_version = l.split(' ')[2].strip()
+                elif l.startswith('Version:') and not current_version:
+                    current_version = l.split(' ')[1].strip()
+            if not upstream_github:
+                log.critical('%upstream_github macro not found. Please prepare your spec file '
+                             'using instructions: ')
+            if not current_version:
+                log.critical('Did not find neither Version: nor %upstream_version in the spec file')
+                sys.exit(1)
+            try:
+                if current_version != 'x':
+                    repo_data['current_version'] = Version(current_version)
+            except InvalidVersion:
+                log.critical('Failed to parse current version from .spec file. Tried {}'.format(
+                    current_version))
+                sys.exit(1)
+            if upstream_name:
+                repo_data['name'] = upstream_name
+                repo_data['spec_name'] = '%{upstream_name}'
+            else:
+                repo_data['name'] = name
+                repo_data['spec_name'] = '%{name}'
+            repo = "{}/{}".format(upstream_github, repo_data['name'])
+
+
     if (not at or '/' in repo) and at != 'helm_chart':
         # find the right hosting for this repo
         project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
@@ -216,6 +263,30 @@ def parse_version(tag):
     return h.sanitize_version(tag, pre_ok=True)
 
 
+def update_spec(repo, res):
+    if 'current_version' not in res or res['current_version'] < res['version']:
+        log.warning('Updating spec {}'.format(repo))
+    else:
+        log.warning('No newer version than already present in spec file')
+    # update %lastversion_tag and %lastversion_dir, Version (?), Release
+    out = []
+    with open(repo) as f:
+        for ln in f.readlines():
+            if ln.startswith('%global lastversion_tag '):
+                out.append('%global lastversion_tag {}'.format(res['spec_tag']))
+            elif ln.startswith('%global lastversion_dir '):
+                out.append('%global lastversion_dir {}-{}'.format(
+                    res['spec_name'], res['spec_tag_no_prefix']))
+            elif ln.startswith('%global upstream_version '):
+                out.append('%global upstream_version {}'.format(res['version']))
+            elif ln.startswith('Version:') and ('module_of' not in res or not res['module_of']):
+                out.append('Version: {}'.format(res['version']))
+            else:
+                out.append(ln.rstrip())
+    print("\n".join(out))
+
+
+
 def main():
     """The entrypoint to CLI app."""
     epilog = None
@@ -328,6 +399,10 @@ def main():
     if args.action == 'install':
         # we can only install assets
         args.format = 'json'
+    
+    if args.repo.endswith('.spec'):
+        args.action = 'update-spec'
+        args.format = 'dict'
 
     # imply source download, unless --assets specified
     # --download is legacy flag to specify download action or name of desired download file
@@ -357,8 +432,10 @@ def main():
         sys.exit(4)
 
     if res:
-        # download command
+        if args.action == 'update-spec':
+            return update_spec(args.repo, res)
         if args.action == 'download':
+            # download command
             if args.format == 'source':
                 # there is only one source, but we need an array
                 res = [res]
