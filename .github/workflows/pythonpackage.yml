@@ -48,6 +48,7 @@ jobs:
       env:
         GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-brotli-rpm:
+    needs: build
     runs-on: ubuntu-latest
     container: getpagespeed/rpmbuilder:centos-8
     steps:
@@ -57,7 +58,6 @@ jobs:
         name: brotli.spec
     - name: Build updated specs
       run: |
-        mkdir -p /github/home/rpmbuild/SPECS/
-        ls -al *
+        mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
         mv *.spec /sources/
         build
