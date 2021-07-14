@@ -23,6 +23,8 @@ jobs:
         pip install -e .[tests]
     - name: Update spec
       run: |
+        # ensure changelog is generated
+        echo "%packager Dick Solomon <info@example.com>" >> ~/.rpmmacros
         cd tests
         lastversion brotli.spec
         lastversion nginx-module-immutable.spec
@@ -30,11 +32,16 @@ jobs:
           exit 1
         fi
         rm -rf libmozjpeg.spec
-    - name: 'Upload Artifact'
+    - name: 'Upload brotli.spec artifact'
       uses: actions/upload-artifact@v2
       with:
         name: brotli.spec
         path: tests/brotli.spec
+    - name: 'Upload nginx-module-immutable.spec artifact'
+      uses: actions/upload-artifact@v2
+      with:
+        name: nginx-module-immutable.spec
+        path: tests/nginx-module-immutable.specc
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -56,8 +63,25 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: brotli.spec
-    - name: Build updated specs
+    - name: Build updated spec
       run: |
         mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
         mv *.spec /sources/
+        build
+  build-nginx-module-immutanle-rpm:
+    needs: build
+    runs-on: ubuntu-latest
+    container: getpagespeed/rpmbuilder:centos-8
+    steps:
+    - name: Download a single artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: nginx-module-immutable.spec
+    - name: Build updated spec
+      run: |
+        mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
+        mv *.spec /sources/
+        yum -y install lastversion
+        NGINX_VER=$(lastversion nginx)
+        echo "main_version ${NGINX_VER}" >> ~/.rpmmacros
         build
