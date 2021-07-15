@@ -1,8 +1,8 @@
 # docs/requirements.txt
+-e ..
 mkdocs==1.2.1
 mkdocs-material
 mkdocstrings
 markdown-include
 pymdown-extensions
-readthedocs-custom-steps
 pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
