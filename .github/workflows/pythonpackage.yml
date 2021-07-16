@@ -30,7 +30,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        exit || pytest -v -n auto
+        pytest -v -n auto
       env:
         GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update .spec files
