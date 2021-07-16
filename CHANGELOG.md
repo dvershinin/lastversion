@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.3] - 2021-07-16
+### Fixed
+* Fixed installation on some systems
+
 ## [1.4.2] - 2021-07-15
 ### Added
 * Experimental: updating .spec files for RPM auto-builds #26
