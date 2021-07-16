@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.5] - 2021-07-16
+### Fixed
+* Fixed RPM builds rpmlint changelog-time-in-future by having changelog in UTC
+
 ## [1.4.4] - 2021-07-16
 ### Added
 * Print latest version from .spec file every time

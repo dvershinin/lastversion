@@ -314,9 +314,9 @@ def update_spec(repo, res, sem='minor'):
                 m = re.match(version_tag_regex, ln)
                 out.append('Version:' + m.group(1) + str(res['version']))
             elif ln.startswith('%changelog') and packager:
-                import datetime
-                today = datetime.date.today()
-                today = today.strftime('%a %b %d %Y')
+                from datetime import datetime
+                now = datetime.utcnow()
+                today = now.strftime('%a %b %d %Y')
                 out.append(ln.rstrip())
                 out.append('* {} {}'.format(today, packager))
                 out.append('- upstream release v{}'.format(res['version']))
