@@ -8,6 +8,7 @@ lastversion
 """
 
 from setuptools import find_packages, setup
+from io import open
 import os
 import re
 
