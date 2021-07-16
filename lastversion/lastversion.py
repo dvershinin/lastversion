@@ -276,6 +276,7 @@ def get_rpm_packager():
 
 
 def update_spec(repo, res, sem='minor'):
+    print(res['version'])
     if 'current_version' not in res or res['current_version'] < res['version']:
         log.info('Updating spec {} with semantic {}'.format(repo, sem))
         if 'current_version' in res and len(res['version'].release) >= 3:

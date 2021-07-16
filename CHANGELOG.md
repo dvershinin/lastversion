@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.4.4] - 2021-07-16
+### Added
+* Print latest version from .spec file every time
+
 ## [1.4.3] - 2021-07-16
 ### Fixed
 * Fixed installation on some systems
