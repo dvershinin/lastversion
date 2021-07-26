@@ -88,8 +88,11 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
             upstream_github = None
             upstream_name = None
             current_version = None
+            spec_repo = None
             for l in f.readlines():
-                if l.startswith('%global upstream_github'):
+                if l.startswith('%global lastversion_repo'):
+                    spec_repo = l.split(' ')[2].strip()
+                elif l.startswith('%global upstream_github'):
                     upstream_github = l.split(' ')[2].strip()
                 elif l.startswith('%global upstream_name'):
                     upstream_name = l.split(' ')[2].strip()
@@ -101,9 +104,10 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                     repo_data['module_of'] = True
                 elif l.startswith('Version:') and not current_version:
                     current_version = l.split('Version:')[1].strip()
-            if not upstream_github:
-                log.critical('%upstream_github macro not found. Please prepare your spec file '
-                             'using instructions: https://github.com/dvershinin/lastversion/wiki/Preparing-RPM-spec-files')
+            if not upstream_github and not spec_repo:
+                log.critical('Neither %upstream_github nor %lastversion_repo macros were found. '
+                             'Please prepare your spec file using instructions: '
+                             'https://lastversion.getpagespeed.com/spec-preparing.html')
             if not current_version:
                 log.critical('Did not find neither Version: nor %upstream_version in the spec file')
                 sys.exit(1)
@@ -120,8 +124,12 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
             else:
                 repo_data['name'] = name
                 repo_data['spec_name'] = '%{name}'
-            repo = "{}/{}".format(upstream_github, repo_data['name'])
-            log.info('Discovered GitHub repo {} from .spec file'.format(repo))
+            if upstream_github:
+                repo = "{}/{}".format(upstream_github, repo_data['name'])
+                log.info('Discovered GitHub repo {} from .spec file'.format(repo))
+            else:
+                repo = spec_repo
+                log.info('Discovered explicit repo {} from .spec file'.format(repo))
 
     if (not at or '/' in repo) and at != 'helm_chart':
         # find the right hosting for this repo
