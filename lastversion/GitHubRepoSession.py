@@ -321,31 +321,16 @@ class GitHubRepoSession(ProjectHolder):
                     log.info('Using commit date')
                     d = node['target']['author']['date']
                 tag_date = parser.parse(d)
-
+                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                    log.info('The version {} is newer, but is too old!'.format(version))
+                    break
                 if not ret or version > ret['version'] or tag_date > ret['tag_date']:
                     # we always want to return formal release if it exists, cause it has useful
                     # data grab formal release via APi to check for pre-release mark
-                    r = self.repo_query('/releases/tags/{}'.format(tag_name))
-                    if r.status_code == 200:
-                        formal_release = r.json()
-                        if not pre_ok and formal_release['prerelease']:
-                            log.info(
-                                "Found formal release for this tag which is unwanted "
-                                "pre-release: {}.".format(version))
-                            continue
-                        if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                            log.info('The version {} is newer, but is too old!'.format(version))
-                            break
-                        # use full release info
-                        ret = formal_release
-                        ret['tag_name'] = tag_name
-                        ret['tag_date'] = tag_date
-                        ret['version'] = version
-                        ret['type'] = 'graphql'
+                    formal_release = self.get_formal_release_for_tag(tag_name)
+                    if formal_release:
+                        ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
                     else:
-                        if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                            log.info('The version {} is newer, but is too old!'.format(version))
-                            break
                         ret = {
                             'tag_name': tag_name,
                             'tag_date': tag_date,
@@ -353,6 +338,13 @@ class GitHubRepoSession(ProjectHolder):
                             'type': 'graphql'
                         }
         return ret
+
+    def get_formal_release_for_tag(self, tag):
+        r = self.repo_query('/releases/tags/{}'.format(tag))
+        if r.status_code == 200:
+            # noinspection SpellCheckingInspection
+            return r.json()
+        return None
 
     # finding in tags requires paging through ALL of them, because the API does not list them
     # in order of recency, thus this is very slow
@@ -379,25 +371,9 @@ class GitHubRepoSession(ProjectHolder):
                 # rare case: if upstream filed formal pre-release that passes as stable
                 # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
                 # TODO handle API failure here as it may result in "false positive"?
-                release_for_tag = None
-                if not pre_ok:
-                    r = self.repo_query('/releases/tags/{}'.format(tag_name))
-                    if r.status_code == 200:
-                        # noinspection SpellCheckingInspection
-                        if r.json()['prerelease']:
-                            log.info(
-                                "Found formal release for this tag which is unwanted "
-                                "pre-release: {}.".format(version))
-                            continue
-                        release_for_tag = r.json()
-
-                log.info("Setting version as current selection: {}.".format(version))
+                release_for_tag = self.get_formal_release_for_tag(tag_name)
                 if release_for_tag:
-                    ret = release_for_tag
-                    ret['tag_name'] = tag_name
-                    ret['tag_date'] = parser.parse(release_for_tag['published_at'])
-                    ret['version'] = version
-                    ret['type'] = 'release'
+                    ret = self.set_matching_formal_release(ret, release_for_tag, version, pre_ok)
                 else:
                     ret = t
                     ret['tag_name'] = tag_name
@@ -489,35 +465,20 @@ class GitHubRepoSession(ProjectHolder):
                     'Tag {} does not contain newer version than we already found'.format(tag_name)
                 )
                 continue
+            tag_date = parser.parse(tag['updated'])
+            if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                log.info('The version {} is newer, but is too old!'.format(version))
+                break
             # we always want to return formal release if it exists, cause it has useful data
             # grab formal release via APi to check for pre-release mark
-            r = self.repo_query('/releases/tags/{}'.format(tag_name))
-            if r.status_code == 200:
-                log.info('Got formal release for tag {}'.format(tag_name))
-                formal_release = r.json()
-                if not pre_ok and formal_release['prerelease']:
-                    log.info(
-                        "Found formal release for this tag which is unwanted "
-                        "pre-release: {}.".format(version))
-                    continue
-                tag_date = parser.parse(tag['updated'])
-                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version {} is newer, but is too old!'.format(version))
-                    break
-                formal_release['tag_name'] = tag_name
-                formal_release['tag_date'] = tag_date
-                formal_release['version'] = version
-                formal_release['type'] = 'feed'
+            formal_release = self.get_formal_release_for_tag(tag_name)
+            if formal_release:
                 # use full release info
-                ret = self.set_matching_formal_release(ret, formal_release, version)
+                ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
             else:
                 if self.having_asset:
                     continue
                 log.info('No formal release for tag {}'.format(tag_name))
-                tag_date = parser.parse(tag['updated'])
-                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version {} is newer, but is too old!'.format(version))
-                    break
                 tag['tag_name'] = tag_name
                 tag['tag_date'] = tag_date
                 tag['version'] = version
@@ -527,7 +488,7 @@ class GitHubRepoSession(ProjectHolder):
                 tag.pop('updated_parsed', None)
                 tag.pop('published_parsed', None)
                 ret = tag
-            log.info("Selected version as current selection: {}.".format(version))
+                log.info("Selected version as current selection: {}.".format(version))
 
         # we are good with release from feeds only without looking at the API
         # simply because feeds list stuff in order of recency
@@ -547,15 +508,11 @@ class GitHubRepoSession(ProjectHolder):
             # ideally we disable ETag validation for this endpoint completely
             r = self.repo_query('/releases/latest')
             if r.status_code == 200:
-                tag_name = r.json()['tag_name']
-                version = self.sanitize_version(tag_name, pre_ok, major)
+                formal_release = r.json()
+                version = self.sanitize_version(formal_release['tag_name'], pre_ok, major)
                 if version:
-                    log.info("Selected version as current selection: {}.".format(version))
-                    ret = r.json()
-                    ret['tag_name'] = tag_name
-                    ret['tag_date'] = parser.parse(r.json()['published_at'])
-                    ret['version'] = version
-                    ret['type'] = 'releases-latest'
+                    ret = self.set_matching_formal_release(ret, formal_release, version,
+                                                           pre_ok, 'releases-latest')
         else:
             r = self.repo_query('/releases')
             if r.status_code == 200:
@@ -565,7 +522,7 @@ class GitHubRepoSession(ProjectHolder):
                     if not version:
                         continue
                     if not ret or version > ret['version']:
-                        ret = self.set_matching_formal_release(ret, release, version)
+                        ret = self.set_matching_formal_release(ret, release, version, pre_ok)
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
@@ -577,8 +534,14 @@ class GitHubRepoSession(ProjectHolder):
 
         return ret
 
-    def set_matching_formal_release(self, ret, formal_release, version):
+    def set_matching_formal_release(self, ret, formal_release, version, pre_ok,
+                                    data_type='release'):
         """Set current release selection to this formal release if matching conditions."""
+        if not pre_ok and formal_release['prerelease']:
+            log.info(
+                "Found formal release for this tag which is unwanted "
+                "pre-release: {}.".format(version))
+            return ret
         if self.having_asset:
             if 'assets' not in formal_release:
                 return ret
@@ -589,10 +552,10 @@ class GitHubRepoSession(ProjectHolder):
                     break
             if not found_asset:
                 return ret
-        log.info("Selected version as current selection: {}.".format(formal_release['version']))
         # formal_release['tag_name'] = tag_name
         formal_release['tag_date'] = parser.parse(formal_release['published_at'])
         formal_release['version'] = version
-        formal_release['type'] = 'release'
+        formal_release['type'] = data_type
+        log.info("Selected version as current selection: {}.".format(formal_release['version']))
         return formal_release
 
