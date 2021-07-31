@@ -53,6 +53,7 @@ class ProjectHolder(requests.Session):
         log.info('Created instance of {}'.format(type(self).__name__))
         self.branches = None
         self.only = None
+        self.having_asset = None
         self.hostname = None
         # identifies project on a given hostname
         self.repo = None
@@ -74,6 +75,12 @@ class ProjectHolder(requests.Session):
         self.only = only
         if only:
             log.info('Only considering tags with "{}"'.format(only))
+
+    def set_having_asset(self, having_asset):
+        """Sets "having_asset" selector for this holder."""
+        self.having_asset = having_asset
+        if having_asset:
+            log.info('Only considering releases with asset "{}"'.format(having_asset))
 
     @classmethod
     def get_host_repo_for_link(cls, repo):

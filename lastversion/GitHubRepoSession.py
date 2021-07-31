@@ -18,6 +18,10 @@ TOKEN_PRO_TIP = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
                 'https://github.com/dvershinin/lastversion#tips'
 
 
+def set_matching_from_tag(ret, tag):
+    ret = tag
+
+
 class GitHubRepoSession(ProjectHolder):
     """A class to represent a GitHub project holder."""
 
@@ -500,27 +504,29 @@ class GitHubRepoSession(ProjectHolder):
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
                     log.info('The version {} is newer, but is too old!'.format(version))
                     break
+                formal_release['tag_name'] = tag_name
+                formal_release['tag_date'] = tag_date
+                formal_release['version'] = version
+                formal_release['type'] = 'feed'
                 # use full release info
-                ret = formal_release
-                ret['tag_name'] = tag_name
-                ret['tag_date'] = tag_date
-                ret['version'] = version
-                ret['type'] = 'feed'
+                ret = self.set_matching_formal_release(ret, formal_release, version)
             else:
+                if self.having_asset:
+                    continue
                 log.info('No formal release for tag {}'.format(tag_name))
                 tag_date = parser.parse(tag['updated'])
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
                     log.info('The version {} is newer, but is too old!'.format(version))
                     break
-                ret = tag
-                ret['tag_name'] = tag_name
-                ret['tag_date'] = tag_date
-                ret['version'] = version
-                ret['type'] = 'feed'
+                tag['tag_name'] = tag_name
+                tag['tag_date'] = tag_date
+                tag['version'] = version
+                tag['type'] = 'feed'
                 # remove keys which are non-jsonable
                 # TODO use those (pop returns them)
-                ret.pop('updated_parsed', None)
-                ret.pop('published_parsed', None)
+                tag.pop('updated_parsed', None)
+                tag.pop('published_parsed', None)
+                ret = tag
             log.info("Selected version as current selection: {}.".format(version))
 
         # we are good with release from feeds only without looking at the API
@@ -559,12 +565,7 @@ class GitHubRepoSession(ProjectHolder):
                     if not version:
                         continue
                     if not ret or version > ret['version']:
-                        log.info("Selected version as current selection: {}.".format(version))
-                        ret = release
-                        ret['tag_name'] = tag_name
-                        ret['tag_date'] = parser.parse(release['published_at'])
-                        ret['version'] = version
-                        ret['type'] = 'release'
+                        ret = self.set_matching_formal_release(ret, release, version)
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
@@ -575,3 +576,23 @@ class GitHubRepoSession(ProjectHolder):
             ret = self.find_in_tags(ret, pre_ok, major)
 
         return ret
+
+    def set_matching_formal_release(self, ret, formal_release, version):
+        """Set current release selection to this formal release if matching conditions."""
+        if self.having_asset:
+            if 'assets' not in formal_release:
+                return ret
+            found_asset = False
+            for asset in formal_release['assets']:
+                if self.having_asset == asset['label']:
+                    found_asset = True
+                    break
+            if not found_asset:
+                return ret
+        log.info("Selected version as current selection: {}.".format(formal_release['version']))
+        # formal_release['tag_name'] = tag_name
+        formal_release['tag_date'] = parser.parse(formal_release['published_at'])
+        formal_release['version'] = version
+        formal_release['type'] = 'release'
+        return formal_release
+

@@ -37,7 +37,8 @@ __self__ = "dvershinin/lastversion"
 
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
-           short_urls=False, major=None, only=None, at=None):
+           short_urls=False, major=None, only=None, at=None,
+           having_asset=None):
     """Find latest release version for a project.
 
     Args:
@@ -130,6 +131,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
 
     project_holder.set_only(only)
+    project_holder.set_having_asset(having_asset)
 
     # we are completely "offline" for 1 hour, not even making conditional requests
     # heuristic=ExpiresAfter(hours=1)   <- make configurable
@@ -379,6 +381,8 @@ def main():
                                                        "projects inside")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
                                                           "expression")
+    parser.add_argument('--having-asset', metavar='ASSET',
+                        help="Only consider releases with this asset")
     parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
                         help='A tiny bit shorter URLs produced')
     parser.add_argument('--at', dest='at',
@@ -390,7 +394,8 @@ def main():
     parser.add_argument('--version', action=VersionAction)
     parser.set_defaults(validate=True, verbose=False, format='version',
                         pre=False, assets=False, newer_than=False, filter=False,
-                        shorter_urls=False, major=None, assumeyes=False, at=None)
+                        shorter_urls=False, major=None, assumeyes=False, at=None,
+                        having_asset=None)
     args = parser.parse_args()
 
     if args.repo == "self":
@@ -477,7 +482,8 @@ def main():
     # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
-                     args.shorter_urls, args.major, args.only, args.at)
+                     args.shorter_urls, args.major, args.only, args.at,
+                     having_asset=args.having_asset)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
         if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ and \
