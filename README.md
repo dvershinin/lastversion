@@ -155,6 +155,8 @@ optional arguments:
   --only ONLY           Only consider releases containing this text. Useful
                         for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
+  --having-asset [ASSET]
+                        Only consider releases with this asset  
   -su, --shorter-urls   A tiny bit shorter URLs produced
   --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}
                         If the repo argument is one word, specifies where to
@@ -271,6 +273,26 @@ The branch selector can also be used to get specific release details, e.g.:
 
 ```bash
 lastversion php:7.2.33 --assets
+```
+
+### Use case: releases with specific assets or formal releases only
+
+Sometimes a project makes nice formal releases but delay in uploading assets for releases.
+And you might be interested in specific asset type always.
+Then you can make `lastversion` consider as latest only the last release with specific asset name.
+Easy with the `--having-asset` switch:
+
+```bash
+lastversion telegramdesktop/tdesktop --having-asset "Linux 64 bit: Binary"
+```
+
+In other situations, you want to consider only latest *formal* release in GitHub. Then you can use 
+`--having-asset` without a value. This is useful when you want to disregard any bare "tag" 
+releases from GitHub. Counter-intuitively, this may return a formal releases without any other 
+assets than source code alone.
+
+```bash
+lastversion telegramdesktop/tdesktop --having-asset
 ```
 
 ### Use case: version of an operating system

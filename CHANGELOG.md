@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2021-08-06
+### Added
+* New `--having-asset` switch to consider only formal releases with given asset name
+### Fixed
+* Unnecessary parsing of repo argument as version (performance)
+
 ## [1.4.5] - 2021-07-16
 ### Fixed
 * Fixed RPM builds rpmlint changelog-time-in-future by having changelog in UTC
