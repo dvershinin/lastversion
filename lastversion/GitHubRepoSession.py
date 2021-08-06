@@ -556,7 +556,7 @@ class GitHubRepoSession(ProjectHolder):
             if self.having_asset is not True:
                 found_asset = False
                 for asset in formal_release['assets']:
-                    if self.having_asset == asset['label'] or self.having_asset == asset['name']:
+                    if self.having_asset in (asset['label'], asset['name']):
                         found_asset = True
                         break
                 if not found_asset:
