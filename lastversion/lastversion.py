@@ -52,6 +52,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         pre_ok (bool): Specifies whether pre-releases can be accepted as newer version.
         at (str): Specifies repo hosting more precisely, only useful if repo argument was
                   specified as one word.
+        having_asset (str): Only consider releases with the given asset.
 
     Returns:
         Version: Newer version object, if found and `output_format` is `version`.
@@ -390,7 +391,8 @@ def main():
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
                                                           "expression")
     parser.add_argument('--having-asset', metavar='ASSET',
-                        help="Only consider releases with this asset")
+                        help="Only consider releases with this asset",
+                        nargs='?', const=True)
     parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
                         help='A tiny bit shorter URLs produced')
     parser.add_argument('--at', dest='at',
@@ -482,10 +484,11 @@ def main():
         if args.format != 'assets':
             args.format = 'source'
 
-    base_compare = parse_version(args.repo)
-    if args.newer_than and base_compare:
-        print(max([args.newer_than, base_compare]))
-        sys.exit(2 if base_compare <= args.newer_than else 0)
+    if args.newer_than:
+        base_compare = parse_version(args.repo)
+        if base_compare:
+            print(max([args.newer_than, base_compare]))
+            sys.exit(2 if base_compare <= args.newer_than else 0)
 
     # other action are either getting release or doing something with release (extend get action)
     try:

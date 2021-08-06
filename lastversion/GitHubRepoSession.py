@@ -331,12 +331,13 @@ class GitHubRepoSession(ProjectHolder):
                     if formal_release:
                         ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
                     else:
-                        ret = {
-                            'tag_name': tag_name,
-                            'tag_date': tag_date,
-                            'version': version,
-                            'type': 'graphql'
-                        }
+                        if not self.having_asset:
+                            ret = {
+                                'tag_name': tag_name,
+                                'tag_date': tag_date,
+                                'version': version,
+                                'type': 'graphql'
+                            }
         return ret
 
     def get_formal_release_for_tag(self, tag):
@@ -524,6 +525,12 @@ class GitHubRepoSession(ProjectHolder):
                     if not ret or version > ret['version']:
                         ret = self.set_matching_formal_release(ret, release, version, pre_ok)
 
+        if self.having_asset:
+            # only formal releases which we enumerated above already, have assets
+            # so there is no point looking in the tags/graphql below
+            # return whatever we got
+            return ret
+
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
         if self.api_token:
@@ -544,14 +551,17 @@ class GitHubRepoSession(ProjectHolder):
             return ret
         if self.having_asset:
             if 'assets' not in formal_release:
+                log.info('Skipping this release due to no assets.')
                 return ret
-            found_asset = False
-            for asset in formal_release['assets']:
-                if self.having_asset == asset['label']:
-                    found_asset = True
-                    break
-            if not found_asset:
-                return ret
+            if self.having_asset is not True:
+                found_asset = False
+                for asset in formal_release['assets']:
+                    if self.having_asset == asset['label'] or self.having_asset == asset['name']:
+                        found_asset = True
+                        break
+                if not found_asset:
+                    log.info('Desired asset not found in the release.')
+                    return ret
         # formal_release['tag_name'] = tag_name
         formal_release['tag_date'] = parser.parse(formal_release['published_at'])
         formal_release['version'] = version
