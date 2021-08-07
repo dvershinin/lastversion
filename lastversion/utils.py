@@ -170,3 +170,55 @@ def rpm_installed_version(name):
         for h in mi:
             return h['version']
     return None
+
+
+def dnf_get_available_version(name):
+    with dnf.Base() as base:
+        RELEASEVER = dnf.rpm.detect_releasever(base.conf.installroot)
+        base.conf.substitutions['releasever'] = RELEASEVER
+        # Repositories are needed if we want to install anything.
+        base.read_all_repos()
+        # A sack is needed for querying.
+        base.fill_sack()
+        # A query matches all packages in sack
+        q = base.sack.query()
+        # https://dnf.readthedocs.io/en/latest/use_cases.html#id3
+        # https: // dnf.readthedocs.io / en / latest / api_queries.html  # dnf.query.Query
+        # Derived query matches only available packages
+        a = q.available()
+        a = a.filter(name=name)
+        print("Available dnf packages:")
+        for pkg in a:  # a only gets evaluated here
+            print('{} in repo {}'.format(pkg, pkg.reponame))
+
+
+def yum_get_available_version(name):
+    pass
+
+
+def apt_get_installed_version(name):
+    cache = apt.cache.Cache()
+    cache.update()
+    cache.open()
+    pkg = cache[name]
+    if name in cache and cache[name].is_installed:
+        return
+
+
+def system_get_available_version(name):
+    try:
+        import dnf
+        return dnf_get_available_version(name)
+    except ImportError:
+        pass
+    try:
+        import yum
+        return yum_get_available_version(name)
+    except ImportError:
+        pass
+    try:
+        import apt
+        return apt_get_installed_version(name)
+    except ImportError:
+        pass
+    return None
