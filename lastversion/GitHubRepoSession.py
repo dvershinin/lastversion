@@ -134,6 +134,8 @@ class GitHubRepoSession(ProjectHolder):
 
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
+        # dict holding repo/owner to feed contents of releases atom
+        self.feed_contents = {}
         self.rate_limited_count = 0
         self.api_token = os.getenv("GITHUB_API_TOKEN")
         if not self.api_token:
@@ -416,6 +418,8 @@ class GitHubRepoSession(ProjectHolder):
         # The only downside is they don't bear pre-release mark (unlike API), and have limited data.
         # We work around these by checking pre-release flag and get full release data via API.
         """
+        if self.repo in self.feed_contents:
+            return self.feed_contents[self.repo]
         r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
@@ -433,6 +437,7 @@ class GitHubRepoSession(ProjectHolder):
                     # request the feed from the new location
                     return self.get_releases_feed_contents(rename_checked=False)
         if r.status_code == 200:
+            self.feed_contents[self.repo] = r.text
             return r.text
         return None
 
@@ -606,9 +611,11 @@ class GitHubRepoSession(ProjectHolder):
         """
         official_repo = "{repo}/{repo}".format(repo=repo)
         log.info('Checking existence of {}'.format(official_repo))
-        url = '{}/repos/{}'.format(self.api_base, official_repo)
-        r = self.get(url)
+        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, official_repo))
+        # API requests are varied by cookie, we don't want serializer for cache fail because of that
+        self.cookies.clear()
         if r.status_code == 200:
+            self.feed_contents[official_repo] = r.text
             return official_repo
         return None
 
