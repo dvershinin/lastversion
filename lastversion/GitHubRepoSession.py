@@ -604,7 +604,7 @@ class GitHubRepoSession(ProjectHolder):
         Returns:
             str: updated repo
         """
-        official_repo = "{}/{}".format(repo, repo)
+        official_repo = "{repo}/{repo}".format(repo=repo)
         log.info('Checking existence of {}'.format(official_repo))
         url = '{}/repos/{}'.format(self.api_base, official_repo)
         r = self.get(url)
