@@ -52,7 +52,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         pre_ok (bool): Specifies whether pre-releases can be accepted as newer version.
         at (str): Specifies repo hosting more precisely, only useful if repo argument was
                   specified as one word.
-        having_asset (str): Only consider releases with the given asset.
+        having_asset (Union[str, bool]): Only consider releases with the given asset.
+                                         Pass `True` for any asset
 
     Returns:
         Version: Newer version object, if found and `output_format` is `version`.

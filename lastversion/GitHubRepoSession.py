@@ -2,6 +2,7 @@ import json
 import logging
 import math
 import os
+import re
 import time
 from datetime import timedelta
 
@@ -20,6 +21,25 @@ TOKEN_PRO_TIP = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
 
 def set_matching_from_tag(ret, tag):
     ret = tag
+
+
+def asset_matches(asset, search, regex_matching):
+    """Check if the asset equals to string or satisfies a regular expression
+    Args:
+        asset (dict): asset dict as returned by the API
+        search (str): string or regexp to match asset's name or label with
+        regex_matching (bool): whether search argument is a regexp
+    Returns:
+        bool: Whether match is satisfied
+    """
+    if regex_matching:
+        if asset['label'] and re.search(search, asset['label']):
+            return True
+        if asset['name'] and re.search(search, asset['name']):
+            return True
+    elif search in (asset['label'], asset['name']):
+        return True
+    return False
 
 
 class GitHubRepoSession(ProjectHolder):
@@ -133,13 +153,17 @@ class GitHubRepoSession(ProjectHolder):
         else:
             self.api_base = 'https://api.{}'.format(self.DEFAULT_HOSTNAME)
         if '/' not in repo:
-            repo = self.find_repo_by_name_only(repo)
-            if not repo:
-                return
-            self.set_repo(repo)
-            log.info('Using repo {} obtained from search API'.format(self.repo))
-        else:
-            self.set_repo(repo)
+            official_repo = self.try_get_official(repo)
+            if official_repo:
+                repo = official_repo
+                log.info('Using official repo {}'.format(repo))
+            else:
+                repo = self.find_repo_by_name_only(repo)
+                if repo:
+                    log.info('Using repo {} obtained from search API'.format(self.repo))
+                else:
+                    return
+        self.set_repo(repo)
 
     def get_rate_limit_url(self):
         return '{}/rate_limit'.format(self.api_base)
@@ -550,13 +574,18 @@ class GitHubRepoSession(ProjectHolder):
                 "pre-release: {}.".format(version))
             return ret
         if self.having_asset:
-            if 'assets' not in formal_release:
+            if 'assets' not in formal_release or not formal_release['assets']:
                 log.info('Skipping this release due to no assets.')
                 return ret
             if self.having_asset is not True:
+                regex_matching = False
+                search = self.having_asset
+                if search.startswith('~'):
+                    search = r'{}'.format(search.lstrip('~'))
+                    regex_matching = True
                 found_asset = False
                 for asset in formal_release['assets']:
-                    if self.having_asset in (asset['label'], asset['name']):
+                    if asset_matches(asset, search, regex_matching=regex_matching):
                         found_asset = True
                         break
                 if not found_asset:
@@ -568,4 +597,18 @@ class GitHubRepoSession(ProjectHolder):
         formal_release['type'] = data_type
         log.info("Selected version as current selection: {}.".format(formal_release['version']))
         return formal_release
+
+    def try_get_official(self, repo):
+        """Check existence of repo/repo
+
+        Returns:
+            str: updated repo
+        """
+        official_repo = "{}/{}".format(repo, repo)
+        log.info('Checking existence of {}'.format(official_repo))
+        url = '{}/repos/{}'.format(self.api_base, official_repo)
+        r = self.get(url)
+        if r.status_code == 200:
+            return official_repo
+        return None
 

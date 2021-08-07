@@ -275,7 +275,7 @@ The branch selector can also be used to get specific release details, e.g.:
 lastversion php:7.2.33 --assets
 ```
 
-### Use case: releases with specific assets or formal releases only
+### Use case: releases with specific assets
 
 Sometimes a project makes nice formal releases but delay in uploading assets for releases.
 And you might be interested in specific asset type always.
@@ -286,10 +286,15 @@ Easy with the `--having-asset` switch:
 lastversion telegramdesktop/tdesktop --having-asset "Linux 64 bit: Binary"
 ```
 
-In other situations, you want to consider only latest *formal* release in GitHub. Then you can use 
-`--having-asset` without a value. This is useful when you want to disregard any bare "tag" 
-releases from GitHub. Counter-intuitively, this may return a formal releases without any other 
-assets than source code alone.
+The argument value to `--having-asset` can be made as regular expression. For this, prepend it 
+with tilde sign. E.g. to get releases with macOS installers:
+
+```bash
+lastversion telegramdesktop/tdesktop --having-asset "~\.dmg$"
+```
+
+You can pass no value to `--having-asset` at all. Then `lastversion` will only return the latest 
+release which has **any** assets added to it:
 
 ```bash
 lastversion telegramdesktop/tdesktop --having-asset

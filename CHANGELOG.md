@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.5.1] - 2021-08-07
+### Added
+* `--having-asset` accepts regular expression if tilde prepended
+* For one-word repo argument, check word/word official GitHub repo first, then search
+
 ## [1.5.0] - 2021-08-06
 ### Added
 * New `--having-asset` switch to consider only formal releases with given asset name

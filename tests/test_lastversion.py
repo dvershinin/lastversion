@@ -484,8 +484,15 @@ def test_wiki_direct_url_meego():
     assert v == version.parse('1.2.0.10')
 
 
-def test_having_asset():
+def test_having_specific_asset():
     """Test locating release with a given asset name."""
     repo = 'https://github.com/lastversion-test-repos/portainer'
     v = latest(repo, having_asset='portainer-2.6.1-linux-amd64.tar.gz')
     assert v == version.parse('2.6.1')
+
+
+def test_having_any_asset():
+    """Test locating release with a given asset name."""
+    repo = 'https://github.com/lastversion-test-repos/portainer'
+    v = latest(repo, having_asset=True)
+    assert v == version.parse('2.6.3')
