@@ -200,10 +200,10 @@ def apt_get_installed_version(name):
     cache = apt.cache.Cache()
     cache.update()
     cache.open()
-    pkg = cache[name]
-    if name in cache and cache[name].is_installed:
-        return
-
+    if name in cache:
+        pkg = cache[name]
+        version = pkg.versions[0].version.split('-')[0]
+    return None
 
 def system_get_available_version(name):
     try:
@@ -218,7 +218,7 @@ def system_get_available_version(name):
         pass
     try:
         import apt
-        return apt_get_installed_version(name)
+        return apt_get_available_version(name)
     except ImportError:
         pass
     return None

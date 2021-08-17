@@ -233,7 +233,7 @@ def test_gitlab_1():
 
     v = latest(repo)
 
-    assert v == version.parse("0.3.3")
+    assert v >= version.parse("0.4.1")
 
 
 def test_merc_1():

@@ -446,14 +446,14 @@ class GitHubRepoSession(ProjectHolder):
         feed_contents = self.get_releases_feed_contents()
         if not feed_contents:
             log.info('The releases.atom feed failed to be fetched!')
-            return []
+            return None
         feed = feedparser.parse(feed_contents)
         if 'bozo' in feed and feed['bozo'] == 1 and 'bozo_exception' in feed:
             exc = feed.bozo_exception
             log.info("Failed to parse feed: {}".format(exc.getMessage()))
-            return []
+            return None
         if not feed.entries:
-            log.info('Feed has no elements. Empty repo???')
+            log.info('Feed has no elements. Means no tags and no releases')
             return []
         return feed.entries
 
@@ -482,47 +482,49 @@ class GitHubRepoSession(ProjectHolder):
         # * has a beta-like, non-version tag name
 
         feed_entries = self.get_releases_feed_entries()
-        for tag in feed_entries:
-            # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
-            tag_name = tag['link'].split('/')[-1]
-            log.info('Checking tag {}'.format(tag_name))
-            version = self.sanitize_version(tag_name, pre_ok, major)
-            if not version:
-                log.info('We did not find a valid version in {} tag'.format(tag_name))
-                continue
-            if ret and ret['version'] >= version:
-                log.info(
-                    'Tag {} does not contain newer version than we already found'.format(tag_name)
-                )
-                continue
-            tag_date = parser.parse(tag['updated'])
-            if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                log.info('The version {} is newer, but is too old!'.format(version))
-                break
-            # we always want to return formal release if it exists, cause it has useful data
-            # grab formal release via APi to check for pre-release mark
-            formal_release = self.get_formal_release_for_tag(tag_name)
-            if formal_release:
-                # use full release info
-                ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
-            else:
-                if self.having_asset:
+        no_tags = feed_entries is not None and not feed_entries
+        if feed_entries:
+            for tag in feed_entries:
+                # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
+                tag_name = tag['link'].split('/')[-1]
+                log.info('Checking tag {}'.format(tag_name))
+                version = self.sanitize_version(tag_name, pre_ok, major)
+                if not version:
+                    log.info('We did not find a valid version in {} tag'.format(tag_name))
                     continue
-                log.info('No formal release for tag {}'.format(tag_name))
-                tag['tag_name'] = tag_name
-                tag['tag_date'] = tag_date
-                tag['version'] = version
-                tag['type'] = 'feed'
-                # remove keys which are non-jsonable
-                # TODO use those (pop returns them)
-                tag.pop('updated_parsed', None)
-                tag.pop('published_parsed', None)
-                ret = tag
-                log.info("Selected version as current selection: {}.".format(version))
+                if ret and ret['version'] >= version:
+                    log.info(
+                        'Tag {} does not contain newer version than we already found'.format(tag_name)
+                    )
+                    continue
+                tag_date = parser.parse(tag['updated'])
+                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                    log.info('The version {} is newer, but is too old!'.format(version))
+                    break
+                # we always want to return formal release if it exists, cause it has useful data
+                # grab formal release via APi to check for pre-release mark
+                formal_release = self.get_formal_release_for_tag(tag_name)
+                if formal_release:
+                    # use full release info
+                    ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
+                else:
+                    if self.having_asset:
+                        continue
+                    log.info('No formal release for tag {}'.format(tag_name))
+                    tag['tag_name'] = tag_name
+                    tag['tag_date'] = tag_date
+                    tag['version'] = version
+                    tag['type'] = 'feed'
+                    # remove keys which are non-jsonable
+                    # TODO use those (pop returns them)
+                    tag.pop('updated_parsed', None)
+                    tag.pop('published_parsed', None)
+                    ret = tag
+                    log.info("Selected version as current selection: {}.".format(version))
 
         # we are good with release from feeds only without looking at the API
         # simply because feeds list stuff in order of recency
-        if ret:
+        if ret or no_tags:
             return ret
 
         # only if we did not find desired stuff through feeds, we switch to using API :)
