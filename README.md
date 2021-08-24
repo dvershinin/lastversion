@@ -239,6 +239,18 @@ To always download source, use `--source` instead:
 wget $(lastversion --source mautic/mautic)  
 ```
 
+### Use case: Download specific asset under specified filename
+
+If you want to download specific asset of the last version's release and save the downloaded file
+ under a desired name, combine `-d` option (for download name) and `--filter` for specifying assets 
+ filter.
+
+Example:
+
+```bash
+lastversion --pre Aircoookie/WLED --format assets --filter ESP32.bin -d ESP32.bin
+```
+
 ### Use case: Get the last version (betas are fine)
 
 We consider the latest release is the one that is stable / not marked as beta.
