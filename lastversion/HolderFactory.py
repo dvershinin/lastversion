@@ -9,6 +9,7 @@ from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
 from .PypiRepoSession import PypiRepoSession
 from .SourceForgeRepoSession import SourceForgeRepoSession
+from .SystemRepoSession import SystemRepoSession
 from .WikipediaRepoSession import WikipediaRepoSession
 from .utils import BadProjectError
 
@@ -26,7 +27,8 @@ class HolderFactory:
         'website-feed': FeedRepoSession,
         'local': LocalVersionSession,
         'helm_chart': HelmChartRepoSession,
-        'wiki': WikipediaRepoSession
+        'wiki': WikipediaRepoSession,
+        'system': SystemRepoSession
     }
 
     @staticmethod
