@@ -170,10 +170,10 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
     if output_format in ['json', 'dict']:
         if output_format == 'dict':
             release['version'] = version
-            release['tag_date'] = release['tag_date']
         else:
             release['version'] = str(version)
-            release['tag_date'] = str(release['tag_date'])
+            if 'tag_date' in release:
+                release['tag_date'] = str(release['tag_date'])
         release['v_prefix'] = tag.startswith("v")
         version_macro = 'upstream_version' if 'module_of' in repo_data else 'version'
         version_macro = '%{{{}}}'.format(version_macro)

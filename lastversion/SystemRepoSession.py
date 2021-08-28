@@ -43,7 +43,17 @@ class SystemRepoSession(ProjectHolder):
     def yum_get_available_version(self, pre_ok, major):
         ret = None
         import yum
+        yumLoggers = ['yum.filelogging.RPMInstallCallback', 'yum.verbose.Repos',
+                      'yum.verbose.plugin',
+                      'yum.Depsolve', 'yum.verbose', 'yum.plugin', 'yum.Repos', 'yum',
+                      'yum.verbose.YumBase',
+                      'yum.filelogging', 'yum.verbose.YumPlugins', 'yum.RepoStorage', 'yum.YumBase',
+                      'yum.filelogging.YumBase', 'yum.verbose.Depsolve']
+        for logger in yumLoggers:
+            logging.getLogger(logger).setLevel(logging.CRITICAL)
         yb = yum.YumBase()
+        yb.preconf.debuglevel = 0
+        yb.preconf.errorlevel = 0
         yb.setCacheDir()
         pkgs = yb.pkgSack.returnNewestByNameArch(patterns=[self.repo])
         for pkg in pkgs:
@@ -51,7 +61,7 @@ class SystemRepoSession(ProjectHolder):
             if not ret or ret['version'] < version:
                 ret = {
                     'version': version,
-                    'tag_name': pkg.vr.version,
+                    'tag_name': pkg.vr,
                     # 'tag_date': ?
                 }
         return ret
