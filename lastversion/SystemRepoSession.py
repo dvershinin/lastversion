@@ -56,7 +56,7 @@ class SystemRepoSession(ProjectHolder):
                 }
         return ret
 
-    def apt_get_installed_version(self, pre_ok, major):
+    def apt_get_available_version(self, pre_ok, major):
         ret = None
         import apt
         cache = apt.cache.Cache()
@@ -81,12 +81,11 @@ class SystemRepoSession(ProjectHolder):
         except ImportError:
             pass
         try:
-
             return self.yum_get_available_version(pre_ok, major)
         except ImportError:
             pass
         try:
-            return self.apt_get_available_version()
+            return self.apt_get_available_version(pre_ok, major)
         except ImportError:
             pass
         return None
