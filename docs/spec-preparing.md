@@ -1,20 +1,30 @@
 `lastversion` is capable of directly updating RPM .spec files with the latest release version:
 
 ```bash
-lastversion package-name.spec
+lastversion foo.spec
 ```
 
-This feature allows building an easy automation for rebuilding package updates.
+It will update your .spec file with the newer project version, if available.
 
-There are only a couple of modifications you must make to your `.spec` file in order to make them `lastversion` friendly.
+This feature allows creating an easy automation for rebuilding package updates.
+You can set up a simple build pipeline via e.g. cron, to automatically build packages for new
+ versions.
 
-These changes will allow `lastversion` to work with your `.spec` file and discover the GitHub repository in question and the current version.
+In general, you may not have to do any special changes in your `.spec` files. `lastversion` will
+ look at the `URL:` tag and check the latest release from that location, and update the `Version:` 
+ tag if a more recent version is found.
 
-It will rewrite your spec file with a newer version when you run `lastversion foo.spec`.
-
-This makes it easy to set up a simple build pipeline via e.g. cron, to automatically build packages for new versions.
-
+However, if you are working with projects hosted on GitHub, it is highly recommended to prepare
+ your `.spec` files in a special way.
+ 
+The recommended changes below will allow `lastversion` to work with your `.spec` file and discover
+ the GitHub repository in question, the current version *and* release tag. The release tag is very
+  important to be part of your build, because it helps to avoid breaking builds.
+ 
 ## lastversion-friendly spec changes
+
+There are only a couple of modifications you must make to your `.spec` file in order to make it
+ `lastversion` friendly.
 
 ### For GitHub projects
 
