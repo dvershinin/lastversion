@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 ## [1.6.0] - 2021-09-04
 ### Added
 * For .spec file updates, look for URL: tag as well, to use as repo argument
+* `--at system` will query last version from package managers
+* Various performance optimizations
 
 ## [1.5.1] - 2021-08-07
 ### Added
