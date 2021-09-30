@@ -115,8 +115,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 spec_host = urlparse(spec_url).hostname
                 if spec_host in ['github.com'] and not upstream_github and not spec_repo:
                     log.warning('Neither %upstream_github nor %lastversion_repo macros were found. '
-                                 'Please prepare your spec file using instructions: '
-                                 'https://lastversion.getpagespeed.com/spec-preparing.html')
+                                'Please prepare your spec file using instructions: '
+                                'https://lastversion.getpagespeed.com/spec-preparing.html')
             if not current_version:
                 log.critical('Did not find neither Version: nor %upstream_version in the spec file')
                 sys.exit(1)
@@ -472,6 +472,13 @@ def main():
     if args.action == 'install':
         # we can only install assets
         args.format = 'json'
+        if args.having_asset is None:
+            args.having_asset = r'~\.rpm$'
+            try:
+                import apt
+                args.having_asset = r'~\.deb$'
+            except ImportError:
+                pass
 
     if args.repo.endswith('.spec'):
         args.action = 'update-spec'
