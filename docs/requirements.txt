@@ -1,6 +1,6 @@
 # docs/requirements.txt
 lastversion
-mkdocs==1.2.1
+mkdocs==1.2.3
 mkdocs-material
 mkdocstrings
 markdown-include
