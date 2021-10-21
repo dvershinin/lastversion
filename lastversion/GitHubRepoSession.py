@@ -420,7 +420,13 @@ class GitHubRepoSession(ProjectHolder):
         """
         if self.repo in self.feed_contents:
             return self.feed_contents[self.repo]
-        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo))
+        headers = {
+            'Accept': '*/*',
+            # private repos do not have releases.atom to begin with,
+            # authorization header may cause a false positive 200 response with an empty feed!
+            'Authorization': ''
+        }
+        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo), headers=headers)
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
         if r.status_code == 404 and not rename_checked:

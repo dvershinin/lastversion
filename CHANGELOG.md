@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2021-10-21
+### Changed
+* The "install" action operates against releases with respective assets #60
+### Fixed
+* The releases.atom w/o aurhotization, fixes behavior of GitHub returning empty feeds
+
 ## [1.6.0] - 2021-09-04
 ### Added
 * For .spec file updates, look for URL: tag as well, to use as repo argument
