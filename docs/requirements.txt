@@ -2,7 +2,7 @@
 lastversion
 mkdocs==1.2.3
 mkdocs-material
-mkdocstrings
-markdown-include
+mkdocstrings==0.16.1
+markdown-include==0.6.0
 pymdown-extensions
 pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
