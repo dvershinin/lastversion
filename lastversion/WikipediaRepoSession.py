@@ -19,6 +19,9 @@ def remove_words(title):
 
 class WikipediaRepoSession(ProjectHolder):
     KNOWN_REPOS_BY_NAME = {
+        'alpine': {
+            'repo': 'Alpine_Linux',
+        },        
         'rocky': {
             'repo': 'Rocky_Linux',
         },
