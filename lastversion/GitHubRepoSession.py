@@ -57,7 +57,9 @@ class GitHubRepoSession(ProjectHolder):
         },
         'linux': {'repo': 'torvalds/linux'},
         'kernel': {'repo': 'torvalds/linux'},
-        'openssl': {'repo': 'openssl/openssl'}
+        'openssl': {'repo': 'openssl/openssl'},
+        'python': {'repo': 'python/cpython'},
+        'cmake': {'repo': 'kitware/cmake'},
     }
 
     """
