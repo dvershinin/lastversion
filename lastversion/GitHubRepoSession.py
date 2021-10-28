@@ -4,8 +4,8 @@ import math
 import os
 import re
 import time
+from datetime import datetime
 from datetime import timedelta
-
 import feedparser
 from appdirs import user_cache_dir
 from dateutil import parser
@@ -314,8 +314,8 @@ class GitHubRepoSession(ProjectHolder):
         
         """
         cursor = ''
-
-        while not ret:
+        log.info('Using graphql queries...')
+        while True:
             # testing on php/php-src
             owner, name = self.repo.split('/')
             query = query_fmt % (owner, name, cursor)
@@ -366,6 +366,8 @@ class GitHubRepoSession(ProjectHolder):
                                 'version': version,
                                 'type': 'graphql'
                             }
+            if ret:
+                break
         return ret
 
     def get_formal_release_for_tag(self, tag):
@@ -490,7 +492,6 @@ class GitHubRepoSession(ProjectHolder):
         # * has a beta-like, non-version tag name
 
         feed_entries = self.get_releases_feed_entries()
-        no_tags = feed_entries is not None and not feed_entries
         if feed_entries:
             for tag in feed_entries:
                 # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
@@ -532,12 +533,13 @@ class GitHubRepoSession(ProjectHolder):
 
         # we are good with release from feeds only without looking at the API
         # simply because feeds list stuff in order of recency
-        if ret or no_tags:
+        # however, still use /tags unless releases.atom has data within a year
+        if ret and ret['tag_date'].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
             return ret
 
         # only if we did not find desired stuff through feeds, we switch to using API :)
         # this may be required in cases
-        # releases.atom has limited tags, and all those are beta / invalid / non-versions
+        # releases.atom has limited/no tags (#63), and all those are beta / invalid / non-versions
         # likewise, we want an older branch (major), which is not there in releases.atom
         # due to limited nature of data inside it
 

@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2021-10-28
+### Fixed
+* GitHub has empty releases.atom in tag-only repos #63, #65
+* Fix for some repos where releases.atom contains old releases only
+
 ## [2.0.0] - 2021-10-21
 ### Changed
 * The "install" action operates against releases with respective assets #60

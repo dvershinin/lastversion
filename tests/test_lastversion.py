@@ -496,3 +496,12 @@ def test_having_any_asset():
     repo = 'https://github.com/lastversion-test-repos/portainer'
     v = latest(repo, having_asset=True)
     assert v == version.parse('2.6.3')
+
+
+def test_tags_only_repo():
+    """A repo may never published a formal release which results
+    in a completely empty releases atom without any formal and non-formal tags
+    See #63"""
+    repo = 'https://github.com/lastversion-test-repos/cpython'
+    v = latest(repo)
+    assert v == version.parse('3.10.0')
