@@ -60,6 +60,7 @@ class GitHubRepoSession(ProjectHolder):
         'openssl': {'repo': 'openssl/openssl'},
         'python': {'repo': 'python/cpython'},
         'cmake': {'repo': 'kitware/cmake'},
+        'kodi': {'repo': 'xbmc/xbmc'}
     }
 
     """
