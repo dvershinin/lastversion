@@ -35,11 +35,9 @@
 
 有时候我们希望所有的软件都有一个固定格式的版本号，`lastversion` 可以帮助你，它可以让你查询某个项目的最新版本的同时返回一个固定格式的版本号，并可以获取下载链接等额外信息。
 
-
 `lastversion` 主要用于自动化脚本，比如自动更新和持续集成等。
 
 [就像我这么做](https://www.getpagespeed.com/redhat)
-
 
 `lastversion` 使用了简单的 AI 来参与到检测中，
 比如清理版本号中的无用信息，比如将 `name-v1.2.3` 修改为 `1.2.3`，
@@ -301,7 +299,6 @@ lastversion ios #> 14.6
 ```bash
 lastversion https://en.wikipedia.org/wiki/Rocky_Linux #> 8.4
 ```
-
 
 ### 特殊用例: NGINX 的稳定版（Stable）和主线版（Mainline）
 
