@@ -9,9 +9,9 @@
 
 [English](README.md) | 简体中文
 
-一个轻巧的命令行工具，帮助你下载或安装一个项目的稳定版本。
+一个轻巧的命令行工具，帮助你查询一个项目/软件的最新版本号及各种相关信息，比如下载链接。
 
-`lastversion` 可以从下面的网站找到一个项目的格式良好的最新版本：
+`lastversion` 可以从下面的网站找到一个项目的格式良好的最新的版本号。
 
 *   [GitHub](https://github.com/dvershinin/lastversion/wiki/GitHub-specifics)
 *   GitLab
@@ -19,11 +19,12 @@
 *   PyPI
 *   Mercurial
 *   SourceForge
+*   Wikipedia
 *   任何以 RSS/ATOM 订阅方式发布软件网站。
 
 ## 为什么需要 `lastversion`？
 
-通常情况下，许多项目作者的一些做法会让我们难以寻找一个项目的最新版本。
+通常情况下，许多项目作者的一些做法会让我们难以寻找一个项目的最新版本及其版本号。
 
 *   发布一个候选版本的时候忘记将其标记为预发布版本，而是作为一个正式版本去发布。比如版本标签为 `v2.0.1-rc` 但是在发布时并未标记为预发布版本。
 *   在版本标签中加入无关的文本，例如 `release-1.2.3` 或 `name-1.2.3-2019`，或者其它类似的文本。
@@ -32,16 +33,18 @@
 
 人与人之间难以保持一致。
 
-如果你要应对这种麻烦的情况，你可以使用 `lastversion`，它可以让你轻松地获取某个项目的格式良好的版本标签（或下载链接）。
+有时候我们希望所有的软件都有一个固定格式的版本号，`lastversion` 可以帮助你，它可以让你查询某个项目的最新版本的同时返回一个固定格式的版本号，并可以获取下载链接等额外信息。
 
-`lastversion` 主要用于 build systems。无论何时，
-你都可以用它获取某个项目的版本信息去自动构建你的 packages，
-或者用于在你的脚本中获取某个项目的最新版本。
+
+`lastversion` 主要用于自动化脚本，比如自动更新和持续集成等。
 
 [就像我这么做](https://www.getpagespeed.com/redhat)
 
-lastversion 使用了一小点 AI 以检测发布者是否将测试版误发布为稳定版，
-也可以清理一些版本信息中那些带有发布者个性文本。
+
+`lastversion` 使用了简单的 AI 来参与到检测中，
+比如清理版本号中的无用信息，比如将 `name-v1.2.3` 修改为 `1.2.3`，
+也用它来检测发布者是否混淆了测试版和稳定版。
+
 
 ## 简介
 
@@ -146,6 +149,8 @@ optional arguments:
   --only ONLY           Only consider releases containing this text. Useful
                         for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
+  --having-asset [ASSET]
+                        Only consider releases with this asset  
   -su, --shorter-urls   A tiny bit shorter URLs produced
   --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}
                         If the repo argument is one word, specifies where to
@@ -155,12 +160,12 @@ optional arguments:
   --version             show program's version number and exit
 ```
 
-`--format` 选项将会指定输出的信息的格式，这些信息是关于某个项目的最后一次发布的版本的信息。
+`--format` 选项将会指定输出的格式。
 
-*   `version` 为默认值，输出格式最新的，格式良好的版本号。
+*   `version` 默认值，输出格式最新的，格式良好的版本号。
 *   `assets` 会以换行分割的最新版本的 asset 的 URL（如果有多个 asset 的话），否则将为最新源码链接（通常为 *.tar.gz 或 *.zip）。
 *   `source` 将输出最新源码的链接（通常为 *.tar.gz 或 *.zip），即使最新版本同时发布了其它的 asset。
-*   `json` 可以被外部 Python 模块使用或用来调试，它是一个 API 的 dict/JSON 的输出，可以满足最后的版本检查。
+*   `json` 此格式可以被 Python 程序处理。
 *   `tag` 只输出最新版本的标签名。
 
 `asset` 在本文是指一个可下载的文件，
@@ -231,7 +236,7 @@ lastversion --pre mautic/mautic
 #> 2.15.2b0
 ```
 
-### 用例: 特定分支的版本
+### 用例: 获取特定的分支/版本
 
 一些项目可能会一起在不同的分支上发布稳定版本，
 典型的例子就是 PHP，你可以使用 `--major` 去指定某个主版本，例如：
@@ -254,7 +259,51 @@ lastversion php:7.2
 lastversion php:7.2.33 --assets
 ```
 
-#### 特殊用例: NGINX 的稳定版（Stable）和主线版（Mainline）
+### 用例：检查是否发布 assets
+
+有时候一个项目可能已经发布了新的版本，但是相关的 assets 并没有第一时间发布，比如各大平台的可执行程序。
+
+如果你只想要某些 assets，你可以使用 `--having-asset` 来实现。
+
+```bash
+lastversion telegramdesktop/tdesktop --having-asset "Linux 64 bit: Binary"
+```
+
+`--having-asset` 接收一个正则表达式用于匹配 assets 的名称。
+
+获取包含 macOS 平台的安装程序的最新版本号。
+
+```bash
+lastversion telegramdesktop/tdesktop --having-asset "~\.dmg$"
+```
+
+如果你不为 `--having-asset` 指定任何值，那么将匹配所有 assets，及只要包含任意的 assets 均可。
+
+```bash
+lastversion telegramdesktop/tdesktop --having-asset
+```
+
+### 用例：获取操作系统的版本号
+
+操作系统通常不会在 Github 发布版本，你通常只能通过官方网站等渠道才能获取，
+不过 `lastversion` 可以做到这一点。
+
+`lastversion` 的做法简单粗暴，将常见的操作系统名称及其对应的 Wikipedia 联系起来并硬编码到程序中。
+
+```bash
+lastversion rocky #> 8.4
+lastversion windows #> 10.0.19043.1081
+lastversion ios #> 14.6
+```
+
+你也可以提供某个软件/操作系统的完整的 Wikipedia 的 URL 来完成相同的操作。
+
+```bash
+lastversion https://en.wikipedia.org/wiki/Rocky_Linux #> 8.4
+```
+
+
+### 特殊用例: NGINX 的稳定版（Stable）和主线版（Mainline）
 
 ```bash
 lastversion https://nginx.org --major stable #> 1.16.1
@@ -322,6 +371,15 @@ lastversion test '1.2.3-rc1' # > 1.2.3rc1
 ```
 
 ### 在 `bash` 上用 `lastversion` 编写脚本
+
+#### 版本号比较
+
+你可以使用 `lastversion` 轻松地比较两个版本号并输出更加新的那个。
+
+```bash
+lastversion 1.2.3 -gt 1.2.4
+#> 1.2.4
+```
 
 #### 检查更新
 
@@ -442,6 +500,7 @@ print('Latest Mautic version: {}'.format(str(latest_mautic_version)))
 if latest_mautic_version >= version.parse('1.8.1'):
     print('It is newer')
 ```
+
 如果 `output_format='version'`（默认），函数会返回一个 
 [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 对象
 或者 `none`。所以你可以进行如版本比较等工作。
