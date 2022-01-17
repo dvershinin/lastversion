@@ -214,7 +214,7 @@ class GitHubRepoSession(ProjectHolder):
                         'Exceeded API rate limit after waiting: {}'.format(
                             r.json()['message'])
                     )
-            return self.get(url)
+                return self.get(url)
 
         if r.status_code == 403 and url != self.get_rate_limit_url():
             self.rate_limited_count = 0
