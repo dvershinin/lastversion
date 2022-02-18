@@ -12,7 +12,7 @@ def remove_words(title):
     parts = title.split(' ')
     parts_n = []
     for part in parts:
-        if not part.isalpha():
+        if not part.isalpha() or '.post' in part:
             parts_n.append(part)
     return " ".join(parts_n)
 
@@ -57,6 +57,12 @@ class WikipediaRepoSession(ProjectHolder):
         },
         'osx': {
             'repo': 'MacOS'
+        },
+        'sles': {
+            'repo': 'SUSE_Linux_Enterprise'
+        },
+        'opensuse': {
+            'repo': 'OpenSUSE'
         }
     }
 
@@ -90,8 +96,10 @@ class WikipediaRepoSession(ProjectHolder):
                 published = parser.parse(published)
                 for t in release_data.select('sup, span'):
                     t.decompose()
+                tag_name = release_data.text
+                tag_name = tag_name.replace(' Service Pack ', '.post')
                 # remove alphas from beginning
-                tag_name = remove_words(release_data.text).split('/')[0]
+                tag_name = remove_words(tag_name).split('/')[0]
                 # Remove unicode stuff (for Python 2)
                 tag['title'] = release_data.text.encode("ascii", "ignore").decode()
                 log.info('Pre-parsed title: {}'.format(tag['title']))
