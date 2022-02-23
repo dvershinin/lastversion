@@ -28,7 +28,8 @@ tests_requires = [
     "flake8",
     # somehow getting this issue only in Travis, anyway this should fix:
     # https://github.com/pytest-dev/pytest/issues/6887#issuecomment-600979770
-    "pytest-xdist==1.29.0"
+    "pytest-xdist==1.29.0",
+    "coverage"
 ]
 
 docs_requires = [

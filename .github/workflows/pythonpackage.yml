@@ -30,9 +30,14 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        pytest -v -n auto
+        pytest -v -n auto --cov=lastversion --cov-report=xml
       env:
         GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload coverage to Codacy
+      run: |
+        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
+      env:
+        CODACY_API_TOKEN: ${{ secrets.CODACY_API_TOKEN }}
     - name: Update .spec files
       run: |
         # ensure changelog is generated
