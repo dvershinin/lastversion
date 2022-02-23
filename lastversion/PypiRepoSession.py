@@ -9,9 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class PypiRepoSession(ProjectHolder):
-    """
-    A class to represent a Pypi project holder.
-    """
+    """A class to represent a Pypi project holder."""
     DEFAULT_HOSTNAME = 'pypi.org'
     REPO_URL_PROJECT_COMPONENTS = 1
     # For project URLs, e.g. https://pypi.org/project/lastversion/
@@ -19,6 +17,7 @@ class PypiRepoSession(ProjectHolder):
     REPO_URL_PROJECT_OFFSET = 1
 
     def get_project(self):
+        """Get project JSON data."""
         project = None
         url = 'https://{}/pypi/{}/json'.format(self.hostname, self.repo)
         log.info('Requesting {}'.format(url))
@@ -50,6 +49,7 @@ class PypiRepoSession(ProjectHolder):
         return None
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get latest project release."""
         ret = self.project
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version

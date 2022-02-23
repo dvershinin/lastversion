@@ -1,7 +1,5 @@
 import logging
 
-from dateutil import parser
-
 from .ProjectHolder import ProjectHolder
 from .utils import BadProjectError
 
@@ -9,9 +7,7 @@ log = logging.getLogger(__name__)
 
 
 class WordPressPluginRepoSession(ProjectHolder):
-    """
-    A class to represent a Pypi project holder.
-    """
+    """A class to represent a WordPress plugin  project holder."""
     DEFAULT_HOSTNAME = 'wordpress.org'
     REPO_URL_PROJECT_COMPONENTS = 1
     # For project URLs, e.g. https://wordpress.org/plugins/opcache-reset/
@@ -19,6 +15,7 @@ class WordPressPluginRepoSession(ProjectHolder):
     REPO_URL_PROJECT_OFFSET = 1
 
     def get_project(self):
+        """Get project JSON data."""
         project = None
         url = 'https://api.{}/plugins/info/1.0/{}.json'.format(self.hostname, self.repo)
         log.info('Requesting {}'.format(url))
@@ -48,6 +45,7 @@ class WordPressPluginRepoSession(ProjectHolder):
             self.repo, release['version'])
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get latest release for this project."""
         ret = {}
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version
@@ -76,7 +74,9 @@ class WordPressPluginRepoSession(ProjectHolder):
 
     @staticmethod
     def make_canonical_link(repo):
+        """Make canonical link from repo."""
         return 'https://{}/plugins/{}/'.format(WordPressPluginRepoSession.DEFAULT_HOSTNAME, repo)
 
     def get_canonical_link(self):
+        """Get canonical link from repo."""
         return 'https://{}/plugins/{}/'.format(self.hostname, self.repo)
