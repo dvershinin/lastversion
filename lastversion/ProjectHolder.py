@@ -3,7 +3,10 @@
 import logging
 import os
 import re
-
+from appdirs import user_cache_dir
+from cachecontrol import CacheControlAdapter
+from cachecontrol.caches.file_cache import FileCache
+from cachecontrol.heuristics import ExpiresAfter
 import requests
 from packaging.version import InvalidVersion
 
@@ -49,7 +52,17 @@ class ProjectHolder(requests.Session):
 
     def __init__(self):
         super(ProjectHolder, self).__init__()
-        self.headers.update({'User-Agent': 'lastversion/{}'.format(__version__)})
+
+        app_name = __name__.split('.')[0]
+        
+        self.cache_dir = user_cache_dir(app_name)
+        log.info("Using cache directory: {}.".format(self.cache_dir))
+        self.cache = FileCache(self.cache_dir)
+        cache_adapter = CacheControlAdapter(cache=self.cache)
+        self.mount("http://", cache_adapter)
+        self.mount("https://", cache_adapter)
+        
+        self.headers.update({'User-Agent': '{}/{}'.format(app_name, __version__)})
         log.info('Created instance of {}'.format(type(self).__name__))
         self.branches = None
         self.only = None

@@ -18,13 +18,11 @@ import re
 import sys
 
 import yaml
-from appdirs import user_cache_dir
 from os.path import expanduser
-from cachecontrol import CacheControl
-from cachecontrol.caches.file_cache import FileCache
-# from cachecontrol.heuristics import ExpiresAfter
+
 from packaging.version import InvalidVersion
 
+from .__about__ import __self__
 from .GitHubRepoSession import TOKEN_PRO_TIP
 from .HolderFactory import HolderFactory
 from .ProjectHolder import ProjectHolder
@@ -34,7 +32,6 @@ from .utils import download_file, ApiCredentialsError, BadProjectError, rpm_inst
 from six.moves.urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
-__self__ = "dvershinin/lastversion"
 
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
@@ -62,8 +59,6 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         str: Single string containing tag, if found and `output_format` is `tag`
 
     """
-    cache_dir = user_cache_dir("lastversion")
-    log.info("Using cache directory: {}.".format(cache_dir))
     repo_data = {}
 
     if repo.endswith('.yml') and not repo.startswith(('http://', 'https://')):
@@ -142,83 +137,73 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
             elif spec_url:
                 repo = spec_url
 
-    if (not at or '/' in repo) and at != 'helm_chart':
-        # find the right hosting for this repo
-        project_holder = HolderFactory.get_instance_for_repo(repo, only=only)
-    else:
-        project_holder = HolderFactory.HOLDERS[at](repo, hostname=None)
+    with HolderFactory.get_instance_for_repo(repo, only=only, at=at) as project:
+        project.set_only(only)
+        project.set_having_asset(having_asset)
+        release = project.get_latest(pre_ok=pre_ok, major=major)
 
-    project_holder.set_only(only)
-    project_holder.set_having_asset(having_asset)
-
-    # we are completely "offline" for 1 hour, not even making conditional requests
-    # heuristic=ExpiresAfter(hours=1)   <- make configurable
-    with CacheControl(project_holder, cache=FileCache(cache_dir)) as s:
-        release = s.get_latest(pre_ok=pre_ok, major=major)
-    s.close()
-
-    # bail out, found nothing that looks like a release
-    if not release:
-        return None
-
-    from_type = 'Located the latest release tag {} at: {}'.format(
-        release['tag_name'], project_holder.get_canonical_link()
-    )
-    if 'type' in release:
-        from_type = '{} via {} mechanism'.format(from_type, release['type'])
-    log.info(from_type)
-
-    version = release['version']
-    tag = release['tag_name']
-
-    # return the release if we've reached far enough:
-    if output_format == 'version':
-        return version
-
-    if output_format in ['json', 'dict']:
-        if output_format == 'dict':
-            release['version'] = version
-        else:
-            release['version'] = str(version)
-            if 'tag_date' in release:
-                release['tag_date'] = str(release['tag_date'])
-        release['v_prefix'] = tag.startswith("v")
-        version_macro = 'upstream_version' if 'module_of' in repo_data else 'version'
-        version_macro = '%{{{}}}'.format(version_macro)
-        holder_i = {value: key for key, value in HolderFactory.HOLDERS.items()}
-        release['source'] = holder_i[type(project_holder)]
-        release['spec_tag'] = tag.replace(
-            str(version),
-            version_macro
+        # bail out, found nothing that looks like a release
+        if not release:
+            return None
+    
+        from_type = 'Located the latest release tag {} at: {}'.format(
+            release['tag_name'], project.get_canonical_link()
         )
-        # spec_tag_no_prefix is the helpful macro which will allow us to know where tarball
-        # extracts to (GitHub-specific)
-        if release['spec_tag'].startswith('v{}'.format(version_macro)) or \
-                re.match(r'^v\d', release['spec_tag']):
-            release['spec_tag_no_prefix'] = release['spec_tag'].lstrip('v')
-        else:
-            release['spec_tag_no_prefix'] = release['spec_tag']
-        release['tag_name'] = tag
-        if hasattr(s, 'repo_license'):
-            release['license'] = s.repo_license(tag)
-        if hasattr(s, 'repo_readme'):
-            release['readme'] = s.repo_readme(tag)
-        release.update(repo_data)
-        try:
-            release['assets'] = s.get_assets(release, short_urls, assets_filter)
-        except NotImplementedError:
-            pass
-        release['from'] = project_holder.get_canonical_link()
-        return release
-
-    if output_format == 'assets':
-        return s.get_assets(release, short_urls, assets_filter)
-
-    if output_format == 'source':
-        return s.release_download_url(release, short_urls)
-
-    if output_format == 'tag':
-        return tag
+        if 'type' in release:
+            from_type = '{} via {} mechanism'.format(from_type, release['type'])
+        log.info(from_type)
+    
+        version = release['version']
+        tag = release['tag_name']
+    
+        # return the release if we've reached far enough:
+        if output_format == 'version':
+            return version
+    
+        if output_format in ['json', 'dict']:
+            if output_format == 'dict':
+                release['version'] = version
+            else:
+                release['version'] = str(version)
+                if 'tag_date' in release:
+                    release['tag_date'] = str(release['tag_date'])
+            release['v_prefix'] = tag.startswith("v")
+            version_macro = 'upstream_version' if 'module_of' in repo_data else 'version'
+            version_macro = '%{{{}}}'.format(version_macro)
+            holder_i = {value: key for key, value in HolderFactory.HOLDERS.items()}
+            release['source'] = holder_i[type(project)]
+            release['spec_tag'] = tag.replace(
+                str(version),
+                version_macro
+            )
+            # spec_tag_no_prefix is the helpful macro which will allow us to know where tarball
+            # extracts to (GitHub-specific)
+            if release['spec_tag'].startswith('v{}'.format(version_macro)) or \
+                    re.match(r'^v\d', release['spec_tag']):
+                release['spec_tag_no_prefix'] = release['spec_tag'].lstrip('v')
+            else:
+                release['spec_tag_no_prefix'] = release['spec_tag']
+            release['tag_name'] = tag
+            if hasattr(project, 'repo_license'):
+                release['license'] = project.repo_license(tag)
+            if hasattr(project, 'repo_readme'):
+                release['readme'] = project.repo_readme(tag)
+            release.update(repo_data)
+            try:
+                release['assets'] = project.get_assets(release, short_urls, assets_filter)
+            except NotImplementedError:
+                pass
+            release['from'] = project.get_canonical_link()
+            return release
+    
+        if output_format == 'assets':
+            return project.get_assets(release, short_urls, assets_filter)
+    
+        if output_format == 'source':
+            return project.release_download_url(release, short_urls)
+    
+        if output_format == 'tag':
+            return tag
 
     return None
 

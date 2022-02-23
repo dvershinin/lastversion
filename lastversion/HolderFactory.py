@@ -48,8 +48,10 @@ class HolderFactory:
     @staticmethod
     # go through subclasses in order to find the one that is holding a given project
     # repo is either complete URL or a name allowing to identify a single project
-    def get_instance_for_repo(repo, only=None):
-
+    def get_instance_for_repo(repo, only=None, at=None):
+        """Find the right hosting for this repo."""
+        if at == 'helm_chart' or (at and '/' not in repo):
+            return HolderFactory.HOLDERS[at](repo, hostname=None)
         holder_class = HolderFactory.HOLDERS['github']
         hostname = None
         known_repo = None

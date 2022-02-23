@@ -7,7 +7,6 @@ import time
 from datetime import datetime
 from datetime import timedelta
 import feedparser
-from appdirs import user_cache_dir
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
@@ -86,7 +85,7 @@ class GitHubRepoSession(ProjectHolder):
     def find_repo_by_name_only(self, repo):
         if repo.startswith(('https://', 'http://')):
             return None
-        cache_repo_names_file = "{}/repos.json".format(user_cache_dir("lastversion"))
+        cache_repo_names_file = "{}/repos.json".format(self.cache_dir)
         try:
             with open(cache_repo_names_file, 'r') as reader:
                 cache = json.load(reader)
@@ -174,6 +173,7 @@ class GitHubRepoSession(ProjectHolder):
         return '{}/rate_limit'.format(self.api_base)
 
     def get(self, url, **kwargs):
+        
         r = super(GitHubRepoSession, self).get(url, **kwargs)
         log.info('Got HTTP status code {} from {}'.format(r.status_code, url))
         if r.status_code == 401:
