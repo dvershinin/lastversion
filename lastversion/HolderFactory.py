@@ -11,6 +11,7 @@ from .PypiRepoSession import PypiRepoSession
 from .SourceForgeRepoSession import SourceForgeRepoSession
 from .SystemRepoSession import SystemRepoSession
 from .WikipediaRepoSession import WikipediaRepoSession
+from .WordPressPluginRepoSession import WordPressPluginRepoSession
 from .utils import BadProjectError
 
 log = logging.getLogger(__name__)
@@ -28,7 +29,8 @@ class HolderFactory:
         'local': LocalVersionSession,
         'helm_chart': HelmChartRepoSession,
         'wiki': WikipediaRepoSession,
-        'system': SystemRepoSession
+        'system': SystemRepoSession,
+        'wp': WordPressPluginRepoSession,
     }
 
     @staticmethod

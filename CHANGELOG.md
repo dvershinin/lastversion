@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2021-02-23
+### Added
+* Several extra repo shortcuts: kodi for Kodi, sles for SUSE Enterprise 
+* Refactored code so that caching can be better used
+* Extra detection of beta via preview and early-access delimiters
+* `--at wordpress` for WordPress plugins
+
 ## [2.0.1] - 2021-10-28
 ### Fixed
 * GitHub has empty releases.atom in tag-only repos #63, #65
