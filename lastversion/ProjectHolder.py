@@ -60,7 +60,7 @@ class ProjectHolder(requests.Session):
         cache_adapter = CacheControlAdapter(cache=self.cache)
         self.mount("http://", cache_adapter)
         self.mount("https://", cache_adapter)
-        
+
         self.headers.update({'User-Agent': '{}/{}'.format(app_name, __version__)})
         log.info('Created instance of {}'.format(type(self).__name__))
         self.branches = None
