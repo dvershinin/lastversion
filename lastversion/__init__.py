@@ -11,10 +11,16 @@ import logging
 from .__about__ import (
     __version__,
 )
+# We intentially import for export here, so it is ok to silence DeepSource test
+# skipcq: PY-W2000
 from .lastversion import __self__
+# skipcq: PY-W2000
 from .lastversion import check_version
+# skipcq: PY-W2000
 from .lastversion import has_update
+# skipcq: PY-W2000
 from .lastversion import latest
+# skipcq: PY-W2000
 from .lastversion import main
 
 # https://realpython.com/python-logging-source-code/#library-vs-application-logging-what-is-nullhandler
