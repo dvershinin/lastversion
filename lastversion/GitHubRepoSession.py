@@ -278,7 +278,7 @@ class GitHubRepoSession(ProjectHolder):
             }
           }
         }
-        
+
         fragment refInfo on Ref {
           name
           target {
@@ -302,7 +302,7 @@ class GitHubRepoSession(ProjectHolder):
             }
           }
         }
-        
+
         fragment commitInfo on Commit {
           zipballUrl
           tarballUrl
@@ -312,7 +312,7 @@ class GitHubRepoSession(ProjectHolder):
             date
           }
         }
-        
+
         """
         cursor = ''
         log.info('Using graphql queries...')

@@ -145,21 +145,21 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         # bail out, found nothing that looks like a release
         if not release:
             return None
-    
+
         from_type = 'Located the latest release tag {} at: {}'.format(
             release['tag_name'], project.get_canonical_link()
         )
         if 'type' in release:
             from_type = '{} via {} mechanism'.format(from_type, release['type'])
         log.info(from_type)
-    
+
         version = release['version']
         tag = release['tag_name']
-    
+
         # return the release if we've reached far enough:
         if output_format == 'version':
             return version
-    
+
         if output_format in ['json', 'dict']:
             if output_format == 'dict':
                 release['version'] = version
@@ -195,13 +195,13 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 pass
             release['from'] = project.get_canonical_link()
             return release
-    
+
         if output_format == 'assets':
             return project.get_assets(release, short_urls, assets_filter)
-    
+
         if output_format == 'source':
             return project.release_download_url(release, short_urls)
-    
+
         if output_format == 'tag':
             return tag
 
