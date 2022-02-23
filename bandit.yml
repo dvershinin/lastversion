@@ -1,5 +1,6 @@
+# B105 - false positive about TOKEN_PRO_TIP
 # allow subprocess import, allow subprocess call
-skips: ['B404', 'B603']
+skips: ['B105', B404', 'B603']
 # Do not check paths including `/tests/`:
 # they use `assert`, leading to B101 false positives.
 # also we do not need check security issues in tests
