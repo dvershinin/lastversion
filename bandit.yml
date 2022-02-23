@@ -1,2 +1,7 @@
-# allow assert call (tests), allow subprocess import, allow subprocess call
-skips: ['B101', 'B404', 'B603']
+# allow subprocess import, allow subprocess call
+skips: ['B404', 'B603']
+# Do not check paths including `/tests/`:
+# they use `assert`, leading to B101 false positives.
+# also we do not need check security issues in tests
+exclude_dirs:
+    - '/tests/'

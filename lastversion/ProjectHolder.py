@@ -6,7 +6,6 @@ import re
 from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
 from cachecontrol.caches.file_cache import FileCache
-from cachecontrol.heuristics import ExpiresAfter
 import requests
 from packaging.version import InvalidVersion
 
@@ -54,7 +53,7 @@ class ProjectHolder(requests.Session):
         super(ProjectHolder, self).__init__()
 
         app_name = __name__.split('.')[0]
-        
+
         self.cache_dir = user_cache_dir(app_name)
         log.info("Using cache directory: {}.".format(self.cache_dir))
         self.cache = FileCache(self.cache_dir)

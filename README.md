@@ -31,13 +31,16 @@ A tiny command-line utility that helps to answer a simple question:
 
 In general, quite many project authors complicate finding the latest version by:
 
-*   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forgetting to
+* Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forgetting to
     mark it as a pre-release
-*   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy 
+
+* Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy 
     like that
-*   Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
+
+* Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
     consistent about it myself :)
-*   Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
+
+* Switching from one version format to another, e.g. `v20150121` to `v2.0.1`
 
 There is no consistency in human beings.
 
@@ -120,7 +123,7 @@ itself.
 
 For more options to control output or behavior, see `--help` output:    
 
-```
+```text
 usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
                    [--format {version,assets,source,json,tag}] [--assets]
                    [--source] [-gt VER] [-b MAJOR] [--only ONLY]
@@ -169,13 +172,17 @@ optional arguments:
 The `--format` will affect what kind of information from the last release and in which format will
  be displayed, e.g.:
 
-*   `version` is the default. Simply outputs well-formatted version number of the latest release
-*   `assets` will output a newline-separated list of assets URLs (if any), otherwise link to
+* `version` is the default. Simply outputs well-formatted version number of the latest release
+
+* `assets` will output a newline-separated list of assets URLs (if any), otherwise link to
     sources archive
-*   `source` will output link to source archive, no matter if the release has some assets added
-*   `json` can be used by external Python modules or for debugging, it is dict/JSON output of an API
+
+* `source` will output link to source archive, no matter if the release has some assets added
+
+* `json` can be used by external Python modules or for debugging, it is dict/JSON output of an API
     call that satisfied last version checks
-*   `tag` will emit just the latest release's tag name, which useful if you're constructing download
+
+* `tag` will emit just the latest release's tag name, which useful if you're constructing download
     URL yourself or need the tag name otherwise
 
 An asset is a downloadable file that typically represents an executable, or otherwise 

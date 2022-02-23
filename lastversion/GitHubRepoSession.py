@@ -631,4 +631,3 @@ class GitHubRepoSession(ProjectHolder):
             self.feed_contents[official_repo] = r.text
             return official_repo
         return None
-
