@@ -1,9 +1,10 @@
 import logging
+from io import BytesIO
 import os
 import platform
 import re
 import sys
-
+import tarfile
 import requests
 import tqdm
 
@@ -150,6 +151,23 @@ def download_file(url, local_filename=None):
         os._exit(1)
     return local_filename
 
+
+def extract_file(url, extract_dir=None):
+    """Extract an archive while stripping the top level dir."""
+    smart_members = []
+    response = requests.get(url, stream=True)
+    # TODO make real stream processing of tar.gz
+    with tarfile.open(fileobj=BytesIO(response.raw.read()), mode="r:gz") as tar_file:
+        all_members = tar_file.getmembers()
+        if not all_members:
+            log.critical('No or not an archive')
+        root_dir = all_members[0].path
+        root_dir_with_slash_len = len(root_dir) + 1
+        for member in tar_file.getmembers():
+            if member.path.startswith(root_dir + "/"):
+                member.path = member.path[root_dir_with_slash_len:]
+                smart_members.append(member)
+        tar_file.extractall(members=smart_members)
 
 def rpm_installed_version(name):
     """Get the installed version of a package with the given name.

@@ -28,7 +28,8 @@ from .HolderFactory import HolderFactory
 from .ProjectHolder import ProjectHolder
 from .Version import Version
 from .argparse_version import VersionAction
-from .utils import download_file, ApiCredentialsError, BadProjectError, rpm_installed_version
+from .utils import download_file, extract_file, rpm_installed_version, ApiCredentialsError, \
+    BadProjectError
 from six.moves.urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
@@ -485,6 +486,10 @@ def main():
         if args.format != 'assets':
             args.format = 'source'
 
+    if args.action in ['extract', 'unzip']:
+        if args.format != 'assets':
+            args.format = 'source'
+
     if args.newer_than:
         base_compare = parse_version(args.repo)
         if base_compare:
@@ -518,6 +523,20 @@ def main():
             for url in res:
                 log.info("Downloading {} ...".format(url))
                 download_file(url, download_name)
+            sys.exit(0)
+
+        if args.action in ['unzip', 'extract']:
+            # download command
+            if args.format == 'source':
+                # there is only one source, but we need an array
+                res = [res]
+            download_name = None
+            # save with custom filename, if there's one file to download
+            if len(res) == 1:
+                download_name = args.download
+            for url in res:
+                log.info("Extracting {} ...".format(url))
+                extract_file(url, extract_dir=None)
             sys.exit(0)
 
         if args.action == 'install':

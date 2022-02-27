@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2021-02-27
+### Added
+* `unzip` command to extract project directly to the current directory
+
 ## [2.1.0] - 2021-02-23
 ### Added
 * Several extra repo shortcuts: kodi for Kodi, sles for SUSE Enterprise 
