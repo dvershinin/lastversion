@@ -489,9 +489,8 @@ def main():
         if args.format != 'assets':
             args.format = 'source'
 
-    if args.action in ['extract', 'unzip']:
-        if args.format != 'assets':
-            args.format = 'source'
+    if args.action in ['extract', 'unzip'] and args.format != 'assets':
+        args.format = 'source'
 
     if args.newer_than:
         base_compare = parse_version(args.repo)
@@ -543,7 +542,7 @@ def main():
                 download_name = args.download
             for url in res:
                 log.info("Extracting {} ...".format(url))
-                extract_file(url, extract_dir=None)
+                extract_file(url)
             sys.exit(0)
 
         if args.action == 'install':

@@ -152,7 +152,7 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def extract_file(url, extract_dir=None):
+def extract_file(url):
     """Extract an archive while stripping the top level dir."""
     smart_members = []
     response = requests.get(url, stream=True)
