@@ -505,3 +505,15 @@ def test_tags_only_repo():
     repo = 'https://github.com/lastversion-test-repos/cpython'
     v = latest(repo)
     assert v == version.parse('3.10.0')
+
+
+def test_only_arg_again():
+    repo = 'https://github.com/lastversion-test-repos/autoscaler/tags'
+    v = latest(repo, only='chart')
+    assert v == version.parse('9.16.0')
+
+
+def test_only_arg_negated():
+    repo = 'https://github.com/lastversion-test-repos/autoscaler/tags'
+    v = latest(repo, only='!chart')
+    assert v == version.parse('1.23.0')

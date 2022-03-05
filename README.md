@@ -125,11 +125,12 @@ itself.
 For more options to control output or behavior, see `--help` output:    
 
 ```text
-usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
-                   [--format {version,assets,source,json,tag}] [--assets]
-                   [--source] [-gt VER] [-b MAJOR] [--only ONLY]
-                   [--filter REGEX] [-su]
-                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}]
+usage: lastversion [-h] [--pre] [--sem {major,minor,patch}] [-v]
+                   [-d [FILENAME]] [--format {version,assets,source,json,tag}]
+                   [--assets] [--source] [-gt VER] [-b MAJOR] [--only REGEX]
+                   [--only-not REGEX] [--filter REGEX]
+                   [--having-asset [ASSET]] [-su]
+                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp}]
                    [-y] [--version]
                    [action] <repo or URL>
 
@@ -137,13 +138,16 @@ Find the latest software release.
 
 positional arguments:
   action                Special action to run, e.g. download, install, test
-  <repo or URL>         GitHub/GitLab/BitBucket/etc. repository in format
-                        owner/name or any URL that belongs to it
+  <repo or URL>         Repository in format owner/name or any URL that
+                        belongs to it
 
 optional arguments:
   -h, --help            show this help message and exit
   --pre                 Include pre-releases in potential versions
-  --verbose             Will give you an idea of what is happening under the hood
+  --sem {major,minor,patch}
+                        Semantic version constraint against compared version
+  -v, --verbose         Will give you an idea of what is happening under the
+                        hood, -vv to increase verbosity level
   -d [FILENAME], --download [FILENAME]
                         Download with custom filename
   --format {version,assets,source,json,tag}
@@ -156,18 +160,21 @@ optional arguments:
   -b MAJOR, --major MAJOR, --branch MAJOR
                         Only consider releases of a specific major version,
                         e.g. 2.1.x
-  --only ONLY           Only consider releases containing this text. Useful
+  --only REGEX          Only consider releases containing this text. Useful
                         for repos with multiple projects inside
+  --only-not REGEX      Only consider releases NOT containing this text.
+                        Useful for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
   --having-asset [ASSET]
-                        Only consider releases with this asset  
+                        Only consider releases with this asset
   -su, --shorter-urls   A tiny bit shorter URLs produced
-  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}
+  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp}
                         If the repo argument is one word, specifies where to
                         look up the project. The default is via internal
                         lookup or GitHub Search
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
+
 ```
 
 The `--format` will affect what kind of information from the last release and in which format will
@@ -210,6 +217,39 @@ To disable OS filtering, use `--filter .`, this will match everything.
 
 You can naturally use `--filter` in place where you would use `grep`, e.g. 
 `lastversion --assets --filter win REPO`
+
+### Use case: Work with a multi-project repository
+
+Sometimes a single repository actually hosts many components, and creates releases that
+have separate version line for each component. 
+
+To help `lastversion` get a component's version for such repos, use `--only` and `--only-not` 
+switches.
+They make `lastversion` look at only those releases which are tagged (or not) with specified 
+strings.
+
+[Example](https://github.com/lastversion-test-repos/autoscaler/tags):
+
+```bash
+lastversion --only chart https://github.com/lastversion-test-repos/autoscaler
+```
+
+The above will report `9.16.0`.
+
+```bash
+lastversion --only-not chart https://github.com/lastversion-test-repos/autoscaler
+```
+
+The above will report a non-chart latest version, `1.23.0`.
+
+Useful for hard cases, you can pass in regular expressions for both arguments, by prepending them 
+with tilde, like so:
+
+```bash
+lastversion --only '~-po.-' https://github.com/lastversion-test-repos/autoscaler
+```
+
+The above will consider only releases tagged with -po*d*-, or -po*v*-, etc.
 
 ### Use case: How to download the latest version of something
 

@@ -380,9 +380,12 @@ def main():
     parser.add_argument('-b', '--major', '--branch', metavar='MAJOR',
                         help="Only consider releases of a specific major "
                              "version, e.g. 2.1.x")
-    parser.add_argument('--only', metavar='ONLY', help="Only consider releases containing this "
-                                                       "text. Useful for repos with multiple "
-                                                       "projects inside")
+    parser.add_argument('--only', metavar='REGEX', 
+                        help="Only consider releases containing this text. "
+                             "Useful for repos with multiple projects inside")
+    parser.add_argument('--only-not', metavar='REGEX', 
+                        help="Only consider releases NOT containing this text. "
+                             "Useful for repos with multiple projects inside")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
                                                           "expression")
     parser.add_argument('--having-asset', metavar='ASSET',
@@ -496,6 +499,10 @@ def main():
             print(max([args.newer_than, base_compare]))
             sys.exit(2 if base_compare <= args.newer_than else 0)
 
+    # the sole purpose of only_not is so we have no ugly quotes for escaping ! in bash
+    if args.only_not:
+        args.only = '!' + args.only_not
+        
     # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,

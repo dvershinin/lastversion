@@ -148,16 +148,22 @@ class ProjectHolder(requests.Session):
     def matches_only(self, version_s):
         if not self.only:
             return True
-        if self.only not in version_s:
-            log.info('"{}" does not match the "only" constraint "{}"'.format(version_s, self.only))
-            return False
-        return True
+        search = self.only
+        positive = True
+        if search.startswith('!'):
+            positive = False
+            search = search[1:]
+        if search.startswith('~'):
+            search = r'{}'.format(self.only.lstrip('~'))
+            return positive == bool(re.search(search, version_s))
+        return positive == bool(search in version_s)
 
     def sanitize_version(self, version_s, pre_ok=False, major=None):
         """Extract version from tag name."""
         log.info("Sanitizing string {} as a satisfying version.".format(version_s))
         res = False
         if not self.matches_only(version_s):
+            log.info('"{}" does not match the "only" constraint "{}"'.format(version_s, self.only))
             return res
         try:
             char_fix_required = self.repo in self.LAST_CHAR_FIX_REQUIRED_ON
