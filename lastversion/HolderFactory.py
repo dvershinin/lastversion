@@ -90,8 +90,8 @@ class HolderFactory:
             
         if known_repo and 'only' in known_repo:
             holder.set_only(known_repo['only'])
-            
+
         if known_repo and 'release_url_format' in known_repo:
             holder.RELEASE_URL_FORMAT = known_repo['release_url_format']
-            
+
         return holder

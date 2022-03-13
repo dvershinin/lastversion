@@ -48,7 +48,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         only (str): Only consider tags with this text. Useful for repos with multiple projects.
                     The argument supports negation and regular expressions. To indicate a regex,
                     start it with tilde sign, to negate the expression, start it with exclamtion
-                    point, e.g. "!~\w" will make it consider only tags without word characters.
+                    point, e.g. r"!~\w" will make it consider only tags without word characters.
         repo (str): Repository specifier in any form.
         output_format (str): Affects return format. Possible values `version`, `json`, `dict`,
                              `assets`, `source`, `tag`.
@@ -393,7 +393,7 @@ def main():
     parser.add_argument('--only', metavar='REGEX', 
                         help="Only consider releases containing this text. "
                              "Useful for repos with multiple projects inside")
-    parser.add_argument('--exclude', metavar='REGEX', 
+    parser.add_argument('--exclude', metavar='REGEX',
                         help="Only consider releases NOT containing this text. "
                              "Useful for repos with multiple projects inside")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "

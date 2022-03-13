@@ -89,7 +89,7 @@ class ProjectHolder(requests.Session):
         if only:
             log.info('Only considering tags with "{}"'.format(only))
         return self
-            
+
     def set_exclude(self, exclude):
         """Sets "exclude" tag selector for this holder."""
         self.exclude = exclude
