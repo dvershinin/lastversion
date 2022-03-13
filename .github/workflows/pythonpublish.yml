@@ -28,5 +28,6 @@ jobs:
       uses: shimataro/ssh-key-action@v2
       with:
         key: ${{ secrets.BUILDER_SSH_KEY }}
+        known_hosts: ${{ secrets.BUILDER_SSH_KNOWN_HOSTS }}
     - name: Trigger RPM build
       run: ${{ secrets.RPM_BUILD_CMD }}
