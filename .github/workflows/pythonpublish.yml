@@ -24,3 +24,9 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
         twine upload dist/*
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.BUILDER_SSH_KEY }}
+    - name: Trigger RPM build
+      run: ${{ secrets.RPM_BUILD_CMD }}

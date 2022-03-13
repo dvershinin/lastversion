@@ -1,11 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [2.2.0] - 2021-02-27
+## [2.2.1] - 2022-02-27
+### Added
+* `--only` now accepts regex via `~` prefix and negation via `!` prefix
+* new `--exclude` argument allows for negative filtering
+* `dict` or `json` output: added `rpmspec_license` field
+
+## [2.2.0] - 2022-02-27
 ### Added
 * `unzip` command to extract project directly to the current directory
 
-## [2.1.0] - 2021-02-23
+## [2.1.0] - 2022-02-23
 ### Added
 * Several extra repo shortcuts: kodi for Kodi, sles for SUSE Enterprise 
 * Refactored code so that caching can be better used

@@ -30,6 +30,7 @@ from .Version import Version
 from .argparse_version import VersionAction
 from .utils import download_file, extract_file, rpm_installed_version, ApiCredentialsError, \
     BadProjectError
+from .spdx_id_to_rpmspec import rpmspec_licenses
 from six.moves.urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
@@ -37,14 +38,17 @@ log = logging.getLogger(__name__)
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
            short_urls=False, major=None, only=None, at=None,
-           having_asset=None):
+           having_asset=None, exclude=None):
     """Find latest release version for a project.
 
     Args:
         major (str): Only consider versions which are "descendants" of this major version string
         short_urls (bool): Whether we should try to return shorter URLs for release data
         assets_filter (str): Regular expression for filtering assets for the latest release
-        only (str): Only consider tags with this text. Useful for repos with multiple projects
+        only (str): Only consider tags with this text. Useful for repos with multiple projects.
+                    The argument supports negation and regular expressions. To indicate a regex,
+                    start it with tilde sign, to negate the expression, start it with exclamtion
+                    point, e.g. "!~\w" will make it consider only tags without word characters.
         repo (str): Repository specifier in any form.
         output_format (str): Affects return format. Possible values `version`, `json`, `dict`,
                              `assets`, `source`, `tag`.
@@ -138,8 +142,9 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
             elif spec_url:
                 repo = spec_url
 
-    with HolderFactory.get_instance_for_repo(repo, only=only, at=at) as project:
+    with HolderFactory.get_instance_for_repo(repo, at=at) as project:
         project.set_only(only)
+        project.set_exclude(exclude)
         project.set_having_asset(having_asset)
         release = project.get_latest(pre_ok=pre_ok, major=major)
 
@@ -195,6 +200,11 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
             except NotImplementedError:
                 pass
             release['from'] = project.get_canonical_link()
+
+            spdx_id = release['license']['license']['spdx_id'] if 'license' in release else None
+            rpmspec_licence = rpmspec_licenses[spdx_id] if spdx_id in rpmspec_licenses else None
+            if rpmspec_licence:
+                release['rpmspec_license'] = rpmspec_licence
             return release
 
         if output_format == 'assets':
@@ -383,7 +393,7 @@ def main():
     parser.add_argument('--only', metavar='REGEX', 
                         help="Only consider releases containing this text. "
                              "Useful for repos with multiple projects inside")
-    parser.add_argument('--only-not', metavar='REGEX', 
+    parser.add_argument('--exclude', metavar='REGEX', 
                         help="Only consider releases NOT containing this text. "
                              "Useful for repos with multiple projects inside")
     parser.add_argument('--filter', metavar='REGEX', help="Filters --assets result by a regular "
@@ -497,16 +507,12 @@ def main():
         if base_compare:
             print(max([args.newer_than, base_compare]))
             sys.exit(2 if base_compare <= args.newer_than else 0)
-
-    # the sole purpose of only_not is so we have no ugly quotes for escaping ! in bash
-    if args.only_not:
-        args.only = '!' + args.only_not
-        
+     
     # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
                      args.shorter_urls, args.major, args.only, args.at,
-                     having_asset=args.having_asset)
+                     having_asset=args.having_asset, exclude=args.exclude)
     except (ApiCredentialsError, BadProjectError) as error:
         sys.stderr.write(str(error) + os.linesep)
         if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ and \

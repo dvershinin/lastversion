@@ -128,7 +128,7 @@ For more options to control output or behavior, see `--help` output:
 usage: lastversion [-h] [--pre] [--sem {major,minor,patch}] [-v]
                    [-d [FILENAME]] [--format {version,assets,source,json,tag}]
                    [--assets] [--source] [-gt VER] [-b MAJOR] [--only REGEX]
-                   [--only-not REGEX] [--filter REGEX]
+                   [--exclude REGEX] [--filter REGEX]
                    [--having-asset [ASSET]] [-su]
                    [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp}]
                    [-y] [--version]
@@ -162,7 +162,7 @@ optional arguments:
                         e.g. 2.1.x
   --only REGEX          Only consider releases containing this text. Useful
                         for repos with multiple projects inside
-  --only-not REGEX      Only consider releases NOT containing this text.
+  --exclude REGEX      Only consider releases NOT containing this text.
                         Useful for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
   --having-asset [ASSET]
@@ -223,7 +223,7 @@ You can naturally use `--filter` in place where you would use `grep`, e.g.
 Sometimes a single repository actually hosts many components, and creates releases that
 have separate version line for each component. 
 
-To help `lastversion` get a component's version for such repos, use `--only` and `--only-not` 
+To help `lastversion` get a component's version for such repos, use `--only` and `--exclude` 
 switches.
 They make `lastversion` look at only those releases which are tagged (or not) with specified 
 strings.
@@ -237,7 +237,7 @@ lastversion --only chart https://github.com/lastversion-test-repos/autoscaler
 The above will report `9.16.0`.
 
 ```bash
-lastversion --only-not chart https://github.com/lastversion-test-repos/autoscaler
+lastversion --exclude chart https://github.com/lastversion-test-repos/autoscaler
 ```
 
 The above will report a non-chart latest version, `1.23.0`.
