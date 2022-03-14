@@ -517,3 +517,9 @@ def test_only_arg_negated():
     repo = 'https://github.com/lastversion-test-repos/autoscaler/tags'
     v = latest(repo, only='!chart')
     assert v == version.parse('1.23.0')
+
+
+def test_gitea_tags():
+    repo = 'https://gitea.com/lastversion-test-repos/tea/tags'
+    v = latest(repo)
+    assert v == version.parse('0.8.0')
