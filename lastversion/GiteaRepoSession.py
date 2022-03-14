@@ -6,7 +6,7 @@ import re
 import time
 from datetime import datetime
 from datetime import timedelta
-import feedparser
+
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
@@ -41,33 +41,10 @@ def asset_matches(asset, search, regex_matching):
     return False
 
 
-class GitHubRepoSession(ProjectHolder):
+class GiteaRepoSession(ProjectHolder):
     """A class to represent a GitHub project holder."""
 
-    DEFAULT_HOSTNAME = 'github.com'
-
-    # one-word aliases or simply known popular repos to skip using search API
-    KNOWN_REPOS_BY_NAME = {
-        'php': {
-            'repo': 'php/php-src',
-            # get URL from official website because it is a "prepared" source
-            'release_url_format': "https://www.php.net/distributions/php-{version}.tar.gz"
-        },
-        'linux': {'repo': 'torvalds/linux'},
-        'kernel': {'repo': 'torvalds/linux'},
-        'openssl': {'repo': 'openssl/openssl'},
-        'python': {'repo': 'python/cpython'},
-        'cmake': {'repo': 'kitware/cmake'},
-        'kodi': {'repo': 'xbmc/xbmc'}
-    }
-
-    """
-    The last alphanumeric after digits is part of version scheme, not beta level.
-    E.g. 1.1.1b is not beta. Hard-coding such odds repos is required.
-    """
-    LAST_CHAR_FIX_REQUIRED_ON = [
-        'openssl/openssl'
-    ]
+    DEFAULT_HOSTNAME = 'gitea.com'
 
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
@@ -78,8 +55,9 @@ class GitHubRepoSession(ProjectHolder):
     and it is not broken on fancy release tags like v1.2.3-stable
     https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
     """
-    RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}/{name}-{tag}.{ext}"
-    SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
+    RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
+    SHORT_RELEASE_URL_FORMAT = RELEASE_URL_FORMAT
+
 
     def find_repo_by_name_only(self, repo):
         if repo.startswith(('https://', 'http://')):
@@ -133,8 +111,9 @@ class GitHubRepoSession(ProjectHolder):
             )
         return full_name
 
+
     def __init__(self, repo, hostname):
-        super(GitHubRepoSession, self).__init__()
+        super(GiteaRepoSession, self).__init__()
         # dict holding repo/owner to feed contents of releases atom
         self.feed_contents = {}
         self.rate_limited_count = 0
@@ -152,9 +131,9 @@ class GitHubRepoSession(ProjectHolder):
             log.info('Using API token.')
             self.headers.update({'Authorization': "token {}".format(self.api_token)})
         if self.hostname != self.DEFAULT_HOSTNAME:
-            self.api_base = 'https://{}/api/v3'.format(self.hostname)
+            self.api_base = 'https://{}/api/v1'.format(self.hostname)
         else:
-            self.api_base = 'https://api.{}'.format(self.DEFAULT_HOSTNAME)
+            self.api_base = 'https://{}/api/v1'.format(self.DEFAULT_HOSTNAME)
         if '/' not in repo:
             official_repo = self.try_get_official(repo)
             if official_repo:
@@ -168,12 +147,14 @@ class GitHubRepoSession(ProjectHolder):
                     return
         self.set_repo(repo)
 
+
     def get_rate_limit_url(self):
         return '{}/rate_limit'.format(self.api_base)
 
+
     def get(self, url, **kwargs):
         """Send GET reqiest and account for GitHub rate limits and such."""
-        r = super(GitHubRepoSession, self).get(url, **kwargs)
+        r = super(GiteaRepoSession, self).get(url, **kwargs)
         log.info('Got HTTP status code {} from {}'.format(r.status_code, url))
         if r.status_code == 401:
             if self.api_token:
@@ -219,13 +200,16 @@ class GitHubRepoSession(ProjectHolder):
             self.rate_limited_count = 0
         return r
 
+
     def rate_limit(self):
         url = '{}/rate_limit'.format(self.api_base)
         return self.get(url)
 
+
     def repo_query(self, uri):
         url = '{}/repos/{}{}'.format(self.api_base, self.repo, uri)
         return self.get(url)
+
 
     def repo_license(self, tag):
         r = self.repo_query('/license?ref={}'.format(tag))
@@ -239,136 +223,13 @@ class GitHubRepoSession(ProjectHolder):
                 return license_data
         return None
 
+
     def repo_readme(self, tag):
         r = self.repo_query('/readme?ref={}'.format(tag))
         if r.status_code == 200:
             return r.json()
         return None
 
-    def find_in_tags_via_graphql(self, ret, pre_ok, major):
-        """GraphQL allows for faster search across many tags.
-        We aggregate the highest semantic version among batches of 100 records.
-        In this way --major filtering results in much fewer requests compared to traditional API
-        use.
-
-        Args:
-            ret (dict): currently selected release object
-            pre_ok (bool): whether betas are acceptable
-            major (str): the major filter
-
-        Returns: currently selected release object
-
-        """
-        query_fmt = """
-        {
-          rateLimit {
-            cost
-            remaining
-          }
-          repository(owner: "%s", name: "%s") {
-            tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s",
-              orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {
-              edges {
-                cursor,
-                node {
-                  ...refInfo
-                }
-              }
-            }
-          }
-        }
-
-        fragment refInfo on Ref {
-          name
-          target {
-            sha: oid
-            commitResourcePath
-            __typename
-            ... on Tag {
-              target {
-                ... on Commit {
-                  ...commitInfo
-                }
-              }
-              tagger {
-                name
-                email
-                date
-              }
-            }
-            ... on Commit {
-              ...commitInfo
-            }
-          }
-        }
-
-        fragment commitInfo on Commit {
-          zipballUrl
-          tarballUrl
-          author {
-            name
-            email
-            date
-          }
-        }
-
-        """
-        cursor = ''
-        log.info('Using graphql queries...')
-        while True:
-            # testing on php/php-src
-            owner, name = self.repo.split('/')
-            query = query_fmt % (owner, name, cursor)
-            log.info('Running query {}'.format(query))
-            r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
-            log.info('Requested graphql with cursor "{}"'.format(cursor))
-            if r.status_code != 200:
-                log.info("query returned non 200 response code {}".format(r.status_code))
-                return ret
-            j = r.json()
-            if 'errors' in j and j['errors'][0]['type'] == 'NOT_FOUND':
-                raise BadProjectError(
-                    'No such project found on GitHub: {}'.format(self.repo)
-                )
-            if not j['data']['repository']['tags']['edges']:
-                log.info('No tags in GraphQL response: {}'.format(r.text))
-                break
-            for edge in j['data']['repository']['tags']['edges']:
-                node = edge['node']
-                cursor = edge['cursor']
-                tag_name = node['name']
-                version = self.sanitize_version(tag_name, pre_ok, major)
-                if not version:
-                    continue
-                if 'tagger' in node['target']:
-                    # use date of annotated tag as it better corresponds to "release date"
-                    log.info('Using annotated tag date')
-                    d = node['target']['tagger']['date']
-                else:
-                    # using commit date because the tag is not annotated
-                    log.info('Using commit date')
-                    d = node['target']['author']['date']
-                tag_date = parser.parse(d)
-                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version {} is newer, but is too old!'.format(version))
-                    break
-                if not ret or version > ret['version'] or tag_date > ret['tag_date']:
-                    # we always want to return formal release if it exists, cause it has useful
-                    # data grab formal release via APi to check for pre-release mark
-                    formal_release = self.get_formal_release_for_tag(tag_name)
-                    if formal_release:
-                        ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
-                    else:
-                        if not self.having_asset:
-                            ret = {
-                                'tag_name': tag_name,
-                                'tag_date': tag_date,
-                                'version': version,
-                                'type': 'graphql'
-                            }
-            if ret:
-                break
-        return ret
 
     def get_formal_release_for_tag(self, tag):
         r = self.repo_query('/releases/tags/{}'.format(tag))
@@ -376,6 +237,7 @@ class GitHubRepoSession(ProjectHolder):
             # noinspection SpellCheckingInspection
             return r.json()
         return None
+
 
     # finding in tags requires paging through ALL of them, because the API does not list them
     # in order of recency, thus this is very slow
@@ -395,7 +257,8 @@ class GitHubRepoSession(ProjectHolder):
             if not version:
                 continue
             c = self.repo_query('/git/commits/{}'.format(t['commit']['sha']))
-            d = c.json()['committer']['date']
+            c = c.json()
+            d = c['committer']['created']
             d = parser.parse(d)
 
             if not ret or version > ret['version'] or d > ret['tag_date']:
@@ -413,59 +276,6 @@ class GitHubRepoSession(ProjectHolder):
                     ret['type'] = 'tag'
         return ret
 
-    def get_releases_feed_contents(self, rename_checked=False):
-        """
-        Fetch contents of repository's releases.atom feed.
-        # The releases.atom and tags.atom don't differ much except releases having more data.
-        # The releases.atom feed includes non-formal releases which are just tags, so we are good.
-        # Based on testing, edited old releases don't jump forward in the list and stay behind (good).
-        # The only downside is they don't bear pre-release mark (unlike API), and have limited data.
-        # We work around these by checking pre-release flag and get full release data via API.
-        """
-        if self.repo in self.feed_contents:
-            return self.feed_contents[self.repo]
-        headers = {
-            'Accept': '*/*',
-            # private repos do not have releases.atom to begin with,
-            # authorization header may cause a false positive 200 response with an empty feed!
-            'Authorization': ''
-        }
-        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo), headers=headers)
-        # API requests are varied by cookie, we don't want serializer for cache fail because of that
-        self.cookies.clear()
-        if r.status_code == 404 and not rename_checked:
-            # #44: in some network locations, GitHub returns 404 (as opposed to 301 redirect) for the renamed
-            # repositories /releases.atom. When we get a 404, we lazily load repo info via API, and hopefully
-            # get redirect there as well as the new repo full name
-            r = self.repo_query('')
-            if r.status_code == 200:
-                repo_data = r.json()
-                if self.repo != repo_data['full_name']:
-                    log.info('Detected name change from {} to {}'.format(self.repo,
-                                                                         repo_data['full_name']))
-                    self.set_repo(repo_data['full_name'])
-                    # request the feed from the new location
-                    return self.get_releases_feed_contents(rename_checked=False)
-        if r.status_code == 200:
-            self.feed_contents[self.repo] = r.text
-            return r.text
-        return None
-
-    def get_releases_feed_entries(self):
-        """Get an array of releases.atom feed entries."""
-        feed_contents = self.get_releases_feed_contents()
-        if not feed_contents:
-            log.info('The releases.atom feed failed to be fetched!')
-            return None
-        feed = feedparser.parse(feed_contents)
-        if 'bozo' in feed and feed['bozo'] == 1 and 'bozo_exception' in feed:
-            exc = feed.bozo_exception
-            log.info("Failed to parse feed: {}".format(exc.getMessage()))
-            return None
-        if not feed.entries:
-            log.info('Feed has no elements. Means no tags and no releases')
-            return []
-        return feed.entries
 
     def get_latest(self, pre_ok=False, major=None):
         """
@@ -491,46 +301,6 @@ class GitHubRepoSession(ProjectHolder):
         # * marked pre-release in releases endpoints
         # * has a beta-like, non-version tag name
 
-        feed_entries = self.get_releases_feed_entries()
-        if feed_entries:
-            for tag in feed_entries:
-                # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
-                tag_name = tag['link'].split('/')[-1]
-                log.info('Checking tag {}'.format(tag_name))
-                version = self.sanitize_version(tag_name, pre_ok, major)
-                if not version:
-                    log.info('We did not find a valid version in {} tag'.format(tag_name))
-                    continue
-                if ret and ret['version'] >= version:
-                    log.info(
-                        'Tag {} does not contain newer version than we already found'.format(tag_name)
-                    )
-                    continue
-                tag_date = parser.parse(tag['updated'])
-                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version {} is newer, but is too old!'.format(version))
-                    break
-                # we always want to return formal release if it exists, cause it has useful data
-                # grab formal release via APi to check for pre-release mark
-                formal_release = self.get_formal_release_for_tag(tag_name)
-                if formal_release:
-                    # use full release info
-                    ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
-                else:
-                    if self.having_asset:
-                        continue
-                    log.info('No formal release for tag {}'.format(tag_name))
-                    tag['tag_name'] = tag_name
-                    tag['tag_date'] = tag_date
-                    tag['version'] = version
-                    tag['type'] = 'feed'
-                    # remove keys which are non-jsonable
-                    # TODO use those (pop returns them)
-                    tag.pop('updated_parsed', None)
-                    tag.pop('published_parsed', None)
-                    ret = tag
-                    log.info("Selected version as current selection: {}.".format(version))
-
         # we are good with release from feeds only without looking at the API
         # simply because feeds list stuff in order of recency
         # however, still use /tags unless releases.atom has data within a year
@@ -545,16 +315,7 @@ class GitHubRepoSession(ProjectHolder):
 
         # releases/latest fetches only non-prerelease, non-draft, so it
         # should not be used for hunting down pre-releases assets
-        if not pre_ok:
-            # https://stackoverflow.com/questions/28060116/which-is-more-reliable-for-github-api-conditional-requests-etag-or-last-modifie/57309763?noredirect=1#comment101114702_57309763
-            # ideally we disable ETag validation for this endpoint completely
-            r = self.repo_query('/releases/latest')
-            if r.status_code == 200:
-                formal_release = r.json()
-                version = self.sanitize_version(formal_release['tag_name'], pre_ok, major)
-                if version:
-                    ret = self.set_matching_formal_release(ret, formal_release, version,
-                                                           pre_ok, 'releases-latest')
+
         else:
             r = self.repo_query('/releases')
             if r.status_code == 200:
@@ -574,13 +335,10 @@ class GitHubRepoSession(ProjectHolder):
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
-        if self.api_token:
-            # GraphQL requires auth
-            ret = self.find_in_tags_via_graphql(ret, pre_ok, major)
-        else:
-            ret = self.find_in_tags(ret, pre_ok, major)
+        ret = self.find_in_tags(ret, pre_ok, major)
 
         return ret
+
 
     def set_matching_formal_release(self, ret, formal_release, version, pre_ok,
                                     data_type='release'):
@@ -614,6 +372,7 @@ class GitHubRepoSession(ProjectHolder):
         formal_release['type'] = data_type
         log.info("Selected version as current selection: {}.".format(formal_release['version']))
         return formal_release
+
 
     def try_get_official(self, repo):
         """Check existence of repo/repo

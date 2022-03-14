@@ -31,7 +31,6 @@ class ProjectHolder(requests.Session):
     # web accessible project holders may have single well-known domain usable by everyone
     # in case of GitHub, that is github.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
-    DEFAULT_HOLDER = False
     KNOWN_REPO_URLS = {}
     KNOWN_REPOS_BY_NAME = {}
     # e.g. owner/project, but mercurial just /project together with hostname

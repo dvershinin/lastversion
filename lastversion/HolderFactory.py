@@ -1,5 +1,6 @@
 import logging
 
+from .GiteaRepoSession import GiteaRepoSession
 from .BitBucketRepoSession import BitBucketRepoSession
 from .FeedRepoSession import FeedRepoSession
 from .GitHubRepoSession import GitHubRepoSession
@@ -31,7 +32,10 @@ class HolderFactory:
         'wiki': WikipediaRepoSession,
         'system': SystemRepoSession,
         'wp': WordPressPluginRepoSession,
+        'gitea': GiteaRepoSession
     }
+
+    DEFAULT_HOLDER = 'github'
 
     @staticmethod
     def guess_from_homepage(repo, hostname):
@@ -54,7 +58,7 @@ class HolderFactory:
         """Find the right hosting for this repo."""
         if at == 'helm_chart' or (at and '/' not in repo):
             return HolderFactory.HOLDERS[at](repo, hostname=None)
-        holder_class = HolderFactory.HOLDERS['github']
+        holder_class = HolderFactory.HOLDERS[HolderFactory.DEFAULT_HOLDER]
         hostname = None
         known_repo = None
 
