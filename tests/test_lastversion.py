@@ -523,3 +523,9 @@ def test_gitea_tags():
     repo = 'https://gitea.com/lastversion-test-repos/tea/tags'
     v = latest(repo)
     assert v == version.parse('0.8.0')
+
+
+def test_dict_no_license():
+    repo = 'https://github.com/lastversion-test-repos/nginx_ajp_module'
+    release = latest(repo, output_format='dict')
+    assert release['version'] == version.parse('0.3.2')

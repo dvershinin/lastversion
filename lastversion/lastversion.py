@@ -201,10 +201,11 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 pass
             release['from'] = project.get_canonical_link()
 
-            spdx_id = release['license']['license']['spdx_id'] if 'license' in release else None
-            rpmspec_licence = rpmspec_licenses[spdx_id] if spdx_id in rpmspec_licenses else None
-            if rpmspec_licence:
-                release['rpmspec_license'] = rpmspec_licence
+            if 'license' in release and release['license']:
+                spdx_id = release['license']['license']['spdx_id']
+                rpmspec_licence = rpmspec_licenses[spdx_id] if spdx_id in rpmspec_licenses else None
+                if rpmspec_licence:
+                    release['rpmspec_license'] = rpmspec_licence
             return release
 
         if output_format == 'assets':

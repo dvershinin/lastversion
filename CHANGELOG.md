@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.2] - 2022-03-18
+### Fixed
+* `rpmspec_license` failed output when no license
+
 ## [2.2.1] - 2022-02-27
 ### Added
 * `--only` now accepts regex via `~` prefix and negation via `!` prefix
