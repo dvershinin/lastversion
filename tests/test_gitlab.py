@@ -1,0 +1,17 @@
+import os
+
+from packaging import version
+
+from lastversion.lastversion import latest
+
+# change dir to tests directory to make relative paths possible
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
+
+def test_gitlab_1():
+    """Test specifying a deep-level link at GitLab."""
+    repo = 'https://gitlab.com/ddcci-driver-linux/ddcci-driver-linux/-/tree/master'
+
+    v = latest(repo)
+
+    assert v >= version.parse("0.4.1")

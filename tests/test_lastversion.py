@@ -42,15 +42,6 @@ def test_monit():
     assert output > version.parse("5.25.0")
 
 
-def test_nginx():
-    """Test NGINX."""
-    repo = "https://nginx.org/"
-
-    output = latest(repo, 'version')
-
-    assert output >= version.parse("1.18.0")
-
-
 def test_gperftools():
     """Test gperftools."""
     repo = "https://github.com/gperftools/gperftools/releases"
@@ -227,24 +218,6 @@ def test_contain_rpm_related_data():
     assert v['license']['path'] == 'LICENSE'
 
 
-def test_gitlab_1():
-    """Test specifying a deep-level link at GitLab."""
-    repo = 'https://gitlab.com/ddcci-driver-linux/ddcci-driver-linux/-/tree/master'
-
-    v = latest(repo)
-
-    assert v >= version.parse("0.4.1")
-
-
-def test_merc_1():
-    """Test a Mercurial repo."""
-    repo = 'https://hg.dillo.org/dillo/'
-
-    v = latest(repo)
-
-    assert v == version.parse('3.0.5')
-
-
 def test_yml_input():
     """Test passing a yml file as repo argument."""
     repo = os.path.dirname(os.path.abspath(__file__)) + '/geoip2.yml'
@@ -276,15 +249,6 @@ def test_magento2_major_tag():
     v = latest(repo, major='2.3.4', output_format='tag')
 
     assert v == '2.3.4-p2'
-
-
-def test_sf_keepass():
-    """Test a SourceForge project."""
-    repo = 'https://sourceforge.net/projects/keepass'
-
-    v = latest(repo)
-
-    assert v >= version.parse('2.45')
 
 
 def test_squid_underscore_lover():
@@ -361,22 +325,6 @@ def test_main_assets():
     out, err = process.communicate()
 
     assert "update.zip" in str(out)
-
-
-def test_pypi_full_url():
-    """Test with full PyPi URL."""
-    repo = 'https://pypi.org/project/pylockfile/'
-    v = latest(repo)
-
-    assert v == version.parse('0.0.3.3')
-
-
-def test_project_at_pypi():
-    """Test project at Pypi with short name."""
-    repo = 'pylockfile'
-    v = latest(repo, at='pip')
-
-    assert v == version.parse('0.0.3.3')
 
 
 def test_tag_mess():
@@ -470,20 +418,6 @@ def test_at_with_url_github():
     assert v >= version.parse('1.3.4')
 
 
-def test_wiki_known_ios():
-    """Test iOS version."""
-    repo = 'ios'
-    v = latest(repo)
-    assert v >= version.parse('14.6')
-
-
-def test_wiki_direct_url_meego():
-    """Test Meego version."""
-    repo = 'https://en.wikipedia.org/wiki/MeeGo'
-    v = latest(repo)
-    assert v == version.parse('1.2.0.10')
-
-
 def test_having_specific_asset():
     """Test locating release with a given asset name."""
     repo = 'https://github.com/lastversion-test-repos/portainer'
@@ -517,12 +451,6 @@ def test_only_arg_negated():
     repo = 'https://github.com/lastversion-test-repos/autoscaler/tags'
     v = latest(repo, only='!chart')
     assert v == version.parse('1.23.0')
-
-
-def test_gitea_tags():
-    repo = 'https://gitea.com/lastversion-test-repos/tea/tags'
-    v = latest(repo)
-    assert v == version.parse('0.8.0')
 
 
 def test_dict_no_license():

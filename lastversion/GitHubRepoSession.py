@@ -233,7 +233,7 @@ class GitHubRepoSession(ProjectHolder):
         r = self.repo_query('/license?ref={}'.format(tag))
         if r.status_code == 200:
             # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag
-            # we have to double check whether the license file exists "at release tag"
+            # we have to double-check whether the license file exists "at release tag"
             license_data = r.json()
             license_path = license_data['path']
             license_r = self.repo_query('/contents/{}?ref={}'.format(license_path, tag))
@@ -372,9 +372,11 @@ class GitHubRepoSession(ProjectHolder):
                 break
         return ret
 
-    def get_formal_release_for_tag(self, tag):
-        # prime cache for dict of recent formal releases
-        # this fetches /releases and allow quickly look up if a tag is marked as pre-release
+    def ensure_formal_releases_fetched(self):
+        """
+        Prime cache for dict of recent formal releases
+        this fetches /releases and allow quickly look up if a tag is marked as pre-release
+        """
         if self.formal_releases_by_tag is None:
             self.formal_releases_by_tag = {}
             r = self.repo_query('/releases')
@@ -382,6 +384,8 @@ class GitHubRepoSession(ProjectHolder):
                 for release in r.json():
                     self.formal_releases_by_tag[release['tag_name']] = release
 
+    def get_formal_release_for_tag(self, tag):
+        self.ensure_formal_releases_fetched()
         # no releases in /releases means no
         if self.formal_releases_by_tag and tag not in self.formal_releases_by_tag:
             r = self.repo_query('/releases/tags/{}'.format(tag))
@@ -390,10 +394,20 @@ class GitHubRepoSession(ProjectHolder):
 
         return self.formal_releases_by_tag.get(tag)
 
-    # finding in tags requires paging through ALL of them, because the API does not list them
-    # in order of recency, thus this is very slow
-    # in: current release to be returned, output: newer release to be returned
+
     def find_in_tags(self, ret, pre_ok, major):
+        """
+        Find a more recent release in the /tags API endpoint.
+        Finding in /tags requires paging through ALL of them, because the API does not list them
+        in order of recency, thus this is very slow.
+        We need to check all tags commit dates simply because the most recent wins
+        We don't check tags which:
+
+        * marked pre-release in releases endpoints
+        * has a beta-like, non-version tag name
+
+        # in: current release to be returned, output: newer release to be returned
+        """
         r = self.repo_query('/tags?per_page=100')
         if r.status_code != 200:
             return None
@@ -482,7 +496,7 @@ class GitHubRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """
-        Gets latest release satisfying "prereleases are OK" or major/branch constraints
+        Get latest release satisfying "prereleases are OK" or major/branch constraints
         Strives to fetch formal API release if it exists, because it has useful information
         like assets.
         """
@@ -495,11 +509,6 @@ class GitHubRepoSession(ProjectHolder):
         # if pre not ok, filter out tags to check
 
         # if major, filter out tags to check for major
-
-        # we need to check all tags commit dates simply because the most recent wins
-        # we don't check tags which:
-        # * marked pre-release in releases endpoints
-        # * has a beta-like, non-version tag name
 
         feed_entries = self.get_releases_feed_entries()
         if feed_entries:
@@ -555,28 +564,14 @@ class GitHubRepoSession(ProjectHolder):
         # likewise, we want an older branch (major), which is not there in releases.atom
         # due to limited nature of data inside it
 
-        # releases/latest fetches only non-prerelease, non-draft, so it
-        # should not be used for hunting down pre-releases assets
-        if not pre_ok:
-            # https://stackoverflow.com/questions/28060116/which-is-more-reliable-for-github-api-conditional-requests-etag-or-last-modifie/57309763?noredirect=1#comment101114702_57309763
-            # ideally we disable ETag validation for this endpoint completely
-            r = self.repo_query('/releases/latest')
-            if r.status_code == 200:
-                formal_release = r.json()
-                version = self.sanitize_version(formal_release['tag_name'], pre_ok, major)
-                if version:
-                    ret = self.set_matching_formal_release(ret, formal_release, version,
-                                                           pre_ok, 'releases-latest')
-        else:
-            r = self.repo_query('/releases')
-            if r.status_code == 200:
-                for release in r.json():
-                    tag_name = release['tag_name']
-                    version = self.sanitize_version(tag_name, pre_ok, major)
-                    if not version:
-                        continue
-                    if not ret or version > ret['version']:
-                        ret = self.set_matching_formal_release(ret, release, version, pre_ok)
+        self.ensure_formal_releases_fetched()
+        for tag_name in self.formal_releases_by_tag:
+            release = self.formal_releases_by_tag[tag_name]
+            version = self.sanitize_version(tag_name, pre_ok, major)
+            if not version:
+                continue
+            if not ret or version > ret['version']:
+                ret = self.set_matching_formal_release(ret, release, version, pre_ok)
 
         if self.having_asset:
             # only formal releases which we enumerated above already, have assets
