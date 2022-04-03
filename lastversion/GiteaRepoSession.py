@@ -256,10 +256,7 @@ class GiteaRepoSession(ProjectHolder):
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue
-            c = self.repo_query('/git/commits/{}'.format(t['commit']['sha']))
-            c = c.json()
-            d = c['committer']['created']
-            d = parser.parse(d)
+            d = t['commit']['created']
 
             if not ret or version > ret['version'] or d > ret['tag_date']:
                 # rare case: if upstream filed formal pre-release that passes as stable
@@ -286,46 +283,6 @@ class GiteaRepoSession(ProjectHolder):
         # data of selected tag, always contains ['version', 'tag_name', 'tag_date', 'type'] will
         # be returned
         ret = None
-
-        # always fetch /releases as this will allow us to quickly look up if a tag is marked as
-        # pre-release
-
-        # then always get *all* tags through pagination
-
-        # if pre not ok, filter out tags to check
-
-        # if major, filter out tags to check for major
-
-        # we need to check all tags commit dates simply because the most recent wins
-        # we don't check tags which:
-        # * marked pre-release in releases endpoints
-        # * has a beta-like, non-version tag name
-
-        # we are good with release from feeds only without looking at the API
-        # simply because feeds list stuff in order of recency
-        # however, still use /tags unless releases.atom has data within a year
-        if ret and ret['tag_date'].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
-            return ret
-
-        # only if we did not find desired stuff through feeds, we switch to using API :)
-        # this may be required in cases
-        # releases.atom has limited/no tags (#63), and all those are beta / invalid / non-versions
-        # likewise, we want an older branch (major), which is not there in releases.atom
-        # due to limited nature of data inside it
-
-        # releases/latest fetches only non-prerelease, non-draft, so it
-        # should not be used for hunting down pre-releases assets
-
-        else:
-            r = self.repo_query('/releases')
-            if r.status_code == 200:
-                for release in r.json():
-                    tag_name = release['tag_name']
-                    version = self.sanitize_version(tag_name, pre_ok, major)
-                    if not version:
-                        continue
-                    if not ret or version > ret['version']:
-                        ret = self.set_matching_formal_release(ret, release, version, pre_ok)
 
         if self.having_asset:
             # only formal releases which we enumerated above already, have assets

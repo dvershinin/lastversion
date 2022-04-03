@@ -226,6 +226,7 @@ class GitHubRepoSession(ProjectHolder):
         return self.get(url)
 
     def repo_query(self, uri):
+        """API query for a repository"""
         url = '{}/repos/{}{}'.format(self.api_base, self.repo, uri)
         return self.get(url)
 
