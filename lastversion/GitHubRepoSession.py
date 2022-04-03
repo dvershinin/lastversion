@@ -137,6 +137,8 @@ class GitHubRepoSession(ProjectHolder):
         super(GitHubRepoSession, self).__init__()
         # dict holding repo/owner to feed contents of releases atom
         self.feed_contents = {}
+        # lazy loaded dict cache of /releases response keyed by tag, only first page
+        self.formal_releases_by_tag = None
         self.rate_limited_count = 0
         self.api_token = os.getenv("GITHUB_API_TOKEN")
         if not self.api_token:
@@ -371,11 +373,22 @@ class GitHubRepoSession(ProjectHolder):
         return ret
 
     def get_formal_release_for_tag(self, tag):
-        r = self.repo_query('/releases/tags/{}'.format(tag))
-        if r.status_code == 200:
-            # noinspection SpellCheckingInspection
-            return r.json()
-        return None
+        # prime cache for dict of recent formal releases
+        # this fetches /releases and allow quickly look up if a tag is marked as pre-release
+        if self.formal_releases_by_tag is None:
+            self.formal_releases_by_tag = {}
+            r = self.repo_query('/releases')
+            if r.status_code == 200:
+                for release in r.json():
+                    self.formal_releases_by_tag[release['tag_name']] = release
+
+        # no releases in /releases means no
+        if self.formal_releases_by_tag and tag not in self.formal_releases_by_tag:
+            r = self.repo_query('/releases/tags/{}'.format(tag))
+            if r.status_code == 200:
+                self.formal_releases_by_tag[tag] = r.json()
+
+        return self.formal_releases_by_tag.get(tag)
 
     # finding in tags requires paging through ALL of them, because the API does not list them
     # in order of recency, thus this is very slow
@@ -477,9 +490,6 @@ class GitHubRepoSession(ProjectHolder):
         # be returned
         ret = None
 
-        # always fetch /releases as this will allow us to quickly look up if a tag is marked as
-        # pre-release
-
         # then always get *all* tags through pagination
 
         # if pre not ok, filter out tags to check
@@ -536,6 +546,8 @@ class GitHubRepoSession(ProjectHolder):
         # however, still use /tags unless releases.atom has data within a year
         if ret and ret['tag_date'].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
             return ret
+
+        log.info('Feed contained none or only tags older than 1 year. Switching to API')
 
         # only if we did not find desired stuff through feeds, we switch to using API :)
         # this may be required in cases
