@@ -162,39 +162,39 @@ class GiteaRepoSession(ProjectHolder):
                                           'Missing scopes?')
             raise ApiCredentialsError('Denied API access. Please set GITHUB_API_TOKEN env var '
                                       'as per https://github.com/dvershinin/lastversion#tips')
-        if r.status_code == 403:
-            if 'X-RateLimit-Reset' in r.headers and 'X-RateLimit-Remaining' in r.headers:
-                if self.rate_limited_count > 2:
-                    raise ApiCredentialsError(
-                        'API requests were denied after retrying {} times'.format(
-                            self.rate_limited_count)
-                    )
-                remaining = int(r.headers['X-RateLimit-Remaining'])
-                # 1 sec to account for skewed clock between GitHub and client
-                wait_for = float(r.headers['X-RateLimit-Reset']) - time.time() + 1.0
-                wait_for = math.ceil(wait_for)
-                if not remaining:
-                    # got 403, likely due to used quota
-                    if wait_for < 300:
-                        if wait_for < 0:
-                            log.warning(
-                                'Exceeded API quota. Repeating request because quota is about to '
-                                'be reinstated'
-                            )
-                        else:
-                            w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
-                            if "GITHUB_API_TOKEN" not in os.environ \
-                                    and 'GITHUB_TOKEN' not in os.environ:
-                                w = "{} {}".format(w, TOKEN_PRO_TIP)
-                            log.warning(w)
-                            time.sleep(wait_for)
-                        self.rate_limited_count = self.rate_limited_count + 1
-                        return self.get(url)
-                    raise ApiCredentialsError(
-                        'Exceeded API rate limit after waiting: {}'.format(
-                            r.json()['message'])
-                    )
-                return self.get(url)
+        if r.status_code == 403 and 'X-RateLimit-Reset' in r.headers \
+                and 'X-RateLimit-Remaining' in r.headers:
+            if self.rate_limited_count > 2:
+                raise ApiCredentialsError(
+                    'API requests were denied after retrying {} times'.format(
+                        self.rate_limited_count)
+                )
+            remaining = int(r.headers['X-RateLimit-Remaining'])
+            # 1 sec to account for skewed clock between GitHub and client
+            wait_for = float(r.headers['X-RateLimit-Reset']) - time.time() + 1.0
+            wait_for = math.ceil(wait_for)
+            if not remaining:
+                # got 403, likely due to used quota
+                if wait_for < 300:
+                    if wait_for < 0:
+                        log.warning(
+                            'Exceeded API quota. Repeating request because quota is about to '
+                            'be reinstated'
+                        )
+                    else:
+                        w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
+                        if "GITHUB_API_TOKEN" not in os.environ \
+                                and 'GITHUB_TOKEN' not in os.environ:
+                            w = "{} {}".format(w, TOKEN_PRO_TIP)
+                        log.warning(w)
+                        time.sleep(wait_for)
+                    self.rate_limited_count = self.rate_limited_count + 1
+                    return self.get(url)
+                raise ApiCredentialsError(
+                    'Exceeded API rate limit after waiting: {}'.format(
+                        r.json()['message'])
+                )
+            return self.get(url)
 
         if r.status_code == 403 and url != self.get_rate_limit_url():
             self.rate_limited_count = 0

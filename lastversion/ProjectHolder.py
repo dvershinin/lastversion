@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 class ProjectHolder(requests.Session):
     """Generic project holder class abstracts a web-accessible project storage."""
 
-    """List of odd repos where last char is part of version not beta level."""
+    # List of odd repos where last char is part of version not beta level
     LAST_CHAR_FIX_REQUIRED_ON = []
 
     # web accessible project holders may have single well-known domain usable by everyone
