@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2022-04-05
+### Fixed
+* Removed unnecessary API calls, performance improvement
+
 ## [2.2.2] - 2022-03-18
 ### Fixed
 * `rpmspec_license` failed output when no license
