@@ -366,8 +366,8 @@ def main():
     # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
-    parser.add_argument('--sem', dest='sem', choices=['major', 'minor', 'patch'],
-                        help='Semantic version constraint against compared version')
+    parser.add_argument('--sem', dest='sem', choices=['major', 'minor', 'patch', 'any'],
+                        help='Semantic versioning level base to print or compare against')
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='Will give you an idea of what is happening under the hood, '
                              '-vv to increase verbosity level')
@@ -590,10 +590,14 @@ def main():
         elif args.format == 'json':
             json.dump(res, sys.stdout)
         else:
+            res = res.sem_extract_base(args.sem)
             print(res)
             # special exit code "2" is useful for scripting to detect if no newer release exists
-            if args.newer_than and res <= args.newer_than:
-                sys.exit(2)
+            if args.newer_than:
+                # set up same SEM base
+                args.newer_than = args.newer_than.sem_extract_base(args.sem)
+                if res <= args.newer_than:
+                    sys.exit(2)
     else:
         # empty list returned to --assets, emit 3
         if args.format == 'assets' and res is not False:

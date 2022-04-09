@@ -119,6 +119,20 @@ class Version(PackagingVersion):
             return ".".join(str(x) for x in self._version.local)
         return None
 
+    def sem_extract_base(self, level=None):
+        """
+        Return Version with desired semantic version level base
+        E.g. for 5.9.3 it will return 5.9 (patch is None)
+        """
+        if level == 'major':
+            # get major
+            return Version(str(self.major))
+        if level == 'minor':
+            return Version("{}.{}".format(self.major, self.minor))
+        if level == 'patch':
+            return Version("{}.{}.{}".format(self.major, self.minor, self.micro))
+        return self
+
     def __str__(self):
         # type: () -> str
         parts = []

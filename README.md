@@ -145,7 +145,8 @@ optional arguments:
   -h, --help            show this help message and exit
   --pre                 Include pre-releases in potential versions
   --sem {major,minor,patch}
-                        Semantic version constraint against compared version
+                        Semantic versioning level base to print or compare
+                        against
   -v, --verbose         Will give you an idea of what is happening under the
                         hood, -vv to increase verbosity level
   -d [FILENAME], --download [FILENAME]
@@ -452,6 +453,38 @@ lastversion test '1.2.3-rc1' # > 1.2.3rc1
 
 ### Scripting with `lastversion` in `bash`
 
+#### Semantic versioning support
+
+Sometimes you only want to check updates for a specific semantic versioning level.
+Does a project have a new minor release? Does a project have a new major release?
+To print just the necessary semantic versioning base, use `--sem` option.
+
+Acceptable values are `major`, `minor`, and `patch`.
+
+```bash
+lastversion wordpress --sem major
+#> 5
+```
+
+```bash
+lastversion wordpress --sem minor
+#> 5.9
+```
+
+```bash
+lastversion wordpress --sem patch
+#> 5.9.3
+```
+
+The value `--sem patch` can be used to *normalize* a given result to semantic versioning,
+if a project doesn't follow the semantics strictly. E.g. sometimes WordPress would publish an x.y
+release while it's implicitly x.y.0. So let's say WordPress released "5.10":
+
+```bash
+lastversion wordpress --sem patch
+#> 5.10.0
+```
+
 #### Compare arbitrary versions
 
 Use `lastversion` for easy comparison of versions on the command line.
@@ -463,6 +496,9 @@ lastversion 1.2.3 -gt 1.2.4
 ```
 
 See exit codes below, to find whether the first argument is a higher version, or the second.
+
+The `--sem` option described earlier will affect both what's being printed and what semantic
+versioning base level is being compared, thus the result.
 
 #### Check for NEW release
 
