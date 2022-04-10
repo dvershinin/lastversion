@@ -27,12 +27,8 @@ class MercurialRepoSession(ProjectHolder):
     # http://hg.nginx.org/nginx/archive/release-1.19.2.tar.gz
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
-    @classmethod
-    def get_matching_hostname(cls, repo):
-        if repo.startswith('http://hg.') or repo.startswith('https://hg.'):
-            url_parts = repo.split('/')
-            return url_parts[2]
-        return None
+    # Domains hg.example.com
+    SUBDOMAIN_INDICATOR = "hg"
 
     def __init__(self, repo, hostname):
         super(MercurialRepoSession, self).__init__()

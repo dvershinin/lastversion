@@ -11,6 +11,9 @@ log = logging.getLogger(__name__)
 class GitLabRepoSession(ProjectHolder):
     DEFAULT_HOSTNAME = 'gitlab.com'
 
+    # Domains gitlab.example.com
+    SUBDOMAIN_INDICATOR = "gitlab"
+
     def __init__(self, repo, hostname):
         super(GitLabRepoSession, self).__init__()
         self.pa_token = os.getenv("GITLAB_PA_TOKEN")

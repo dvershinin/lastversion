@@ -31,6 +31,7 @@ class ProjectHolder(requests.Session):
     # web accessible project holders may have single well-known domain usable by everyone
     # in case of GitHub, that is github.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
+    SUBDOMAIN_INDICATOR = None
     KNOWN_REPO_URLS = {}
     KNOWN_REPOS_BY_NAME = {}
     # e.g. owner/project, but mercurial just /project together with hostname
@@ -133,12 +134,16 @@ class ProjectHolder(requests.Session):
     @classmethod
     def get_matching_hostname(cls, repo):
         """Find matching hostname between repo and holder's default hostname."""
-        if not cls.DEFAULT_HOSTNAME:
+        if not repo.startswith(('http://', 'https://')):
             return None
-        if repo.startswith('http://{}'.format(cls.DEFAULT_HOSTNAME)):
-            return cls.DEFAULT_HOSTNAME
-        if repo.startswith('https://{}'.format(cls.DEFAULT_HOSTNAME)):
-            return cls.DEFAULT_HOSTNAME
+        if not cls.DEFAULT_HOSTNAME and not cls.SUBDOMAIN_INDICATOR:
+            return None
+        url_parts = repo.split('/')
+        domain = url_parts[2]
+        if cls.DEFAULT_HOSTNAME == domain:
+            return domain
+        if cls.SUBDOMAIN_INDICATOR and domain.startswith(cls.SUBDOMAIN_INDICATOR + "."):
+            return domain
         return None
 
     def matches_major_filter(self, version, major):
