@@ -313,6 +313,20 @@ def test_main_url():
     assert version.parse(out.decode('utf-8').strip()) >= version.parse("1.13.35.2")
 
 
+def test_cli_get_tag():
+    """Test CLI with full URL at GitHub, get tag as a result."""
+    repo = 'https://github.com/lastversion-test-repos/Tasmota'
+
+    process = subprocess.Popen(
+        ['lastversion', repo, '--format', 'tag'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    out, err = process.communicate()
+
+    assert out.decode('utf-8').strip() == "v11.0.0"
+
+
 def test_main_assets():
     """Test CLI with --format assets."""
     repo = 'mautic/mautic'

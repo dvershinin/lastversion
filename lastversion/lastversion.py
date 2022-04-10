@@ -590,7 +590,9 @@ def main():
         elif args.format == 'json':
             json.dump(res, sys.stdout)
         else:
-            res = res.sem_extract_base(args.sem)
+            # result may be a tag str, not just Version
+            if isinstance(res, Version):
+                res = res.sem_extract_base(args.sem)
             print(res)
             # special exit code "2" is useful for scripting to detect if no newer release exists
             if args.newer_than:

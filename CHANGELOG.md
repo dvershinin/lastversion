@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.1] - 2022-04-10
+### Fixed
+* Fixed regression from previous release where `--tag` CLI failed
+
 ## [2.4.0] - 2022-04-09
 ### Added
 * Added better semantic versioning support via `--sem` option
