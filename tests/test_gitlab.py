@@ -15,3 +15,12 @@ def test_gitlab_1():
     v = latest(repo)
 
     assert v >= version.parse("0.4.1")
+
+
+def test_gitlab_at():
+    """Test specifying GitLab repo with an --at parameter."""
+    repo = 'ddcci-driver-linux/ddcci-driver-linux'
+
+    v = latest(repo, at='gitlab')
+
+    assert v >= version.parse("0.4.1")

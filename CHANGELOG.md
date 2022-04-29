@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.3] - 2022-04-29
+### Fixed
+* Allow using --at with any non-URL repository specifier
+
 ## [2.4.2] - 2022-04-10
 ### Fixed
 * Detection of self-hosted GitLab via gitlab. subdomain

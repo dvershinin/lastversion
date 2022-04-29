@@ -56,7 +56,7 @@ class HolderFactory:
     # repo is either complete URL or a name allowing to identify a single project
     def get_instance_for_repo(repo, at=None):
         """Find the right hosting for this repo."""
-        if at == 'helm_chart' or (at and '/' not in repo):
+        if at == 'helm_chart' or (at and not repo.startswith(('http:', 'https:'))):
             return HolderFactory.HOLDERS[at](repo, hostname=None)
         holder_class = HolderFactory.HOLDERS[HolderFactory.DEFAULT_HOLDER]
         hostname = None
