@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.4] - 2022-05-08
+### Added
+* Allow extracting version from an arbitrary string (CLI)
+
 ## [2.4.3] - 2022-04-29
 ### Fixed
 * Allow using --at with any non-URL repository specifier

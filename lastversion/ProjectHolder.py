@@ -199,6 +199,9 @@ class ProjectHolder(requests.Session):
                 if not version_s.endswith('.x'):
                     # we know regex is valid version format, so no need to try catch
                     res = Version(version_s)
+                if res:
+                    # satisfy on the first matched version-like string, e.g. 5.2.6-3.12
+                    break
             if not matches:
                 log.info("Did not find anything that looks like a version in the tag")
                 # as a last resort, let's try to convert underscores to dots, while stripping out

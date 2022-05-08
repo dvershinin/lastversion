@@ -360,9 +360,10 @@ def main():
                                      epilog=epilog,
                                      prog='lastversion')
     parser.add_argument('action', nargs='?', default='get',
-                        help='Special action to run, e.g. download, install, test')
-    parser.add_argument('repo', metavar='<repo or URL>',
-                        help='Repository in format owner/name or any URL that belongs to it')
+                        help='Action to run. Default: get',
+                        choices=['get', 'download', 'extract', 'unzip', 'test', 'format', 'install', 'update-spec'])
+    parser.add_argument('repo', metavar='<repo URL or string>',
+                        help='Repository in format owner/name or any URL that belongs to it, or a version string')
     # affects what is considered last release
     parser.add_argument('--pre', dest='pre', action='store_true',
                         help='Include pre-releases in potential versions')
@@ -372,7 +373,7 @@ def main():
                         help='Will give you an idea of what is happening under the hood, '
                              '-vv to increase verbosity level')
     # no --download = False, --download filename.tar, --download = None
-    parser.add_argument('-d', '--download', dest='download', nargs='?', default=False, const=None,
+    parser.add_argument('-d', '-o', '--download', '--output', dest='download', nargs='?', default=False, const=None,
                         metavar='FILENAME', help='Download with custom filename')
     # how / which data of last release we want to present
     # assets will give download urls for assets if available and sources archive otherwise
@@ -459,14 +460,19 @@ def main():
     if args.filter:
         args.filter = re.compile(args.filter)
 
-    if args.action == 'test':
+    if args.action in ['test', 'format']:
         v = parse_version(args.repo)
         if not v:
-            print('Failed to parse as a valid version')
+            log.critical('Failed to parse as a valid version')
             sys.exit(1)
         else:
-            print("Parsed as: {}".format(v))
-            print("Stable: {}".format(not v.is_prerelease))
+            # extract the desired print base
+            v = v.sem_extract_base(args.sem)
+            if args.action == 'test':
+                print("Parsed as: {}".format(v))
+                print("Stable: {}".format(not v.is_prerelease))
+            else:
+                print(v)
             sys.exit(0)
 
     if args.action == 'install':
@@ -515,10 +521,10 @@ def main():
                      args.shorter_urls, args.major, args.only, args.at,
                      having_asset=args.having_asset, exclude=args.exclude)
     except (ApiCredentialsError, BadProjectError) as error:
-        sys.stderr.write(str(error) + os.linesep)
+        log.critical(str(error))
         if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ and \
                 "GITHUB_TOKEN" not in os.environ:
-            sys.stderr.write(TOKEN_PRO_TIP + os.linesep)
+            log.critical(TOKEN_PRO_TIP)
         sys.exit(4)
 
     if res:
@@ -604,7 +610,7 @@ def main():
         # empty list returned to --assets, emit 3
         if args.format == 'assets' and res is not False:
             sys.exit(3)
-        sys.stderr.write("No release was found" + os.linesep)
+        log.critical("No release was found")
         sys.exit(1)
 
 

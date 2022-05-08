@@ -313,6 +313,20 @@ def test_main_url():
     assert version.parse(out.decode('utf-8').strip()) >= version.parse("1.13.35.2")
 
 
+def test_cli_format_with_sem_base():
+    """Test formatting arbitrary version string with semantic level extraction."""
+    repo = 'mysqld  Ver 5.6.51-91.0 for Linux on x86_64 (Percona Server (GPL), Release 91.0, Revision b59139e)'
+
+    process = subprocess.Popen(
+        ['lastversion', '--sem', 'major', 'format', repo],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    out, err = process.communicate()
+
+    assert out.decode('utf-8').strip() == "5"
+
+
 def test_cli_get_tag():
     """Test CLI with full URL at GitHub, get tag as a result."""
     repo = 'https://github.com/lastversion-test-repos/Tasmota'

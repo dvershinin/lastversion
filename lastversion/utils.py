@@ -169,6 +169,7 @@ def extract_file(url):
                 smart_members.append(member)
         tar_file.extractall(members=smart_members)
 
+
 def rpm_installed_version(name):
     """Get the installed version of a package with the given name.
 

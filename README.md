@@ -65,17 +65,20 @@ version information.
 lastversion apache/incubator-pagespeed-ngx 
 #> 1.13.35.2
 
-lastversion apache/incubator-pagespeed-ngx -d 
+lastversion download apache/incubator-pagespeed-ngx 
 #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
 
-lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz 
+lastversion download apache/incubator-pagespeed-ngx -o pagespeed.tar.gz 
 #> downloads with chosen filename
 
 lastversion https://transmissionbt.com/
 #> 3.0
+
+lastversion format "mysqld  Ver 5.6.51-91.0 for Linux"
+#> 5.6.51
 ```
 
-## Installation for CentOS/RHEL 7, 8 or Amazon Linux 2
+## Installation for CentOS/RHEL 7, 8, Amazon Linux 2, Fedora Linux
 
 ```bash
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
@@ -125,31 +128,33 @@ itself.
 For more options to control output or behavior, see `--help` output:    
 
 ```text
-usage: lastversion [-h] [--pre] [--sem {major,minor,patch}] [-v]
+usage: lastversion [-h] [--pre] [--sem {major,minor,patch,any}] [-v]
                    [-d [FILENAME]] [--format {version,assets,source,json,tag}]
                    [--assets] [--source] [-gt VER] [-b MAJOR] [--only REGEX]
-                   [--exclude REGEX] [--filter REGEX]
-                   [--having-asset [ASSET]] [-su]
-                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp}]
+                   [--exclude REGEX] [--filter REGEX] [--having-asset [ASSET]]
+                   [-su]
+                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea}]
                    [-y] [--version]
-                   [action] <repo or URL>
+                   [{get,download,extract,unzip,test,format,install,update-spec}]
+                   <repo URL or string>
 
 Find the latest software release.
 
 positional arguments:
-  action                Special action to run, e.g. download, install, test
-  <repo or URL>         Repository in format owner/name or any URL that
-                        belongs to it
+  {get,download,extract,unzip,test,format,install,update-spec}
+                        Action to run. Default: get
+  <repo URL or string>  Repository in format owner/name or any URL that
+                        belongs to it, or a version string
 
 optional arguments:
   -h, --help            show this help message and exit
   --pre                 Include pre-releases in potential versions
-  --sem {major,minor,patch}
+  --sem {major,minor,patch,any}
                         Semantic versioning level base to print or compare
                         against
   -v, --verbose         Will give you an idea of what is happening under the
                         hood, -vv to increase verbosity level
-  -d [FILENAME], --download [FILENAME]
+  -d [FILENAME], -o [FILENAME], --download [FILENAME], --output [FILENAME]
                         Download with custom filename
   --format {version,assets,source,json,tag}
                         Output format
@@ -163,13 +168,13 @@ optional arguments:
                         e.g. 2.1.x
   --only REGEX          Only consider releases containing this text. Useful
                         for repos with multiple projects inside
-  --exclude REGEX      Only consider releases NOT containing this text.
+  --exclude REGEX       Only consider releases NOT containing this text.
                         Useful for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
   --having-asset [ASSET]
                         Only consider releases with this asset
   -su, --shorter-urls   A tiny bit shorter URLs produced
-  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp}
+  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea}
                         If the repo argument is one word, specifies where to
                         look up the project. The default is via internal
                         lookup or GitHub Search
@@ -259,16 +264,23 @@ You can also use `lastversion` to download assets/sources for the latest release
 Download the most recent Mautic source release:
 
 ```bash
-lastversion mautic/mautic --download 
+lastversion download mautic/mautic 
 ```
     
 Customize downloaded filename (works only for sources, which is the default):
 
 ```bash
-lastversion mautic/mautic --download mautic.tar.gz
+lastversion download mautic/mautic -o mautic.tar.gz
+```
+
+You can also directly fetch and extract latest release's file into the current working directory 
+by using `extract` command:
+
+```bash
+lastversion extract wordpress
 ```
     
-Or you can just have `lastversion` output sources/assets URLs and have those downloaded by 
+You can have `lastversion` output sources/assets URLs and have those downloaded by 
 something else:    
 
 ```bash
@@ -483,6 +495,22 @@ release while it's implicitly x.y.0. So let's say WordPress released "5.10":
 ```bash
 lastversion wordpress --sem patch
 #> 5.10.0
+```
+
+#### Format any version string
+
+Say you ran `mysqld --version` and got this output:
+
+> mysqld  Ver 5.6.51-91.0 for Linux on x86_64 (Percona Server (GPL), Release 91.0, Revision b59139e)
+
+This is rather hard to parse in bash if you want to just extract the major MySQL server version.
+
+`lastversion` can easily parse out and give the desired information based on desired semantic 
+versioning level:
+
+```bash
+lastversion --sem major format "mysqld  Ver 5.6.51-91.0 for Linux on x86_64 (Percona Server (GPL) , Release 91.0, Revision b59139e)" 
+#> 5
 ```
 
 #### Compare arbitrary versions
