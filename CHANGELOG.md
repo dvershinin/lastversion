@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.5] - 2022-05-22
+### Added
+* Officially supporting Gitea repos #73
+
 ## [2.4.4] - 2022-05-08
 ### Added
 * Allow extracting version from an arbitrary string (CLI)

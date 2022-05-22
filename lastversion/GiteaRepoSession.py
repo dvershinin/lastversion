@@ -256,7 +256,7 @@ class GiteaRepoSession(ProjectHolder):
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue
-            d = t['commit']['created']
+            d = parser.parse(t['commit']['created'])
 
             if not ret or version > ret['version'] or d > ret['tag_date']:
                 # rare case: if upstream filed formal pre-release that passes as stable
