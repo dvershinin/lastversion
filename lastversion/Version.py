@@ -45,6 +45,9 @@ class Version(PackagingVersion):
             # https://www.python.org/dev/peps/pep-0440/#developmental-releases
             if part in ['devel', 'test', 'dev']:
                 part = 'dev0'
+            elif part in ['beta']:
+                # "4.3.0-beta"
+                part = 'b0'
             else:
                 # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
                 # p12 => post12
