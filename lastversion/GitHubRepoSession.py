@@ -66,7 +66,8 @@ class GitHubRepoSession(ProjectHolder):
     E.g. 1.1.1b is not beta. Hard-coding such odds repos is required.
     """
     LAST_CHAR_FIX_REQUIRED_ON = [
-        'openssl/openssl'
+        'openssl/openssl',
+        'quictls/openssl'
     ]
 
     """ The following format will benefit from:
