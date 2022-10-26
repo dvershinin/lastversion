@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.6] - 2022-10-26
+### Added
+* More licenses for matching to RPM license field #74
+* Added quictls/openssl for special version handling
+
 ## [2.4.5] - 2022-05-22
 ### Added
 * Officially supporting Gitea repos #73
