@@ -115,15 +115,6 @@ def test_roer():
     assert output >= version.parse("0.11.3")
 
 
-def test_ndk():
-    """Test a GitHub project."""
-    repo = "https://github.com/simplresty/ngx_devel_kit"
-
-    output = latest(repo)
-
-    assert output <= version.parse("0.3.1")
-
-
 def test_naxsi():
     """Test a GitHub project."""
     repo = "https://github.com/nbs-system/naxsi/releases"
