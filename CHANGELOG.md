@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.7] - 2022-11-10
+### Added
+* Added quictls/openssl repo shortcut
+* Updated Accept: API header reflecting current state of GitHub docs
+### Fixed
+* Use stars instead of best-match for GitHub repo search as it seems more consistent
+* Minor optimization to GitHub repositories search
+
 ## [2.4.6] - 2022-10-26
 ### Added
 * More licenses for matching to RPM license field #74

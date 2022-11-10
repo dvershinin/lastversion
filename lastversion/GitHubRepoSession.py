@@ -58,12 +58,13 @@ class GitHubRepoSession(ProjectHolder):
         'openssl': {'repo': 'openssl/openssl'},
         'python': {'repo': 'python/cpython'},
         'cmake': {'repo': 'kitware/cmake'},
-        'kodi': {'repo': 'xbmc/xbmc'}
+        'kodi': {'repo': 'xbmc/xbmc'},
+        'quictls': {'repo': 'quictls/openssl'}
     }
 
     """
     The last alphanumeric after digits is part of version scheme, not beta level.
-    E.g. 1.1.1b is not beta. Hard-coding such odds repos is required.
+    E.g. 1.1.1b is not beta. Hard-coding such odd repos is required.
     """
     LAST_CHAR_FIX_REQUIRED_ON = [
         'openssl/openssl',
@@ -103,7 +104,13 @@ class GitHubRepoSession(ProjectHolder):
             pass
         log.info("Making query against GitHub API to search repo {}".format(repo))
         r = self.get(
-            '{}/search/repositories?q={}+in:name'.format(self.api_base, repo))
+            '{}/search/repositories'.format(self.api_base),
+            params={
+                'q': "{} in:name".format(repo),
+                'sort': 'stars',
+                'per_page': 1
+            }
+        )
         if r.status_code == 404:
             # when not found, skip using this holder in the factory by not setting self.repo
             return None
@@ -149,7 +156,7 @@ class GitHubRepoSession(ProjectHolder):
             self.hostname = self.DEFAULT_HOSTNAME
         # Explicitly specify the API version that we want:
         self.headers.update({
-            'Accept': 'application/vnd.github.v3+json'
+            'Accept': 'application/vnd.github+json'
         })
         if self.api_token:
             log.info('Using API token.')
@@ -166,7 +173,7 @@ class GitHubRepoSession(ProjectHolder):
             else:
                 repo = self.find_repo_by_name_only(repo)
                 if repo:
-                    log.info('Using repo {} obtained from search API'.format(self.repo))
+                    log.info('Using repo {} obtained from search API'.format(repo))
                 else:
                     return
         self.set_repo(repo)

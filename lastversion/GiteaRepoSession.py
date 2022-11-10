@@ -58,7 +58,6 @@ class GiteaRepoSession(ProjectHolder):
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
     SHORT_RELEASE_URL_FORMAT = RELEASE_URL_FORMAT
 
-
     def find_repo_by_name_only(self, repo):
         if repo.startswith(('https://', 'http://')):
             return None
@@ -75,12 +74,16 @@ class GiteaRepoSession(ProjectHolder):
                     raise BadProjectError(
                         'No project found on GitHub for search query: {}'.format(repo)
                     )
-                return cache[repo]['repo']
+                # return cache[repo]['repo']
         except TypeError:
             pass
         log.info("Making query against GitHub API to search repo {}".format(repo))
         r = self.get(
-            '{}/search/repositories?q={}+in:name'.format(self.api_base, repo))
+            '{}/search/repositories'.format(self.api_base),
+            params={
+                'q': "{} in:name".format(repo)
+            }
+        )
         if r.status_code == 404:
             # when not found, skip using this holder in the factory by not setting self.repo
             return None
@@ -110,7 +113,6 @@ class GiteaRepoSession(ProjectHolder):
                 'No project found on GitHub for search query: {}'.format(repo)
             )
         return full_name
-
 
     def __init__(self, repo, hostname):
         super(GiteaRepoSession, self).__init__()
@@ -147,10 +149,8 @@ class GiteaRepoSession(ProjectHolder):
                     return
         self.set_repo(repo)
 
-
     def get_rate_limit_url(self):
         return '{}/rate_limit'.format(self.api_base)
-
 
     def get(self, url, **kwargs):
         """Send GET reqiest and account for GitHub rate limits and such."""
@@ -200,16 +200,13 @@ class GiteaRepoSession(ProjectHolder):
             self.rate_limited_count = 0
         return r
 
-
     def rate_limit(self):
         url = '{}/rate_limit'.format(self.api_base)
         return self.get(url)
 
-
     def repo_query(self, uri):
         url = '{}/repos/{}{}'.format(self.api_base, self.repo, uri)
         return self.get(url)
-
 
     def repo_license(self, tag):
         r = self.repo_query('/license?ref={}'.format(tag))
@@ -223,13 +220,11 @@ class GiteaRepoSession(ProjectHolder):
                 return license_data
         return None
 
-
     def repo_readme(self, tag):
         r = self.repo_query('/readme?ref={}'.format(tag))
         if r.status_code == 200:
             return r.json()
         return None
-
 
     def get_formal_release_for_tag(self, tag):
         r = self.repo_query('/releases/tags/{}'.format(tag))
@@ -237,7 +232,6 @@ class GiteaRepoSession(ProjectHolder):
             # noinspection SpellCheckingInspection
             return r.json()
         return None
-
 
     # finding in tags requires paging through ALL of them, because the API does not list them
     # in order of recency, thus this is very slow
@@ -273,7 +267,6 @@ class GiteaRepoSession(ProjectHolder):
                     ret['type'] = 'tag'
         return ret
 
-
     def get_latest(self, pre_ok=False, major=None):
         """
         Gets latest release satisfying "prereleases are OK" or major/branch constraints
@@ -295,7 +288,6 @@ class GiteaRepoSession(ProjectHolder):
         ret = self.find_in_tags(ret, pre_ok, major)
 
         return ret
-
 
     def set_matching_formal_release(self, ret, formal_release, version, pre_ok,
                                     data_type='release'):
@@ -329,7 +321,6 @@ class GiteaRepoSession(ProjectHolder):
         formal_release['type'] = data_type
         log.info("Selected version as current selection: {}.".format(formal_release['version']))
         return formal_release
-
 
     def try_get_official(self, repo):
         """Check existence of repo/repo
