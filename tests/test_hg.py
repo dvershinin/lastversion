@@ -8,15 +8,6 @@ from lastversion.lastversion import latest
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
-def test_merc_1():
-    """Test a Mercurial repo."""
-    repo = 'https://hg.dillo.org/dillo/'
-
-    v = latest(repo)
-
-    assert v == version.parse('3.0.5')
-
-
 def test_hg_nginx():
     """Test NGINX."""
     repo = "https://nginx.org/"
