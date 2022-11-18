@@ -167,7 +167,26 @@ def extract_file(url):
             if member.path.startswith(root_dir + "/"):
                 member.path = member.path[root_dir_with_slash_len:]
                 smart_members.append(member)
-        tar_file.extractall(members=smart_members)
+        def is_within_directory(directory, target):
+            
+            abs_directory = os.path.abspath(directory)
+            abs_target = os.path.abspath(target)
+        
+            prefix = os.path.commonprefix([abs_directory, abs_target])
+            
+            return prefix == abs_directory
+        
+        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+        
+            for member in tar.getmembers():
+                member_path = os.path.join(path, member.name)
+                if not is_within_directory(path, member_path):
+                    raise Exception("Attempted Path Traversal in Tar File")
+        
+            tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+        
+        safe_extract(tar_file, members=smart_members)
 
 
 def rpm_installed_version(name):
