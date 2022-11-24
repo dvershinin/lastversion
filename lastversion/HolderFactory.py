@@ -1,11 +1,11 @@
 import logging
 
-from .GiteaRepoSession import GiteaRepoSession
 from .BitBucketRepoSession import BitBucketRepoSession
 from .FeedRepoSession import FeedRepoSession
 from .GitHubRepoSession import GitHubRepoSession
-from .HelmChartRepoSession import HelmChartRepoSession
 from .GitLabRepoSession import GitLabRepoSession
+from .GiteaRepoSession import GiteaRepoSession
+from .HelmChartRepoSession import HelmChartRepoSession
 from .LocalVersionSession import LocalVersionSession
 from .MercurialRepoSession import MercurialRepoSession
 from .PypiRepoSession import PypiRepoSession

@@ -1,8 +1,7 @@
 import datetime
-
-from .ProjectHolder import ProjectHolder
 import logging
 
+from .ProjectHolder import ProjectHolder
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +14,7 @@ class SystemRepoSession(ProjectHolder):
 
     def dnf_get_available_version(self, pre_ok, major):
         ret = None
+        # noinspection PyUnresolvedReferences
         import dnf
         with dnf.Base() as base:
             RELEASEVER = dnf.rpm.detect_releasever(base.conf.installroot)
@@ -42,6 +42,7 @@ class SystemRepoSession(ProjectHolder):
 
     def yum_get_available_version(self, pre_ok, major):
         ret = None
+        # noinspection PyUnresolvedReferences
         import yum
         yumLoggers = ['yum.filelogging.RPMInstallCallback', 'yum.verbose.Repos',
                       'yum.verbose.plugin',
@@ -68,6 +69,7 @@ class SystemRepoSession(ProjectHolder):
 
     def apt_get_available_version(self, pre_ok, major):
         ret = None
+        # noinspection PyUnresolvedReferences
         import apt
         cache = apt.cache.Cache()
         cache.update()

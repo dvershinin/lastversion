@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from dateutil import parser
-from bs4 import BeautifulSoup
 import logging
+
+from bs4 import BeautifulSoup
+from dateutil import parser
+
 from .ProjectHolder import ProjectHolder
 
 log = logging.getLogger(__name__)

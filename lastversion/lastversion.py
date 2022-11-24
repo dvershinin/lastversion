@@ -16,22 +16,21 @@ import logging
 import os
 import re
 import sys
-
-import yaml
 from os.path import expanduser
 
+import yaml
 from packaging.version import InvalidVersion
+from six.moves.urllib.parse import urlparse
 
-from .__about__ import __self__
 from .GitHubRepoSession import TOKEN_PRO_TIP
 from .HolderFactory import HolderFactory
 from .ProjectHolder import ProjectHolder
 from .Version import Version
+from .__about__ import __self__
 from .argparse_version import VersionAction
+from .spdx_id_to_rpmspec import rpmspec_licenses
 from .utils import download_file, extract_file, rpm_installed_version, ApiCredentialsError, \
     BadProjectError
-from .spdx_id_to_rpmspec import rpmspec_licenses
-from six.moves.urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ log = logging.getLogger(__name__)
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
            short_urls=False, major=None, only=None, at=None,
            having_asset=None, exclude=None):
-    """Find latest release version for a project.
+    """Find the latest release version for a project.
 
     Args:
         major (str): Only consider versions which are "descendants" of this major version string
@@ -47,8 +46,8 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         assets_filter (str): Regular expression for filtering assets for the latest release
         only (str): Only consider tags with this text. Useful for repos with multiple projects.
                     The argument supports negation and regular expressions. To indicate a regex,
-                    start it with tilde sign, to negate the expression, start it with exclamtion
-                    point, e.g. r"!~\w" will make it consider only tags without word characters.
+                    start it with tilde sign, to negate the expression, start it with exclamation
+                    point. See ``Examples``.
         repo (str): Repository specifier in any form.
         output_format (str): Affects return format. Possible values `version`, `json`, `dict`,
                              `assets`, `source`, `tag`.
@@ -57,6 +56,18 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                   specified as one word.
         having_asset (Union[str, bool]): Only consider releases with the given asset.
                                          Pass `True` for any asset
+        exclude (str): Only consider releases NOT containing this text/regular expression.
+
+    Examples:
+        Find the latest version of Mautic, it is OK to consider betas.
+
+        >>> latest("mautic/mautic", output_format='version', pre_ok=True)
+        <Version('4.4.4')>
+
+        Consider only tags without letters:
+
+        >>> latest("openssl/openssl", output_format='version', only=r'!~\w')
+        <Version('3.0.7')>
 
     Returns:
         Version: Newer version object, if found and `output_format` is `version`.

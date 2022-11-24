@@ -6,6 +6,7 @@ import re
 import time
 from datetime import datetime
 from datetime import timedelta
+
 import feedparser
 from dateutil import parser
 
@@ -364,7 +365,7 @@ class GitHubRepoSession(ProjectHolder):
                     log.info('The version {} is newer, but is too old!'.format(version))
                     break
                 if not ret or version > ret['version'] or tag_date > ret['tag_date']:
-                    # we always want to return formal release if it exists, cause it has useful
+                    # we always want to return formal release if it exists, because it has useful
                     # data grab formal release via APi to check for pre-release mark
                     formal_release = self.get_formal_release_for_tag(tag_name)
                     if formal_release:
@@ -451,12 +452,14 @@ class GitHubRepoSession(ProjectHolder):
 
     def get_releases_feed_contents(self, rename_checked=False):
         """
-        Fetch contents of repository's releases.atom feed.
-        # The releases.atom and tags.atom don't differ much except releases having more data.
-        # The releases.atom feed includes non-formal releases which are just tags, so we are good.
-        # Based on testing, edited old releases don't jump forward in the list and stay behind (good).
-        # The only downside is they don't bear pre-release mark (unlike API), and have limited data.
-        # We work around these by checking pre-release flag and get full release data via API.
+        Fetch contents of repository's `releases.atom` feed.
+
+        The `releases.atom` and `tags.atom` don't differ much except releases having more data.
+
+        The `releases.atom` feed includes non-formal releases which are just tags, so we are good.
+        Based on testing, edited old releases don't jump forward in the list and stay behind (good).
+        The only downside is they don't bear pre-release mark (unlike API), and have limited data.
+        We work around these by checking pre-release flag and get full release data via API.
         """
         if self.repo in self.feed_contents:
             return self.feed_contents[self.repo]
@@ -488,7 +491,7 @@ class GitHubRepoSession(ProjectHolder):
         return None
 
     def get_releases_feed_entries(self):
-        """Get an array of releases.atom feed entries."""
+        """Get an array of `releases.atom` feed entries."""
         feed_contents = self.get_releases_feed_contents()
         if not feed_contents:
             log.info('The releases.atom feed failed to be fetched!')
@@ -505,7 +508,7 @@ class GitHubRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """
-        Get latest release satisfying "prereleases are OK" or major/branch constraints
+        Get the latest release satisfying "prereleases are OK" or major/branch constraints
         Strives to fetch formal API release if it exists, because it has useful information
         like assets.
         """
@@ -538,7 +541,7 @@ class GitHubRepoSession(ProjectHolder):
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
                     log.info('The version {} is newer, but is too old!'.format(version))
                     break
-                # we always want to return formal release if it exists, cause it has useful data
+                # we always want to return formal release if it exists, because it has useful data
                 # grab formal release via APi to check for pre-release mark
                 formal_release = self.get_formal_release_for_tag(tag_name)
                 if formal_release:

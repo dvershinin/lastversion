@@ -3,10 +3,11 @@
 import logging
 import os
 import re
+
+import requests
 from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
 from cachecontrol.caches.file_cache import FileCache
-import requests
 from packaging.version import InvalidVersion
 
 from .Version import Version

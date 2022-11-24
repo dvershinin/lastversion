@@ -4,8 +4,6 @@ import math
 import os
 import re
 import time
-from datetime import datetime
-from datetime import timedelta
 
 from dateutil import parser
 
@@ -212,7 +210,7 @@ class GiteaRepoSession(ProjectHolder):
         r = self.repo_query('/license?ref={}'.format(tag))
         if r.status_code == 200:
             # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag
-            # we have to double check whether the license file exists "at release tag"
+            # we have to double-check whether the license file exists "at release tag"
             license_data = r.json()
             license_path = license_data['path']
             license_r = self.repo_query('/contents/{}?ref={}'.format(license_path, tag))
@@ -269,7 +267,7 @@ class GiteaRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """
-        Gets latest release satisfying "prereleases are OK" or major/branch constraints
+        Gets the latest release satisfying "prereleases are OK" or major/branch constraints
         Strives to fetch formal API release if it exists, because it has useful information
         like assets.
         """

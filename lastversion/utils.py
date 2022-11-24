@@ -1,10 +1,11 @@
 import logging
-from io import BytesIO
 import os
 import platform
 import re
 import sys
 import tarfile
+from io import BytesIO
+
 import requests
 import tqdm
 
@@ -108,8 +109,8 @@ def download_file(url, local_filename=None):
 
     Args:
         url (str): URL to download from
-        local_filename (str): Destination filename
-
+        local_filename (:obj:`str`, optional): Destination filename
+            Defaults to current directory plus base name of the URL.
     Returns:
         str: Destination filename, on success
 
@@ -146,9 +147,10 @@ def download_file(url, local_filename=None):
             pbar.set_description('Downloaded {}'.format(local_filename))
             pbar.close()
     except KeyboardInterrupt:
+        pbar.close()
         os.remove(local_filename)
         log.warning('Cancelled')
-        os._exit(1)
+        sys.exit(1)
     return local_filename
 
 

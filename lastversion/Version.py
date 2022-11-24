@@ -85,10 +85,10 @@ class Version(PackagingVersion):
 
     @property
     def epoch(self):
+        # type: () -> int
         """
         An integer giving the version epoch of this Version instance
         """
-        # type: () -> int
         _epoch = self._version.epoch  # type: int
         return _epoch
 

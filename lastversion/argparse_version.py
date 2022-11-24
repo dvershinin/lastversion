@@ -28,7 +28,7 @@ class VersionAction(Action):
             version += ', up to date'
         else:
             version += ', newer version {} available'.format(last_version)
-        formatter = parser._get_formatter()
+        formatter = parser.formatter_class(prog=parser.prog)
         formatter.add_text(version)
-        parser._print_message(formatter.format_help(), _sys.stdout)
+        _sys.stdout.write(formatter.format_help())
         parser.exit()
