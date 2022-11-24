@@ -1,6 +1,6 @@
 site_name: lastversion docs
 site_description: "Automatic documentation from sources, for lastversion."
-site_url:
+site_url: https://lastversion.getpagespeed.com/
 repo_url: https://github.com/dvershinin/lastversion
 theme:
   name: "material"
