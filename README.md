@@ -78,7 +78,13 @@ lastversion format "mysqld  Ver 5.6.51-91.0 for Linux"
 #> 5.6.51
 ```
 
-## Installation for CentOS/RHEL 7, 8, Amazon Linux 2, Fedora Linux
+## Installation for RPM-based systems
+
+Supported:
+
+* CentOS/RHEL 7, 8, 9 including clones like AlmaLinux and Rocky Linux
+* Amazon Linux 2
+* Fedora Linux
 
 ```bash
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
