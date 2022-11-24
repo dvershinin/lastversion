@@ -17,9 +17,5 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.6'
-      - name: Deploy to GH Pages
-        uses: afritzler/mkdocs-gh-pages-action@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_DOMAIN: lastversion.getpagespeed.com
-          REQUIREMENTS: docs/requirements.txt
+      - run: pip install -r docs/requirements.txt
+      - run: mkdocs gh-deploy --force --clean --verbose
