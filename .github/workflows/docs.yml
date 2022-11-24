@@ -18,8 +18,8 @@ jobs:
         with:
           python-version: '3.6'
       - name: Deploy to GH Pages
-        uses: mhausenblas/mkdocs-deploy-gh-pages@1.24
+        uses: afritzler/mkdocs-gh-pages-action@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CUSTOM_DOMAIN: lastversion.getpagespeed.com
+          GITHUB_DOMAIN: lastversion.getpagespeed.com
           REQUIREMENTS: docs/requirements.txt
