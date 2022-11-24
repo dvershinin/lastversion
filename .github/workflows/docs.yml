@@ -9,11 +9,11 @@ jobs:
   build:
     name: Build
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout master
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Deploy to GH Pages
         uses: mhausenblas/mkdocs-deploy-gh-pages@1.24

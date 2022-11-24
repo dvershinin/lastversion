@@ -5,16 +5,16 @@ on: [push, pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       max-parallel: 4
       matrix:
         python-version: [2.7, 3.6, 3.7, 3.8, 3.9]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -61,7 +61,7 @@ jobs:
         path: tests/nginx-module-immutable.spec
   build-brotli-rpm:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download a single artifact
@@ -75,7 +75,7 @@ jobs:
         build
   build-nginx-module-immutable-rpm:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download a single artifact
