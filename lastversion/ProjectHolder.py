@@ -254,7 +254,9 @@ class ProjectHolder(requests.Session):
 
     def get_assets(self, release, short_urls, assets_filter=None):
         urls = []
-        assets = release['assets']
+        assets = []
+        if 'assets' in release:
+            assets = release['assets']
         arch_matched_assets = []
         if not assets_filter and platform.machine() in ['x86_64', 'AMD64']:
             for asset in assets:
@@ -263,7 +265,7 @@ class ProjectHolder(requests.Session):
             if arch_matched_assets:
                 assets = arch_matched_assets
 
-        if 'assets' in release and assets:
+        if assets:
             for asset in assets:
                 if assets_filter and not re.search(assets_filter, asset['name']):
                     continue
