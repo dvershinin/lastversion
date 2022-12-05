@@ -6,6 +6,7 @@ import sys
 import tarfile
 from io import BytesIO
 
+import distro
 import requests
 import tqdm
 
@@ -30,7 +31,7 @@ extension_distros = {
     'deb': ['ubuntu', 'debian'],
     'rpm': ['rhel', 'centos', 'fedora', 'amazon', 'cloudlinux'],
     'apk': ['alpine'],
-    'darwin': ['dmg']
+    'dmg': ['darwin']
 }
 
 # matches *start* of sys.platform value to words in asset name
@@ -43,7 +44,7 @@ platform_markers = {
 
 # this is all too simple for now
 non_amd64_markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'armv7l',
-                     'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64']
+                     'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64', 'armhf', 'armv7hl']
 
 
 def asset_does_not_belong_to_machine(asset):
@@ -68,8 +69,7 @@ def asset_does_not_belong_to_machine(asset):
                 matches = r.search(asset)
                 if matches:
                     return True
-    if sys.platform == 'linux':
-        import distro
+    if sys.platform.startswith('linux'):
         # Weeding out non-matching Linux distros
         for ext, ext_distros in extension_distros.items():
             if asset.endswith("." + ext) and distro.id() not in ext_distros:
@@ -79,12 +79,10 @@ def asset_does_not_belong_to_machine(asset):
     if platform.machine() in ['x86_64', 'AMD64']:
         for non_amd64_word in non_amd64_markers:
             r = re.compile(r'\b{}\b'.format(non_amd64_word), flags=re.IGNORECASE)
-            matches = r.search(asset)
-            if matches:
+            if r.search(asset):
                 return True
             r = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
-            matches = r.search(asset)
-            if matches:
+            if r.search(asset):
                 return True
     return False
 

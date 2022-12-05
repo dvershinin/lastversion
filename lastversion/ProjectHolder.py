@@ -2,6 +2,7 @@
 
 import logging
 import os
+import platform
 import re
 
 import requests
@@ -253,8 +254,17 @@ class ProjectHolder(requests.Session):
 
     def get_assets(self, release, short_urls, assets_filter=None):
         urls = []
-        if 'assets' in release and release['assets']:
-            for asset in release['assets']:
+        assets = release['assets']
+        arch_matched_assets = []
+        if not assets_filter and platform.machine() in ['x86_64', 'AMD64']:
+            for asset in assets:
+                if 'x86_64' in asset['name']:
+                    arch_matched_assets.append(asset)
+            if arch_matched_assets:
+                assets = arch_matched_assets
+
+        if 'assets' in release and assets:
+            for asset in assets:
                 if assets_filter and not re.search(assets_filter, asset['name']):
                     continue
                 if not assets_filter and asset_does_not_belong_to_machine(asset['name']):

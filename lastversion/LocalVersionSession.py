@@ -22,8 +22,8 @@ class LocalVersionSession(ProjectHolder):
         if not major:
             major = 'stable'
         ver_file = '/usr/local/share/builder/{}-{}.ver'.format(self.repo, major)
-        with open(ver_file, 'r') as file:
-            version = file.read().replace('\n', '')
+        with open(ver_file, 'r') as f:
+            version = f.read().replace('\n', '')
             return {
                 'version': version,
                 'tag_name': version

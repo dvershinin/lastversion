@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.8] - 2022-12-05
+### Fixed
+* Better detection of x86_64 arch for `install` command
+
 ## [2.4.7] - 2022-11-10
 ### Added
 * Added quictls/openssl repo shortcut

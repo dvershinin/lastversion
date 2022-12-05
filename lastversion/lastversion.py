@@ -560,10 +560,6 @@ def main():
             if args.format == 'source':
                 # there is only one source, but we need an array
                 res = [res]
-            download_name = None
-            # save with custom filename, if there's one file to download
-            if len(res) == 1:
-                download_name = args.download
             for url in res:
                 log.info("Extracting {} ...".format(url))
                 extract_file(url)
