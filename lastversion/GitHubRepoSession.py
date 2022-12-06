@@ -183,7 +183,7 @@ class GitHubRepoSession(ProjectHolder):
         return '{}/rate_limit'.format(self.api_base)
 
     def get(self, url, **kwargs):
-        """Send GET reqiest and account for GitHub rate limits and such."""
+        """Send GET request and account for GitHub rate limits and such."""
         r = super(GitHubRepoSession, self).get(url, **kwargs)
         log.info('Got HTTP status code {} from {}'.format(r.status_code, url))
         if r.status_code == 401:
