@@ -7,6 +7,7 @@ description: |
   geoip2 databases. based on the client IP (default) or from a
   specific variable (supports both IPv4 and IPv6)
 soname: ngx_http_geoip2_module
+# noinspection SpellCheckingInspection
 build_requires:
   - libmaxminddb-devel
 

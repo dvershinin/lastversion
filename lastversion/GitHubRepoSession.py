@@ -508,7 +508,7 @@ class GitHubRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """
-        Get the latest release satisfying "prereleases are OK" or major/branch constraints
+        Get the latest release satisfying "pre-releases are OK" or major/branch constraints
         Strives to fetch formal API release if it exists, because it has useful information
         like assets.
         """
@@ -545,7 +545,7 @@ class GitHubRepoSession(ProjectHolder):
                 # grab formal release via APi to check for pre-release mark
                 formal_release = self.get_formal_release_for_tag(tag_name)
                 if formal_release:
-                    # use full release info
+                    # use the full release info
                     ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
                 else:
                     if self.having_asset:

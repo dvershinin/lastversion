@@ -31,7 +31,7 @@ class ProjectHolder(requests.Session):
     LAST_CHAR_FIX_REQUIRED_ON = []
 
     # web accessible project holders may have single well-known domain usable by everyone
-    # in case of GitHub, that is github.com, for Mercurial web gui - here isn't one, etc.
+    # in case of GitHub, that is GitHub.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
     SUBDOMAIN_INDICATOR = None
     KNOWN_REPO_URLS = {}
@@ -41,7 +41,7 @@ class ProjectHolder(requests.Session):
     # is only one instead of 2
     # or a "format" specifier for matching
     REPO_URL_PROJECT_COMPONENTS = 2
-    # if URI starts with project name, 0. Otherwise skip through this many URI dirs
+    # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
     REPO_URL_PROJECT_OFFSET = 0
     RELEASE_URL_FORMAT = None
     SHORT_RELEASE_URL_FORMAT = None

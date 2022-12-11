@@ -273,7 +273,7 @@ def test_with_search():
 
 
 def test_homepage_github_link_discovery():
-    """Test with discovering github repo from project own website."""
+    """Test with discovering GitHub repo from project own website."""
     repo = 'https://transmissionbt.com/'
 
     v = latest(repo)
@@ -373,7 +373,7 @@ def test_major_graphql():
 def test_raises_bad_project_error_while_graphql():
     """
     Test getting BadProjectError while in graphql.
-    When a bad project is passed as owner/name, we don't fail on 404 while getting releases.atom
+    When a bad project is passed as owner/name, we don't fail on 404 while getting `releases.atom`
     as we're still hoping to get something with graphql.
     So graphql response should be checked and BadProjectError raised so that we can communicate
     that the repo argument passed was invalid.
@@ -452,7 +452,7 @@ def test_having_any_asset():
 
 
 def test_tags_only_repo():
-    """A repo may never published a formal release which results
+    """A repo may never publish a formal release which results
     in a completely empty releases atom without any formal and non-formal tags
     See #63"""
     repo = 'https://github.com/lastversion-test-repos/cpython'

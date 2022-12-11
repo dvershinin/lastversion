@@ -45,7 +45,7 @@ class WordPressPluginRepoSession(ProjectHolder):
             self.repo, release['version'])
 
     def get_latest(self, pre_ok=False, major=None):
-        """Get latest release for this project."""
+        """Get the latest release for this project."""
         ret = {}
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version

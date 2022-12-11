@@ -122,13 +122,13 @@ Helps to answer what is the latest Linux version:
 lastversion linux
 ```
 
-Or wondering what is the latest version of WordPress? :
+Or wondering what is the latest version of WordPress? 
 
 ```bash
 lastversion wordpress
 ```
    
-A special value of `self` for the main argument, will lookup the last release of `lastversion` 
+A special value of `self` for the main argument, will look up the last release of `lastversion` 
 itself.
 
 For more options to control output or behavior, see `--help` output:    
@@ -279,7 +279,7 @@ Customize downloaded filename (works only for sources, which is the default):
 lastversion download mautic/mautic -o mautic.tar.gz
 ```
 
-You can also directly fetch and extract latest release's file into the current working directory 
+You can also directly fetch and extract the latest release's file into the current working directory 
 by using `extract` command:
 
 ```bash
@@ -333,7 +333,7 @@ lastversion --pre mautic/mautic
 
 For some projects, there may be several stable releases available simultaneously, in different
 branches. An obvious example is PHP. You can use `--major` flag to specify the major release
-version to match with, to help you find latest stable release of a branch, like so:
+version to match with, to help you find the latest stable release of a branch, like so:
 
 ```bash
 lastversion php/php-src --major 7.2
@@ -385,7 +385,7 @@ The operating systems are usually *not* versioned through GitHub releases or suc
 It is a challenge to get the last stable version of an OS other than from its website,
 or other announcement channels.
 
-An easy compromise that `lastversion` does about this, is hardcoding well-known OS names, and using
+An easy compromise that `lastversion` does about this, is hard coding well-known OS names, and using
 Wikipedia behind the scenes:
 
 ```bash 
@@ -583,10 +583,10 @@ Exit status code `3` is returned when filtering assets of last release yields em
 
 ## Tips
 
-Getting latest version is heavy on the API, because GitHub does not allow to fetch tags in 
+Getting the latest version is heavy on the API, because GitHub does not allow to fetch tags in 
 chronological order, and some repositories switch from one version format to another, so *we can't 
-just consider highest version to be latest*.
-We have to fetch every tag's commit date, and see if it's actually more recent. Thus it's slower
+just consider the highest version to be latest*.
+We have to fetch every tag's commit date, and see if it's actually more recent. Thus, it's slower
 with larger repositories, which have potentially a lot of tags.
 
 Thus, `lastversion` makes use of caching API response to be fast and light on GitHub API,
@@ -669,7 +669,7 @@ With `output_format='version'` (the default), the function returns a
 [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) object, or
  `None`. So you can do things like above, namely version comparison, checking dev status, etc.
  
-With `output_format='dict'`, a dictionary returned with latest release information, or `False`.
+With `output_format='dict'`, a dictionary returned with the latest release information, or `False`.
 The dictionary keys vary between different project locations (GitHub vs BitBucket, for example),
 but are guaranteed to always have these keys:
 

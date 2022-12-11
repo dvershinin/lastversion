@@ -49,7 +49,7 @@ class PypiRepoSession(ProjectHolder):
         return None
 
     def get_latest(self, pre_ok=False, major=None):
-        """Get latest project release."""
+        """Get the latest project release."""
         ret = self.project
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version

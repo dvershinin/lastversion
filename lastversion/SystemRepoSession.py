@@ -30,7 +30,7 @@ class SystemRepoSession(ProjectHolder):
             # Derived query matches only available packages
             a = q.available()
             a = a.filter(name=self.repo)
-            for pkg in a:  # a only gets evaluated here
+            for pkg in a:  # `a` only gets evaluated here
                 version = self.sanitize_version(pkg.version, pre_ok, major)
                 if not ret or ret['version'] < version:
                     ret = {

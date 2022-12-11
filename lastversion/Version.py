@@ -9,7 +9,7 @@ class Version(PackagingVersion):
     scheme defined in PEP 440. A `Version` instance is comparison
     aware and can be compared and sorted using the standard Python interfaces.
 
-    This class is descendant from Version found in packaging.version,
+    This class is descendant from Version found in `packaging.version`,
     and implements some additional, "AI"-like normalization during instantiation.
 
     Args:
@@ -25,7 +25,12 @@ class Version(PackagingVersion):
         return match.group(1) + '.post' + str(ord(match.group(2)))
 
     def __init__(self, version, char_fix_required=False):
-        # type: (str) -> None
+        """Instantiate the `Version` object.
+
+        Args:
+            version (str): The version-like string
+            char_fix_required (bool): Should we treat alphanumerics as part of version
+        """
         self.fixed_letter_post_release = False
 
         # 4.27-chaos-preview-3 -> 4.27-chaos-pre3
@@ -59,7 +64,7 @@ class Version(PackagingVersion):
             raise InvalidVersion("Invalid version: '{0}'".format(version))
         # remove *any* non-digits which appear at the beginning of the version string
         # e.g. Rhino1_7_13_Release does not even bother to put a delimiter...
-        # such string at the beginning typically do not convey stability level
+        # such string at the beginning typically do not convey stability level,
         # so we are fine to remove them (unlike the ones in the tail)
         parts_n[0] = re.sub('^[^0-9]+', '', parts_n[0], 1)
 
@@ -69,7 +74,7 @@ class Version(PackagingVersion):
         if char_fix_required:
             version = re.sub('(\\d)([a-z])$', self.fix_letter_post_release, version, 1)
         # release-3_0_2 is often seen on Mercurial holders
-        # note that above code removes "release-" already so we are left with "3_0_2"
+        # note that above code removes "release-" already, so we are left with "3_0_2"
         if re.search(r'^(?:\d+_)+(?:\d+)', version):
             version = version.replace('_', '.')
         # finally, split by dot "delimiter", see if there are common words which are definitely

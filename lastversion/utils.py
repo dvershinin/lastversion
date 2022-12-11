@@ -75,7 +75,7 @@ def asset_does_not_belong_to_machine(asset):
             if asset.endswith("." + ext) and distro.id() not in ext_distros:
                 return True
     # weed out non-64 bit stuff from x86_64 bit OS
-    # caution: may be false positive with 32 bit Python on 64 bit OS
+    # caution: may be false positive with 32 bit Python on 64-bit OS
     if platform.machine() in ['x86_64', 'AMD64']:
         for non_amd64_word in non_amd64_markers:
             r = re.compile(r'\b{}\b'.format(non_amd64_word), flags=re.IGNORECASE)
@@ -87,12 +87,13 @@ def asset_does_not_belong_to_machine(asset):
     return False
 
 
-# monkey patching older requests library's response class so it can use context manager
+# monkey patching older requests library's response class, so it can use context manager
 # https://github.com/psf/requests/issues/4136
 def requests_response_patched_enter(self):
     return self
 
 
+# noinspection PyUnusedLocal
 def requests_response_patched_exit(self, *args):
     self.close()
 

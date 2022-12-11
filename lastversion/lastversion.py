@@ -94,7 +94,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
 
     if repo.endswith('.spec'):
         # repo is specified inside the .spec file
-        # github repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
+        # GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
         # no upstream_github global means that the spec was not prepared for lastversion
         # optional: use of spec_tag macros if the source is from GitHub. in edge cases we check
         # new version via GitHub, but prepared sources are elsewhere
@@ -105,23 +105,23 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
             current_version = None
             spec_repo = None
             spec_url = None
-            for l in f.readlines():
-                if l.startswith('%global lastversion_repo'):
-                    spec_repo = l.split(' ')[2].strip()
-                elif l.startswith('%global upstream_github'):
-                    upstream_github = l.split(' ')[2].strip()
-                elif l.startswith('%global upstream_name'):
-                    upstream_name = l.split(' ')[2].strip()
-                elif l.startswith('Name:'):
-                    name = l.split('Name:')[1].strip()
-                elif l.startswith('URL:'):
-                    spec_url = l.split('URL:')[1].strip()
-                elif l.startswith('%global upstream_version '):
-                    current_version = l.split(' ')[2].strip()
+            for line in f.readlines():
+                if line.startswith('%global lastversion_repo'):
+                    spec_repo = line.split(' ')[2].strip()
+                elif line.startswith('%global upstream_github'):
+                    upstream_github = line.split(' ')[2].strip()
+                elif line.startswith('%global upstream_name'):
+                    upstream_name = line.split(' ')[2].strip()
+                elif line.startswith('Name:'):
+                    name = line.split('Name:')[1].strip()
+                elif line.startswith('URL:'):
+                    spec_url = line.split('URL:')[1].strip()
+                elif line.startswith('%global upstream_version '):
+                    current_version = line.split(' ')[2].strip()
                     # influences %spec_tag to use %upstream_version instead of %version
                     repo_data['module_of'] = True
-                elif l.startswith('Version:') and not current_version:
-                    current_version = l.split('Version:')[1].strip()
+                elif line.startswith('Version:') and not current_version:
+                    current_version = line.split('Version:')[1].strip()
             if spec_url:
                 spec_host = urlparse(spec_url).hostname
                 if spec_host in ['github.com'] and not upstream_github and not spec_repo:
@@ -389,7 +389,7 @@ def main():
     # how / which data of last release we want to present
     # assets will give download urls for assets if available and sources archive otherwise
     # sources will give download urls for sources always
-    # json always includes "version", "tag_name" etc + whichever json data was
+    # json always includes "version", "tag_name" etc. + whichever json data was
     # used to satisfy lastversion
     parser.add_argument('--format',
                         choices=['version', 'assets', 'source', 'json', 'tag'],

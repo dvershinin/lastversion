@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 ## [2.4.7] - 2022-11-10
 ### Added
 * Added quictls/openssl repo shortcut
-* Updated Accept: API header reflecting current state of GitHub docs
+* Updated `Accept:` API header reflecting current state of GitHub docs
 ### Fixed
 * Use stars instead of best-match for GitHub repo search as it seems more consistent
 * Minor optimization to GitHub repositories search
@@ -69,14 +69,14 @@ All notable changes to this project will be documented in this file.
 
 ## [2.0.1] - 2021-10-28
 ### Fixed
-* GitHub has empty releases.atom in tag-only repos #63, #65
-* Fix for some repos where releases.atom contains old releases only
+* GitHub has empty `releases.atom` in tag-only repos #63, #65
+* Fix for some repos where `releases.atom` contains old releases only
 
 ## [2.0.0] - 2021-10-21
 ### Changed
 * The "install" action operates against releases with respective assets #60
 ### Fixed
-* The releases.atom w/o aurhotization, fixes behavior of GitHub returning empty feeds
+* The `releases.atom` w/o authorization, fixes behavior of GitHub returning empty feeds
 
 ## [1.6.0] - 2021-09-04
 ### Added
@@ -258,7 +258,7 @@ The `latest` Python function now returns `Version` object instead of string, by 
 * Limited GitLab support
 * Limited Mercurial web repos support
 * Limited BitBucket support
-* Use feeds where available, thus much much faster while still precise
+* Use feeds where available, thus much, much faster while still precise
 * Ability to pass `.yml` with `repo:` value inside. Other elements are merged into `--format json` 
 output. More on the [wiki](https://github.com/dvershinin/lastversion/wiki/Use-in-automatic-RPM-building) 
 on how useful it is

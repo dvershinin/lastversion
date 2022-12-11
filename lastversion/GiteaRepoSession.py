@@ -51,7 +51,7 @@ class GiteaRepoSession(ProjectHolder):
     See https://fedoraproject.org/wiki/Packaging:SourceURL#Git_Tags
     We use variation of this: it does not need a parsed version (thus works for --pre better)
     and it is not broken on fancy release tags like v1.2.3-stable
-    https://github.com/OWNER/PROJECT/archive/%{gittag}/%{gittag}-%{version}.tar.gz
+    https://github.com/OWNER/PROJECT/archive/%{git_tag}/%{git_tag}-%{version}.tar.gz
     """
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
     SHORT_RELEASE_URL_FORMAT = RELEASE_URL_FORMAT
@@ -235,6 +235,7 @@ class GiteaRepoSession(ProjectHolder):
     # in order of recency, thus this is very slow
     # in: current release to be returned, output: newer release to be returned
     def find_in_tags(self, ret, pre_ok, major):
+        ret = None
         r = self.repo_query('/tags?per_page=100')
         if r.status_code != 200:
             return None
@@ -267,23 +268,20 @@ class GiteaRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """
-        Gets the latest release satisfying "prereleases are OK" or major/branch constraints
+        Gets the latest release satisfying "pre-releases are OK" or major/branch constraints
         Strives to fetch formal API release if it exists, because it has useful information
         like assets.
         """
-        # data of selected tag, always contains ['version', 'tag_name', 'tag_date', 'type'] will
-        # be returned
-        ret = None
 
         if self.having_asset:
             # only formal releases which we enumerated above already, have assets
             # so there is no point looking in the tags/graphql below
             # return whatever we got
-            return ret
+            return None
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
-        ret = self.find_in_tags(ret, pre_ok, major)
+        ret = self.find_in_tags(pre_ok, major)
 
         return ret
 
