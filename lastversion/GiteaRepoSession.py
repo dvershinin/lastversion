@@ -234,7 +234,7 @@ class GiteaRepoSession(ProjectHolder):
     # finding in tags requires paging through ALL of them, because the API does not list them
     # in order of recency, thus this is very slow
     # in: current release to be returned, output: newer release to be returned
-    def find_in_tags(self, ret, pre_ok, major):
+    def find_in_tags(self, pre_ok, major):
         ret = None
         r = self.repo_query('/tags?per_page=100')
         if r.status_code != 200:
