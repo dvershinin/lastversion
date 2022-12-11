@@ -117,8 +117,8 @@ class GitHubRepoSession(ProjectHolder):
             return None
         if r.status_code != 200:
             raise BadProjectError(
-                'Error while identifying full repository on GitHub for search query: {}'.format(
-                    repo
+                'Error while identifying full repository on GitHub for search query: {}. Status: {}'.format(
+                    repo, r.status_code
                 )
             )
         data = r.json()

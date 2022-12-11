@@ -55,6 +55,10 @@ These globals, as well as `Version:` tag, are be updated by `lastversion` with t
 The `URL:` and `Source0:` tags of your spec file must be put to the following form:
 
 ```rpmspec
+%global upstream_github <repository owner>
+%global lastversion_tag x
+%global lastversion_dir x
+Name:           <name>
 URL:            https://github.com/%{upstream_github}/%{name}
 Source0:        %{url}/archive/%{lastversion_tag}/%{name}-%{lastversion_tag}.tar.gz
 ```
@@ -64,6 +68,13 @@ Wherever in the `.spec` file you unpack the tarball and have to reference the ex
 Example:
 
 ```rpmspec
+%global upstream_github <repository owner>
+%global lastversion_tag x
+%global lastversion_dir x
+Name:           <name>
+URL:            https://github.com/%{upstream_github}/%{name}
+Source0:        %{url}/archive/%{lastversion_tag}/%{name}-%{lastversion_tag}.tar.gz
+
 %prep
 %autosetup -n %{lastversion_dir}
 ```
@@ -105,6 +116,7 @@ The notable change when building a module is an extra `upstream_version` macro. 
 Your `Version:` tag will stay static between different versions, and must have the form that includes macros for the version of the parent software and the module, e.g.:
 
 ```rpmspec
+%global upstream_version x  # <-- filled by `lastversion`
 Version: %{nginx_version}+%{upstream_version}
 ```
 
