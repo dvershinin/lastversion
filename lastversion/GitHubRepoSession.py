@@ -149,7 +149,9 @@ class GitHubRepoSession(ProjectHolder):
         # lazy loaded dict cache of /releases response keyed by tag, only first page
         self.formal_releases_by_tag = None
         self.rate_limited_count = 0
-        self.api_token = os.getenv("GITHUB_API_TOKEN")
+        self.api_token = os.getenv("LASTVERSION_GITHUB_API_TOKEN")
+        if not self.api_token:
+            self.api_token = os.getenv("GITHUB_API_TOKEN")
         if not self.api_token:
             self.api_token = os.getenv("GITHUB_TOKEN")
         self.hostname = hostname
