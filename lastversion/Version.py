@@ -127,6 +127,13 @@ class Version(PackagingVersion):
             return ".".join(str(x) for x in self._version.local)
         return None
 
+    @property
+    def is_prerelease(self):
+        # type: () -> bool
+        if self.micro and self.micro >= 90:
+            return True
+        return self.dev is not None or self.pre is not None
+
     def sem_extract_base(self, level=None):
         """
         Return Version with desired semantic version level base
