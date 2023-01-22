@@ -101,6 +101,7 @@ class ProjectHolder(requests.Session):
         return self
 
     def set_even(self, even):
+        """Set to return only releases with even numbering like 1.2.3."""
         self.even = even
         if even:
             log.info('Only considering releases with even numbering')
