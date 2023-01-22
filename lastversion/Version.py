@@ -134,6 +134,10 @@ class Version(PackagingVersion):
             return True
         return self.dev is not None or self.pre is not None
 
+    @property
+    def even(self):
+        return self.minor and not self.minor % 2
+
     def sem_extract_base(self, level=None):
         """
         Return Version with desired semantic version level base

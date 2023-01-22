@@ -138,7 +138,7 @@ usage: lastversion [-h] [--pre] [--sem {major,minor,patch,any}] [-v]
                    [-d [FILENAME]] [--format {version,assets,source,json,tag}]
                    [--assets] [--source] [-gt VER] [-b MAJOR] [--only REGEX]
                    [--exclude REGEX] [--filter REGEX] [--having-asset [ASSET]]
-                   [-su]
+                   [-su] [--even]
                    [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea}]
                    [-y] [--version]
                    [{get,download,extract,unzip,test,format,install,update-spec}]
@@ -176,6 +176,8 @@ optional arguments:
                         for repos with multiple projects inside
   --exclude REGEX       Only consider releases NOT containing this text.
                         Useful for repos with multiple projects inside
+  --even                Only even versions like 1.[2].x, or 3.[6].x are
+                        considered as stable                        
   --filter REGEX        Filters --assets result by a regular expression
   --having-asset [ASSET]
                         Only consider releases with this asset
@@ -186,7 +188,6 @@ optional arguments:
                         lookup or GitHub Search
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
-
 ```
 
 The `--format` will affect what kind of information from the last release and in which format will

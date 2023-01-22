@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
            short_urls=False, major=None, only=None, at=None,
-           having_asset=None, exclude=None):
+           having_asset=None, exclude=None, even=False):
     """Find the latest release version for a project.
 
     Args:
@@ -57,6 +57,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         having_asset (Union[str, bool]): Only consider releases with the given asset.
                                          Pass `True` for any asset
         exclude (str): Only consider releases NOT containing this text/regular expression.
+        even (bool): Consider as stable only releases with even minor component, e.g. 1.2.3
 
     Examples:
         Find the latest version of Mautic, it is OK to consider betas.
@@ -157,6 +158,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         project.set_only(only)
         project.set_exclude(exclude)
         project.set_having_asset(having_asset)
+        project.set_even(even)
         release = project.get_latest(pre_ok=pre_ok, major=major)
 
         # bail out, found nothing that looks like a release
@@ -416,6 +418,8 @@ def main():
                         nargs='?', const=True)
     parser.add_argument('-su', '--shorter-urls', dest='shorter_urls', action='store_true',
                         help='A tiny bit shorter URLs produced')
+    parser.add_argument('--even', dest='even', action='store_true',
+                        help='Only even versions like 1.[2].x, or 3.[6].x are considered as stable')
     parser.add_argument('--at', dest='at',
                         help='If the repo argument is one word, specifies where to look up the '
                              'project. The default is via internal lookup or GitHub Search',
@@ -426,7 +430,7 @@ def main():
     parser.set_defaults(validate=True, verbose=False, format='version',
                         pre=False, assets=False, newer_than=False, filter=False,
                         shorter_urls=False, major=None, assumeyes=False, at=None,
-                        having_asset=None)
+                        having_asset=None, even=False)
     args = parser.parse_args()
 
     if args.repo == "self":
@@ -530,7 +534,7 @@ def main():
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
                      args.shorter_urls, args.major, args.only, args.at,
-                     having_asset=args.having_asset, exclude=args.exclude)
+                     having_asset=args.having_asset, exclude=args.exclude, even=args.even)
     except (ApiCredentialsError, BadProjectError) as error:
         log.critical(str(error))
         if isinstance(error, ApiCredentialsError) and "GITHUB_API_TOKEN" not in os.environ and \

@@ -76,6 +76,7 @@ class ProjectHolder(requests.Session):
         self.name = None
         # in some case we do not specify repo, but feed is discovered, no repo is given then
         self.feed_url = None
+        self.even = False
 
     def is_valid(self):
         """Check if project holder is valid instance."""
@@ -97,6 +98,12 @@ class ProjectHolder(requests.Session):
         self.exclude = exclude
         if exclude:
             log.info('Only considering tags without "{}"'.format(exclude))
+        return self
+
+    def set_even(self, even):
+        self.even = even
+        if even:
+            log.info('Only considering releases with even numbering')
         return self
 
     def set_having_asset(self, having_asset):
@@ -227,6 +234,8 @@ class ProjectHolder(requests.Session):
             log.info('{} is not under the desired major {}'.format(
                 version_s, major))
             res = False
+        if res and self.even and not res.even:
+            return False
         return res
 
     def _type(self):
