@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.9] - 2023-01-22
+### Added
+* New `--even` switch to target software that uses odd/even versioning where even is stable
+### Fixed
+* Micro-releases 90+ are treated as non-stable versions (old Linux software)
+
 ## [2.4.8] - 2022-12-05
 ### Fixed
 * Better detection of x86_64 arch for `install` command
