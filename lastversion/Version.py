@@ -128,9 +128,24 @@ class Version(PackagingVersion):
         return None
 
     @property
+    def major(self):
+        # type: () -> int
+        return self.release[0] if len(self.release) >= 1 else 0
+
+    @property
+    def minor(self):
+        # type: () -> int
+        return self.release[1] if len(self.release) >= 2 else 0
+
+    @property
+    def micro(self):
+        # type: () -> int
+        return self.release[2] if len(self.release) >= 3 else 0
+
+    @property
     def is_prerelease(self):
         # type: () -> bool
-        if self.micro and self.micro >= 90:
+        if self.micro >= 90:
             return True
         return self.dev is not None or self.pre is not None
 

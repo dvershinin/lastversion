@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import timedelta
 
 from dateutil import parser
 
@@ -39,18 +40,20 @@ class GitLabRepoSession(ProjectHolder):
         if r.status_code == 200:
             for t in r.json():
                 tag = t['name']
+                tag_date = parser.parse(t['commit']['created_at'])
                 version = self.sanitize_version(tag, pre_ok, major)
                 if not version:
                     continue
+                if ret and tag_date + timedelta(days=365) < ret['tag_date']:
+                    log.info('The version {} is newer, but is too old!'.format(version))
+                    break
                 if not ret or ret and version > ret['version']:
                     log.info("Setting version as current selection: {}.".format(version))
                     ret = t
                     ret['tag_name'] = tag
-                    ret['tag_date'] = parser.parse(t['commit']['created_at'])
+                    ret['tag_date'] = tag_date
                     ret['version'] = version
                     ret['type'] = 'tag'
-                    # stop on first tag, because gitlab is good (c)
-                    break
         return ret
 
     def release_download_url(self, release, shorter=False):

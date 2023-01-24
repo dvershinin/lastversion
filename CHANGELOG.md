@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.10] - 2023-01-24
+### Fixed
+* Fatal failure regression from release 2.4.9 on some packaging library versions
+* More intelligent search in GitLab tags
+
 ## [2.4.9] - 2023-01-22
 ### Added
 * New `--even` switch to target software that uses odd/even versioning where even is stable
