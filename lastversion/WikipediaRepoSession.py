@@ -94,8 +94,9 @@ class WikipediaRepoSession(ProjectHolder):
             if link.text.lower() in ['latest release', 'stable release']:
                 release_data = link.parent.parent.select_one(".infobox-data")
                 # get published before it's removed:
-                published = release_data.select_one('span.published').text
-                published = parser.parse(published)
+                published_span = release_data.select_one('span.published')
+                if published_span:
+                    tag['tag_date'] = parser.parse(published_span.text)
                 for t in release_data.select('sup, span'):
                     t.decompose()
                 tag_name = release_data.text
@@ -105,7 +106,6 @@ class WikipediaRepoSession(ProjectHolder):
                 # Remove unicode stuff (for Python 2)
                 tag['title'] = release_data.text.encode("ascii", "ignore").decode()
                 log.info('Pre-parsed title: {}'.format(tag['title']))
-                tag['tag_date'] = published
                 break
         if not tag_name:
             return None
