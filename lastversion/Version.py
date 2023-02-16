@@ -145,7 +145,7 @@ class Version(PackagingVersion):
     @property
     def is_prerelease(self):
         # type: () -> bool
-        if self.micro >= 90:
+        if self.major and self.minor and self.micro >= 90:
             return True
         return self.dev is not None or self.pre is not None
 

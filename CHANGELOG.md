@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.11] - 2023-02-16
+### Fixed
+* Don't treat 0.0.90+ as pre-releases #90
+
 ## [2.4.10] - 2023-01-24
 ### Fixed
 * Fatal failure regression from release 2.4.9 on some packaging library versions
