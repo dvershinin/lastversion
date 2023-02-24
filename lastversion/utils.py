@@ -14,11 +14,11 @@ log = logging.getLogger(__name__)
 
 
 class ApiCredentialsError(Exception):
-    """raised when there's an API error related to credentials"""
+    """Raised when there's an API error related to credentials"""
 
 
 class BadProjectError(Exception):
-    """raised when no such project exists"""
+    """Raised when no such project exists"""
 
 
 # matches os.name to known extensions that are meant *mostly* to run on it, and not other os.name-s
@@ -158,7 +158,11 @@ def extract_file(url):
     smart_members = []
     response = requests.get(url, stream=True)
     # TODO make real stream processing of tar.gz
-    with tarfile.open(fileobj=BytesIO(response.raw.read()), mode="r:gz") as tar_file:
+    mode == 'r:gz'
+    if url.endswith('.tar.xz'):
+        mode = 'r:xz'
+
+    with tarfile.open(fileobj=BytesIO(response.raw.read()), mode=mode) as tar_file:
         all_members = tar_file.getmembers()
         if not all_members:
             log.critical('No or not an archive')

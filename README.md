@@ -460,6 +460,17 @@ Needless to say, more often than not such RPM packages have no idea about all po
 dependencies. Thus, only use `lastversion install ...` if the software is missing from the base
 `yum` repositories.
 
+### Install an AppImage
+
+If a project provides `.AppImage`, you can install those directly using `lastversion`.
+The `AppImage` is self-contained Linux executable file. What `lastversion` does for you, is fetch
+the latest release's `AppImage`, installs it under `~/Applications/<app>` and makes it executable.
+Just run:
+
+```bash
+lastversion install fluent-reader
+```
+
 ### Test version parser
 
 The `test` command can be used for troubleshooting or simply well formatting a string with version:

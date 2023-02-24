@@ -18,6 +18,10 @@ import re
 import sys
 from os.path import expanduser
 
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path  # python 2 backport
 import yaml
 from packaging.version import InvalidVersion
 from six.moves.urllib.parse import urlparse
@@ -364,6 +368,22 @@ def update_spec(repo, res, sem='minor'):
         f.write("\n".join(out))
 
 
+def install_app_image(url, install_name):
+    """Install an AppImage from a URL to `~/Applications/<install_name>`
+
+    Args:
+        url (str): URL where AppImage file is hosted
+        install_name (str): Short name that the AppImage will be renamed to
+    """
+    home_dir = os.path.expanduser('~')
+    apps_dir = os.path.join(home_dir, 'Applications')
+    app_file_name = os.path.join(apps_dir, install_name)
+
+    Path(apps_dir).mkdir(exist_ok=True, parents=True)
+    download_file(url, app_file_name)
+    os.chmod(app_file_name, 0o755)
+
+
 def main():
     """The entrypoint to CLI app."""
     epilog = None
@@ -405,7 +425,7 @@ def main():
     parser.add_argument('-b', '--major', '--branch', metavar='MAJOR',
                         help="Only consider releases of a specific major "
                              "version, e.g. 2.1.x")
-    parser.add_argument('--only', metavar='REGEX', 
+    parser.add_argument('--only', metavar='REGEX',
                         help="Only consider releases containing this text. "
                              "Useful for repos with multiple projects inside")
     parser.add_argument('--exclude', metavar='REGEX',
@@ -494,10 +514,10 @@ def main():
         # we can only install assets
         args.format = 'json'
         if args.having_asset is None:
-            args.having_asset = r'~\.rpm$'
+            args.having_asset = r'~\.(AppImage|rpm)$'
             try:
                 import apt
-                args.having_asset = r'~\.deb$'
+                args.having_asset = r'~\.(AppImage|deb)$'
             except ImportError:
                 pass
 
@@ -529,7 +549,7 @@ def main():
         if base_compare:
             print(max([args.newer_than, base_compare]))
             sys.exit(2 if base_compare <= args.newer_than else 0)
-     
+
     # other action are either getting release or doing something with release (extend get action)
     try:
         res = latest(args.repo, args.format, args.pre, args.filter,
@@ -570,6 +590,9 @@ def main():
             sys.exit(0)
 
         if args.action == 'install':
+            app_images = [asset for asset in res['assets'] if asset.endswith('.AppImage')]
+            if app_images:
+                return install_app_image(app_images[0], install_name=args.repo)
             rpms = [asset for asset in res['assets'] if asset.endswith('.rpm')]
             if not rpms:
                 log.error('No assets found to install')
