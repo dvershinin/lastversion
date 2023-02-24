@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 import platform
@@ -153,45 +154,83 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
+def is_within_directory(directory, target):
+    abs_directory = os.path.abspath(directory)
+    abs_target = os.path.abspath(target)
+
+    prefix = os.path.commonprefix([abs_directory, abs_target])
+
+    return prefix == abs_directory
+
+
+def safe_extract(tar, path=".", members=None):
+    """Safe extract .tar.gz to workaround CVE-2007-4559. CVE-2007-4559
+
+    Args:
+        tar ():
+        path ():
+        members ():
+    """
+    for member in tar.getmembers():
+        member_path = os.path.join(path, member.name)
+        if not is_within_directory(path, member_path):
+            raise Exception("Attempted Path Traversal in Tar File")
+
+    tar.extractall(path, members)
+
+
 def extract_file(url):
     """Extract an archive while stripping the top level dir."""
     smart_members = []
-    response = requests.get(url, stream=True)
-    # TODO make real stream processing of tar.gz
-    mode == 'r:gz'
-    if url.endswith('.tar.xz'):
-        mode = 'r:xz'
+    try:
+        with requests.get(url, stream=True) as r:
+            r.raise_for_status()
+            # Download the file in chunks and save it to a memory buffer
+            # content-length may be empty, default to 0
+            file_size = int(r.headers.get('Content-Length', 0))
+            bar_size = 1024
+            # fetch 8 KB at a time
+            chunk_size = 8192
+            # how many bars are there in a chunk?
+            chunk_bar_size = chunk_size / bar_size
+            # bars are by KB
+            num_bars = int(file_size / bar_size)
 
-    with tarfile.open(fileobj=BytesIO(response.raw.read()), mode=mode) as tar_file:
-        all_members = tar_file.getmembers()
-        if not all_members:
-            log.critical('No or not an archive')
-        root_dir = all_members[0].path
-        root_dir_with_slash_len = len(root_dir) + 1
-        for member in tar_file.getmembers():
-            if member.path.startswith(root_dir + "/"):
-                member.path = member.path[root_dir_with_slash_len:]
-                smart_members.append(member)
-        def is_within_directory(directory, target):
-            
-            abs_directory = os.path.abspath(directory)
-            abs_target = os.path.abspath(target)
-        
-            prefix = os.path.commonprefix([abs_directory, abs_target])
-            
-            return prefix == abs_directory
-        
-        def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-        
-            for member in tar.getmembers():
-                member_path = os.path.join(path, member.name)
-                if not is_within_directory(path, member_path):
-                    raise Exception("Attempted Path Traversal in Tar File")
-        
-            tar.extractall(path, members, numeric_owner=numeric_owner) 
-            
-        
-        safe_extract(tar_file, members=smart_members)
+            buffer = io.BytesIO()
+            with tqdm.tqdm(
+                disable=None,  # disable on non-TTY
+                total=num_bars,
+                unit='KB',
+                desc=url.split('/')[-1]
+            ) as pbar:
+                for chunk in r.iter_content(chunk_size=chunk_size):
+                    if chunk:
+                        buffer.write(chunk)
+                        pbar.update(chunk_bar_size)
+
+            # Process the file in memory (e.g. extract its contents)
+            buffer.seek(0)
+            # Process the buffer (e.g. extract its contents)
+
+            mode = 'r:gz'
+            if url.endswith('.tar.xz'):
+                mode = 'r:xz'
+
+            with tarfile.open(fileobj=buffer, mode=mode) as tar_file:
+                all_members = tar_file.getmembers()
+                if not all_members:
+                    log.critical('No or not an archive')
+                root_dir = all_members[0].path
+                root_dir_with_slash_len = len(root_dir) + 1
+                for member in tar_file.getmembers():
+                    if member.path.startswith(root_dir + "/"):
+                        member.path = member.path[root_dir_with_slash_len:]
+                        smart_members.append(member)
+                safe_extract(tar_file, members=smart_members)
+    except KeyboardInterrupt:
+        pbar.close()
+        log.warning('Cancelled')
+        sys.exit(1)
 
 
 def rpm_installed_version(name):
