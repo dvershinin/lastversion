@@ -5,6 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/lastversion/badge/?version=latest)](https://lastversion.getpagespeed.com/en/latest/?badge=latest)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/manual/GetPageSpeed/lastversion?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dvershinin/lastversion&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/gh/dvershinin/lastversion/dashboard?utm_source=github.com&utm_medium=referral&utm_content=dvershinin/lastversion&utm_campaign=Badge_Coverage)
+[![Buy Me a Coffee](https://img.shields.io/badge/dynamic/json?color=blue&label=Buy%20me%20a%20Coffee&prefix=%23&query=next_time_total&url=https%3A%2F%2Fwww.getpagespeed.com%2Fbuymeacoffee.json&logo=buymeacoffee)](https://www.buymeacoffee.com/dvershinin)
 
 ![Using lastversion in terminal](https://www.getpagespeed.com/img/lastversion.gif)
 
