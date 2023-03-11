@@ -542,7 +542,7 @@ class GitHubRepoSession(ProjectHolder):
                 tag_date = parser.parse(tag['updated'])
                 if ret and ret['version'] == version and ret['tag_date'] >= tag_date:
                     log.info(
-                        'Tag {} matches already selected version but not newer date than we already found'.format(tag_name)
+                        'Tag {} matches already selected version and is not newer'.format(tag_name)
                     )
                     continue
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
