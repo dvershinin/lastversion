@@ -534,12 +534,17 @@ class GitHubRepoSession(ProjectHolder):
                 if not version:
                     log.info('We did not find a valid version in {} tag'.format(tag_name))
                     continue
-                if ret and ret['version'] >= version:
+                if ret and ret['version'] > version:
                     log.info(
                         'Tag {} does not contain newer version than we already found'.format(tag_name)
                     )
                     continue
                 tag_date = parser.parse(tag['updated'])
+                if ret and ret['version'] == version and ret['tag_date'] >= tag_date:
+                    log.info(
+                        'Tag {} matches already selected version but not newer date than we already found'.format(tag_name)
+                    )
+                    continue
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
                     log.info('The version {} is newer, but is too old!'.format(version))
                     break

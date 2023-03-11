@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.12] - 2023-03-11
+### Fixed
+* Fixes an issue where release feed contains identical tag versions #92
+
 ## [2.4.11] - 2023-02-16
 ### Fixed
 * Don't treat 0.0.90+ as pre-releases #90
