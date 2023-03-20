@@ -34,7 +34,7 @@ from .__about__ import __self__
 from .argparse_version import VersionAction
 from .spdx_id_to_rpmspec import rpmspec_licenses
 from .utils import download_file, extract_file, rpm_installed_version, ApiCredentialsError, \
-    BadProjectError
+    BadProjectError, extract_appimage_desktop_file
 
 log = logging.getLogger(__name__)
 
@@ -382,6 +382,7 @@ def install_app_image(url, install_name):
     Path(apps_dir).mkdir(exist_ok=True, parents=True)
     download_file(url, app_file_name)
     os.chmod(app_file_name, 0o755)
+    extract_appimage_desktop_file(app_file_name)
 
 
 def main():

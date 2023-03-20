@@ -1,10 +1,13 @@
 import logging
 import os
+import re
 from datetime import timedelta
+import platform
 
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
+from .utils import asset_does_not_belong_to_machine
 
 log = logging.getLogger(__name__)
 
@@ -27,16 +30,41 @@ class GitLabRepoSession(ProjectHolder):
         self.api_base = 'https://{}/api/v4'.format(self.hostname)
         self.set_repo(repo)
         self.repo_id = self.repo.replace('/', '%2F')
+        # lazy loaded dict cache of /releases response keyed by tag, only first page
+        self.formal_releases_by_tag = None
 
     def repo_query(self, uri):
-        url = '{}/projects/{}/repository{}'.format(self.api_base, self.repo_id, uri)
+        url = '{}/projects/{}{}'.format(self.api_base, self.repo_id, uri)
         return self.get(url)
+
+    def ensure_formal_releases_fetched(self):
+        """
+        Prime cache for dict of recent formal releases
+        this fetches /releases and allow quickly look up if a tag is marked as pre-release
+        """
+        if self.formal_releases_by_tag is None:
+            self.formal_releases_by_tag = {}
+            r = self.repo_query('/releases')
+            if r.status_code == 200:
+                for release in r.json():
+                    self.formal_releases_by_tag[release['tag_name']] = release
+
+    def get_formal_release_for_tag(self, tag):
+        """Get formal release for a given GitLab tag"""
+        self.ensure_formal_releases_fetched()
+        # no releases in /releases means no
+        if self.formal_releases_by_tag and tag not in self.formal_releases_by_tag:
+            r = self.repo_query('/releases/{}'.format(tag))
+            if r.status_code == 200:
+                self.formal_releases_by_tag[tag] = r.json()
+
+        return self.formal_releases_by_tag.get(tag)
 
     def get_latest(self, pre_ok=False, major=None):
         ret = None
 
         # gitlab returns tags by updated in desc order, this is just what we want :)
-        r = self.repo_query('/tags')
+        r = self.repo_query('/repository/tags')
         if r.status_code == 200:
             for t in r.json():
                 tag = t['name']
@@ -54,7 +82,35 @@ class GitLabRepoSession(ProjectHolder):
                     ret['tag_date'] = tag_date
                     ret['version'] = version
                     ret['type'] = 'tag'
+        if ret:
+            formal_release = self.get_formal_release_for_tag(ret['tag_name'])
+            if formal_release:
+                ret.update(formal_release)
         return ret
+
+    def get_assets(self, release, short_urls, assets_filter=None):
+        urls = []
+        assets = release.get('assets', []).get('links', [])
+        arch_matched_assets = []
+        if not assets_filter and platform.machine() in ['x86_64', 'AMD64']:
+            for asset in assets:
+                if 'x86_64' in asset['name']:
+                    arch_matched_assets.append(asset)
+            if arch_matched_assets:
+                assets = arch_matched_assets
+
+        for asset in assets:
+            if assets_filter and not re.search(assets_filter, asset['name']):
+                continue
+            if not assets_filter and asset_does_not_belong_to_machine(asset['name']):
+                continue
+            urls.append(asset['url'])
+
+        if not urls:
+            download_url = self.release_download_url(release, short_urls)
+            if not assets_filter or re.search(assets_filter, download_url):
+                urls.append(download_url)
+        return urls
 
     def release_download_url(self, release, shorter=False):
         """Get release download URL."""

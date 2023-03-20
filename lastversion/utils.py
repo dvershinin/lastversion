@@ -5,11 +5,11 @@ import platform
 import re
 import sys
 import tarfile
-from io import BytesIO
 
 import distro
 import requests
 import tqdm
+from six.moves import urllib
 
 log = logging.getLogger(__name__)
 
@@ -104,6 +104,66 @@ if not hasattr(requests.Response, '__exit__'):
     requests.Response.__exit__ = requests_response_patched_exit
 
 
+def extract_appimage_desktop_file(appimage_path):
+    """Extracts the desktop file from an AppImage
+
+    Args:
+        appimage_path (str): Path to the AppImage
+
+    Returns:
+        str: Path to the extracted desktop file
+
+    """
+    import os
+    import shutil
+    import subprocess
+    import tempfile
+
+    temp_dir = tempfile.mkdtemp()
+
+    # Extract the contents of the AppImage file to a temporary directory
+    subprocess.call([appimage_path, "--appimage-extract"], cwd=temp_dir)
+
+    # Search the temporary directory for the .desktop file
+    desktop_file = None
+    for root, dirs, files in os.walk(temp_dir):
+        for file in files:
+            if file.endswith(".desktop"):
+                desktop_file = os.path.join(root, file)
+                break
+        if desktop_file:
+            break
+
+    # Copy the .desktop file to the current directory
+    if desktop_file:
+        shutil.copy(desktop_file, ".")
+
+    # Remove the temporary directory
+    shutil.rmtree(temp_dir)
+
+
+def get_content_disposition_filename(response):
+    """Get the preferred filename from the `Content-Disposition` header.
+
+    Examples:
+        `attachment; filename="emulationstation-de-2.0.0-x64.deb"; filename*=UTF-8''emulationstation-de-2.0.0-x64.deb`
+
+    """
+    filename = None
+    content_disp = response.headers.get('content-disposition')
+    if not content_disp or not content_disp.startswith('attachment;'):
+        return None
+    for m in re.finditer(r"filename(?P<priority>\*)?=((?P<encoding>[\S-]+)'')?(?P<filename>[^;]*)", content_disp):
+        filename = m.group('filename')
+        encoding = m.group('encoding')
+        if encoding:
+            filename = urllib.parse.unquote(filename)
+            filename = filename.encode(encoding).decode('utf-8')
+        if m.group('priority'):
+            break
+    return filename
+
+
 def download_file(url, local_filename=None):
     """Download a URL to the given filename.
 
@@ -121,6 +181,10 @@ def download_file(url, local_filename=None):
         # NOTE the stream=True parameter below
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
+            if '.' not in local_filename and 'Content-Disposition' in r.headers:
+                disp_filename = get_content_disposition_filename(r)
+                if disp_filename:
+                    local_filename = disp_filename
             # content-length may be empty, default to 0
             file_size = int(r.headers.get('Content-Length', 0))
             bar_size = 1024
