@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.13] - 2023-03-28
+### Fixed
+* Downloading GitLab `--assets` is now possible
+* Fixed `--exclude` option not working
+* Fixes detecting of some pre-releases
+
 ## [2.4.12] - 2023-03-11
 ### Fixed
 * Fixes an issue where release feed contains identical tag versions #92
