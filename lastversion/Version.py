@@ -37,6 +37,8 @@ class Version(PackagingVersion):
         version = re.sub('-preview-(\\d+)', '-pre\\1', version, 1)
         # 5.0.0-early-access-2 -> 5.0.0-alpha2
         version = re.sub('-early-access-(\\d+)', '-alpha\\1', version, 1)
+        # v4.0.0-pre-0 -> v4.0.0-pre0
+        version = re.sub('-pre-(\\d+)', '-pre\\1', version, 1)
 
         # many times they would tag foo-1.2.3 which would parse to LegacyVersion
         # we can avoid this, by reassigning to what comes after the dash:

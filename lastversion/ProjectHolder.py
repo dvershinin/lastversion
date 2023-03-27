@@ -24,6 +24,29 @@ from .utils import asset_does_not_belong_to_machine
 log = logging.getLogger(__name__)
 
 
+def matches_filter(filter_s, positive, version_s):
+    """Check if version string matches a filter string.
+
+    Args:
+        filter_s (str):  Filter string.
+        positive (bool): Whether filter is positive or negative.
+        version_s (str): Version string, often a tag name.
+
+    Returns:
+        bool: True if version matches filter, False otherwise.
+    """
+    if not filter_s:
+        return True
+
+    if filter_s.startswith('!'):
+        positive = not positive
+        filter_s = filter_s[1:]
+    if filter_s.startswith('~'):
+        filter_s = re.compile(r'{}'.format(filter_s.lstrip('~')))
+        return positive == bool(re.search(filter_s, version_s))
+    return positive == bool(filter_s in version_s)
+
+
 class ProjectHolder(requests.Session):
     """Generic project holder class abstracts a web-accessible project storage."""
 
@@ -169,26 +192,16 @@ class ProjectHolder(requests.Session):
             return True
         return False
 
-    def matches_only(self, version_s):
-        if not self.only:
-            return True
-        search = self.only
-        positive = True
-        if search.startswith('!'):
-            positive = False
-            search = search[1:]
-        if search.startswith('~'):
-            search = r'{}'.format(self.only.lstrip('~'))
-            return positive == bool(re.search(search, version_s))
-        return positive == bool(search in version_s)
-
     def sanitize_version(self, version_s, pre_ok=False, major=None):
         """Extract version from tag name."""
         log.info("Sanitizing string {} as a satisfying version.".format(version_s))
         res = False
-        if not self.matches_only(version_s):
+        if not matches_filter(self.only, True, version_s):
             log.info('"{}" does not match the "only" constraint "{}"'.format(version_s, self.only))
-            return res
+            return False
+        if not matches_filter(self.exclude, False, version_s):
+            log.info('"{}" does not match the "exclude" constraint "{}"'.format(version_s, self.exclude))
+            return False
         try:
             char_fix_required = self.repo in self.LAST_CHAR_FIX_REQUIRED_ON
             v = Version(version_s, char_fix_required=char_fix_required)
