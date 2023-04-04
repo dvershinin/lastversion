@@ -114,7 +114,6 @@ def extract_appimage_desktop_file(appimage_path):
         str: Path to the extracted desktop file
 
     """
-    import os
     import shutil
     import subprocess
     import tempfile
