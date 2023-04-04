@@ -73,10 +73,10 @@ class GitLabRepoSession(ProjectHolder):
                 if not version:
                     continue
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version {} is newer, but is too old!'.format(version))
+                    log.info('The version %s is newer, but is too old!', version)
                     break
                 if not ret or ret and version > ret['version']:
-                    log.info("Setting version as current selection: {}.".format(version))
+                    log.info("Setting version as current selection: %s.", version)
                     ret = t
                     ret['tag_name'] = tag
                     ret['tag_date'] = tag_date

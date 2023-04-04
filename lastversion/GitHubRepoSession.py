@@ -95,7 +95,7 @@ class GitHubRepoSession(ProjectHolder):
             cache = {}
         try:
             if repo in cache and time.time() - cache[repo]['updated_at'] < 3600 * 24 * 30:
-                log.info("Found {} in repo short name cache".format(repo))
+                log.info("Found %s in repo short name cache", repo)
                 if not cache[repo]['repo']:
                     raise BadProjectError(
                         'No project found on GitHub for search query: {}'.format(repo)
@@ -103,7 +103,7 @@ class GitHubRepoSession(ProjectHolder):
                 return cache[repo]['repo']
         except TypeError:
             pass
-        log.info("Making query against GitHub API to search repo {}".format(repo))
+        log.info("Making query against GitHub API to search repo %s", repo)
         r = self.get(
             '{}/search/repositories'.format(self.api_base),
             params={
@@ -172,11 +172,11 @@ class GitHubRepoSession(ProjectHolder):
             official_repo = self.try_get_official(repo)
             if official_repo:
                 repo = official_repo
-                log.info('Using official repo {}'.format(repo))
+                log.info('Using official repo %s', repo)
             else:
                 repo = self.find_repo_by_name_only(repo)
                 if repo:
-                    log.info('Using repo {} obtained from search API'.format(repo))
+                    log.info('Using repo %s obtained from search API', repo)
                 else:
                     return
         self.set_repo(repo)
@@ -187,7 +187,7 @@ class GitHubRepoSession(ProjectHolder):
     def get(self, url, **kwargs):
         """Send GET request and account for GitHub rate limits and such."""
         r = super(GitHubRepoSession, self).get(url, **kwargs)
-        log.info('Got HTTP status code {} from {}'.format(r.status_code, url))
+        log.info('Got HTTP status code %s from %s', r.status_code, url)
         if r.status_code == 401:
             if self.api_token:
                 raise ApiCredentialsError('API request was denied despite using an API token. '
@@ -333,11 +333,11 @@ class GitHubRepoSession(ProjectHolder):
             # testing on php/php-src
             owner, name = self.repo.split('/')
             query = query_fmt % (owner, name, cursor)
-            log.info('Running query {}'.format(query))
+            log.info('Running query %s', query)
             r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
-            log.info('Requested graphql with cursor "{}"'.format(cursor))
+            log.info('Requested graphql with cursor "%s"', cursor)
             if r.status_code != 200:
-                log.info("query returned non 200 response code {}".format(r.status_code))
+                log.info("query returned non 200 response code %s", r.status_code)
                 return ret
             j = r.json()
             if 'errors' in j and j['errors'][0]['type'] == 'NOT_FOUND':
@@ -345,7 +345,7 @@ class GitHubRepoSession(ProjectHolder):
                     'No such project found on GitHub: {}'.format(self.repo)
                 )
             if not j['data']['repository']['tags']['edges']:
-                log.info('No tags in GraphQL response: {}'.format(r.text))
+                log.info('No tags in GraphQL response: %s', r.text)
                 break
             for edge in j['data']['repository']['tags']['edges']:
                 node = edge['node']
@@ -364,7 +364,7 @@ class GitHubRepoSession(ProjectHolder):
                     d = node['target']['author']['date']
                 tag_date = parser.parse(d)
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version {} is newer, but is too old!'.format(version))
+                    log.info('The version %s is newer, but is too old!', version)
                     break
                 if not ret or version > ret['version'] or tag_date > ret['tag_date']:
                     # we always want to return formal release if it exists, because it has useful
@@ -482,8 +482,7 @@ class GitHubRepoSession(ProjectHolder):
             if r.status_code == 200:
                 repo_data = r.json()
                 if self.repo != repo_data['full_name']:
-                    log.info('Detected name change from {} to {}'.format(self.repo,
-                                                                         repo_data['full_name']))
+                    log.info('Detected name change from %s to %s', self.repo, repo_data['full_name'])
                     self.set_repo(repo_data['full_name'])
                     # request the feed from the new location
                     return self.get_releases_feed_contents(rename_checked=False)
@@ -501,7 +500,7 @@ class GitHubRepoSession(ProjectHolder):
         feed = feedparser.parse(feed_contents)
         if 'bozo' in feed and feed['bozo'] == 1 and 'bozo_exception' in feed:
             exc = feed.bozo_exception
-            log.info("Failed to parse feed: {}".format(exc.getMessage()))
+            log.info("Failed to parse feed: %s", exc.getMessage())
             return None
         if not feed.entries:
             log.info('Feed has no elements. Means no tags and no releases')
@@ -529,24 +528,24 @@ class GitHubRepoSession(ProjectHolder):
             for tag in feed_entries:
                 # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
                 tag_name = tag['link'].split('/')[-1]
-                log.info('Checking tag {}'.format(tag_name))
+                log.info('Checking tag %s', tag_name)
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
-                    log.info('We did not find a valid version in {} tag'.format(tag_name))
+                    log.info('We did not find a valid version in %s tag', tag_name)
                     continue
                 if ret and ret['version'] > version:
                     log.info(
-                        'Tag {} does not contain newer version than we already found'.format(tag_name)
+                        'Tag %s does not contain newer version than we already found', tag_name
                     )
                     continue
                 tag_date = parser.parse(tag['updated'])
                 if ret and ret['version'] == version and ret['tag_date'] >= tag_date:
                     log.info(
-                        'Tag {} matches already selected version and is not newer'.format(tag_name)
+                        'Tag %s matches already selected version and is not newer', tag_name
                     )
                     continue
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version {} is newer, but is too old!'.format(version))
+                    log.info('The version %s is newer, but is too old!', version)
                     break
                 # we always want to return formal release if it exists, because it has useful data
                 # grab formal release via APi to check for pre-release mark
@@ -557,7 +556,7 @@ class GitHubRepoSession(ProjectHolder):
                 else:
                     if self.having_asset:
                         continue
-                    log.info('No formal release for tag {}'.format(tag_name))
+                    log.info('No formal release for tag %s', tag_name)
                     tag['tag_name'] = tag_name
                     tag['tag_date'] = tag_date
                     tag['version'] = version
@@ -567,7 +566,7 @@ class GitHubRepoSession(ProjectHolder):
                     tag.pop('updated_parsed', None)
                     tag.pop('published_parsed', None)
                     ret = tag
-                    log.info("Selected version as current selection: {}.".format(version))
+                    log.info("Selected version as current selection: %s.", version)
 
         # we are good with release from feeds only without looking at the API
         # simply because feeds list stuff in order of recency
@@ -614,7 +613,7 @@ class GitHubRepoSession(ProjectHolder):
         if not pre_ok and formal_release['prerelease']:
             log.info(
                 "Found formal release for this tag which is unwanted "
-                "pre-release: {}.".format(version))
+                "pre-release: %s.", version)
             return ret
         if self.having_asset:
             if 'assets' not in formal_release or not formal_release['assets']:
@@ -638,7 +637,7 @@ class GitHubRepoSession(ProjectHolder):
         formal_release['tag_date'] = parser.parse(formal_release['published_at'])
         formal_release['version'] = version
         formal_release['type'] = data_type
-        log.info("Selected version as current selection: {}.".format(formal_release['version']))
+        log.info("Selected version as current selection: %s.", formal_release['version'])
         return formal_release
 
     def try_get_official(self, repo):
@@ -648,7 +647,7 @@ class GitHubRepoSession(ProjectHolder):
             str: updated repo
         """
         official_repo = "{repo}/{repo}".format(repo=repo)
-        log.info('Checking existence of {}'.format(official_repo))
+        log.info('Checking existence of %s', official_repo)
         r = self.get('https://{}/{}/releases.atom'.format(self.hostname, official_repo))
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()

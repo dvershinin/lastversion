@@ -59,7 +59,7 @@ class FeedRepoSession(ProjectHolder):
             return
         self.hostname = hostname
         self.set_repo(repo)
-        log.info('Using feed URL: {}'.format(feeds[0]))
+        log.info('Using feed URL: %s', feeds[0])
         self.feed_url = feeds[0]
 
     def get_latest(self, pre_ok=False, major=None):

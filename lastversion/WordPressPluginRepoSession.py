@@ -18,7 +18,7 @@ class WordPressPluginRepoSession(ProjectHolder):
         """Get project JSON data."""
         project = None
         url = 'https://api.{}/plugins/info/1.0/{}.json'.format(self.hostname, self.repo)
-        log.info('Requesting {}'.format(url))
+        log.info('Requesting %s', url)
         r = self.get(url)
         if r.status_code == 200:
             project = r.json()
@@ -64,9 +64,9 @@ class WordPressPluginRepoSession(ProjectHolder):
                 if 'version' not in ret or version > ret['version']:
                     ret['tag_name'] = release_ver
                     ret['version'] = version
-                    log.info('Set current selection to {}'.format(version))
+                    log.info('Set current selection to %s', version)
                 else:
-                    log.info('Not set {}'.format(str(version)))
+                    log.info('Not set %s', version)
         if 'tag_name' in ret:
             self.project.update(ret)
             return self.project

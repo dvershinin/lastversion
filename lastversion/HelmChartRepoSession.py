@@ -14,7 +14,7 @@ class HelmChartRepoSession(ProjectHolder):
         super(HelmChartRepoSession, self).__init__()
         if not repo.endswith('Chart.yaml'):
             repo = repo.rstrip('/') + '/Chart.yaml'
-        log.info('Helm Chart.yml: {}'.format(repo))
+        log.info('Helm Chart.yml: %s', repo)
         self.url = repo
 
     def get_latest(self, pre_ok=False, major=None):

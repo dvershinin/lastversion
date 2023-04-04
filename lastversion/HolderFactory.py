@@ -44,7 +44,7 @@ class HolderFactory:
         holder = FeedRepoSession(repo, hostname)
         if not holder.is_valid():
             # re-use soup from feed holder object
-            log.info('Have not found any RSS feed for the website {}'.format(hostname))
+            log.info('Have not found any RSS feed for the website %s', hostname)
             github_link = holder.home_soup.select_one("a[href*='github.com']")
             if github_link:
                 hostname, repo = GitHubRepoSession.get_host_repo_for_link(github_link['href'])
@@ -66,7 +66,7 @@ class HolderFactory:
             known_repo = sc.is_official_for_repo(repo)
             if known_repo:
                 holder_class = sc
-                log.info('Trying {} adapter'.format(k))
+                log.info('Trying %s adapter', k)
                 break
             # TODO now easy multiple default hostnames per holder
             hostname = sc.get_matching_hostname(repo)
@@ -88,10 +88,10 @@ class HolderFactory:
                 raise BadProjectError(
                     'No project found. Could not guess a repo from homepage'
                 )
-            
+
         if known_repo and 'branches' in known_repo:
             holder.set_branches(known_repo['branches'])
-            
+
         if known_repo and 'only' in known_repo:
             holder.set_only(known_repo['only'])
 

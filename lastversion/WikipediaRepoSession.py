@@ -105,7 +105,7 @@ class WikipediaRepoSession(ProjectHolder):
                 tag_name = remove_words(tag_name).split('/')[0]
                 # Remove unicode stuff (for Python 2)
                 tag['title'] = release_data.text.encode("ascii", "ignore").decode()
-                log.info('Pre-parsed title: {}'.format(tag['title']))
+                log.info('Pre-parsed title: %s', tag['title'])
                 break
         if not tag_name:
             return None

@@ -67,7 +67,7 @@ class GiteaRepoSession(ProjectHolder):
             cache = {}
         try:
             if repo in cache and time.time() - cache[repo]['updated_at'] < 3600 * 24 * 30:
-                log.info("Found {} in repo short name cache".format(repo))
+                log.info("Found %s in repo short name cache", repo)
                 if not cache[repo]['repo']:
                     raise BadProjectError(
                         'No project found on GitHub for search query: {}'.format(repo)
@@ -75,7 +75,7 @@ class GiteaRepoSession(ProjectHolder):
                 # return cache[repo]['repo']
         except TypeError:
             pass
-        log.info("Making query against GitHub API to search repo {}".format(repo))
+        log.info("Making query against GitHub API to search repo %s", repo)
         r = self.get(
             '{}/search/repositories'.format(self.api_base),
             params={
@@ -138,11 +138,11 @@ class GiteaRepoSession(ProjectHolder):
             official_repo = self.try_get_official(repo)
             if official_repo:
                 repo = official_repo
-                log.info('Using official repo {}'.format(repo))
+                log.info('Using official repo %s', repo)
             else:
                 repo = self.find_repo_by_name_only(repo)
                 if repo:
-                    log.info('Using repo {} obtained from search API'.format(self.repo))
+                    log.info('Using repo %s obtained from search API', self.repo)
                 else:
                     return
         self.set_repo(repo)
@@ -153,7 +153,7 @@ class GiteaRepoSession(ProjectHolder):
     def get(self, url, **kwargs):
         """Send GET request and account for GitHub rate limits and such."""
         r = super(GiteaRepoSession, self).get(url, **kwargs)
-        log.info('Got HTTP status code {} from {}'.format(r.status_code, url))
+        log.info('Got HTTP status code %s from %s', r.status_code, url)
         if r.status_code == 401:
             if self.api_token:
                 raise ApiCredentialsError('API request was denied despite using an API token. '
@@ -291,7 +291,7 @@ class GiteaRepoSession(ProjectHolder):
         if not pre_ok and formal_release['prerelease']:
             log.info(
                 "Found formal release for this tag which is unwanted "
-                "pre-release: {}.".format(version))
+                "pre-release: %s.", version)
             return ret
         if self.having_asset:
             if 'assets' not in formal_release or not formal_release['assets']:
@@ -315,7 +315,7 @@ class GiteaRepoSession(ProjectHolder):
         formal_release['tag_date'] = parser.parse(formal_release['published_at'])
         formal_release['version'] = version
         formal_release['type'] = data_type
-        log.info("Selected version as current selection: {}.".format(formal_release['version']))
+        log.info("Selected version as current selection: %s.", formal_release['version'])
         return formal_release
 
     def try_get_official(self, repo):
@@ -325,7 +325,7 @@ class GiteaRepoSession(ProjectHolder):
             str: updated repo
         """
         official_repo = "{repo}/{repo}".format(repo=repo)
-        log.info('Checking existence of {}'.format(official_repo))
+        log.info('Checking existence of %s', official_repo)
         r = self.get('https://{}/{}/releases.atom'.format(self.hostname, official_repo))
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()

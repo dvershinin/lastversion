@@ -19,6 +19,7 @@ import sys
 from os.path import expanduser
 
 try:
+    # noinspection PyCompatibility
     from pathlib import Path
 except ImportError:
     from pathlib2 import Path  # python 2 backport
@@ -42,7 +43,7 @@ log = logging.getLogger(__name__)
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
            short_urls=False, major=None, only=None, at=None,
            having_asset=None, exclude=None, even=False):
-    """Find the latest release version for a project.
+    r"""Find the latest release version for a project.
 
     Args:
         major (str): Only consider versions which are "descendants" of this major version string
@@ -151,10 +152,10 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 repo_data['spec_name'] = '%{name}'
             if upstream_github:
                 repo = "{}/{}".format(upstream_github, repo_data['name'])
-                log.info('Discovered GitHub repo {} from .spec file'.format(repo))
+                log.info('Discovered GitHub repo %s from .spec file', repo)
             elif spec_repo:
                 repo = spec_repo
-                log.info('Discovered explicit repo {} from .spec file'.format(repo))
+                log.info('Discovered explicit repo %s from .spec file', repo)
             elif spec_url:
                 repo = spec_url
 
@@ -312,7 +313,7 @@ def get_rpm_packager():
 def update_spec(repo, res, sem='minor'):
     print(res['version'])
     if 'current_version' not in res or res['current_version'] < res['version']:
-        log.info('Updating spec {} with semantic {}'.format(repo, sem))
+        log.info('Updating spec %s with semantic %s', repo, sem)
         if 'current_version' in res and len(res['version'].release) >= 3:
             current_major = res['current_version'].release[0]
             latest_major = res['version'].release[0]
@@ -381,7 +382,7 @@ def install_app_image(url, install_name):
 
     Path(apps_dir).mkdir(exist_ok=True, parents=True)
     download_file(url, app_file_name)
-    os.chmod(app_file_name, 0o755)
+    os.chmod(app_file_name, 0o755)  # skipcq: BAN-B103
     extract_appimage_desktop_file(app_file_name)
 
 
@@ -480,7 +481,7 @@ def main():
 
     if args.verbose:
         logger.setLevel(logging.DEBUG)
-        log.info("Verbose {} level output.".format(args.verbose))
+        log.info("Verbose %s level output.", args.verbose)
         if args.verbose >= 2:
             cachecontrol_logger = logging.getLogger('cachecontrol')
             cachecontrol_logger.removeHandler(logging.NullHandler())
@@ -576,7 +577,7 @@ def main():
             if len(res) == 1:
                 download_name = args.download
             for url in res:
-                log.info("Downloading {} ...".format(url))
+                log.info("Downloading %s ...", url)
                 download_file(url, download_name)
             sys.exit(0)
 
@@ -586,7 +587,7 @@ def main():
                 # there is only one source, but we need an array
                 res = [res]
             for url in res:
-                log.info("Extracting {} ...".format(url))
+                log.info("Extracting %s ...", url)
                 extract_file(url)
             sys.exit(0)
 

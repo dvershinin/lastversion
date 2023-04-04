@@ -20,7 +20,7 @@ class PypiRepoSession(ProjectHolder):
         """Get project JSON data."""
         project = None
         url = 'https://{}/pypi/{}/json'.format(self.hostname, self.repo)
-        log.info('Requesting {}'.format(url))
+        log.info('Requesting %s', url)
         r = self.get(url)
         if r.status_code == 200:
             project = r.json()

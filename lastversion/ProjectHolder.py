@@ -80,14 +80,14 @@ class ProjectHolder(requests.Session):
         app_name = __name__.split('.')[0]
 
         self.cache_dir = user_cache_dir(app_name)
-        log.info("Using cache directory: {}.".format(self.cache_dir))
+        log.info("Using cache directory: %s.", self.cache_dir)
         self.cache = FileCache(self.cache_dir)
         cache_adapter = CacheControlAdapter(cache=self.cache)
         self.mount("http://", cache_adapter)
         self.mount("https://", cache_adapter)
 
         self.headers.update({'User-Agent': '{}/{}'.format(app_name, __version__)})
-        log.info('Created instance of {}'.format(type(self).__name__))
+        log.info('Created instance of %s', type(self).__name__)
         self.branches = None
         self.only = None
         self.exclude = None
@@ -113,14 +113,14 @@ class ProjectHolder(requests.Session):
         """Sets "only" tag selector for this holder."""
         self.only = only
         if only:
-            log.info('Only considering tags with "{}"'.format(only))
+            log.info('Only considering tags with "%s"', only)
         return self
 
     def set_exclude(self, exclude):
         """Sets "exclude" tag selector for this holder."""
         self.exclude = exclude
         if exclude:
-            log.info('Only considering tags without "{}"'.format(exclude))
+            log.info('Only considering tags without "%s"', exclude)
         return self
 
     def set_even(self, even):
@@ -134,7 +134,7 @@ class ProjectHolder(requests.Session):
         """Sets "having_asset" selector for this holder."""
         self.having_asset = having_asset
         if having_asset:
-            log.info('Only considering releases with asset "{}"'.format(having_asset))
+            log.info('Only considering releases with asset "%s"', having_asset)
         return self
 
     @classmethod
@@ -156,11 +156,11 @@ class ProjectHolder(requests.Session):
         if repo.startswith(('https://', 'http://')):
             for url in cls.KNOWN_REPO_URLS:
                 if repo.startswith((url, "https://{}".format(url), "http://{}".format(url))):
-                    log.info('{} Starts with {}'.format(repo, url))
+                    log.info('%s Starts with %s', repo, url)
                     return cls.KNOWN_REPO_URLS[url]
         else:
             if repo.lower() in cls.KNOWN_REPOS_BY_NAME:
-                log.info('Selecting known repo {}'.format(repo))
+                log.info('Selecting known repo %s', repo)
                 return cls.KNOWN_REPOS_BY_NAME[repo.lower()]
         return False
 
@@ -182,11 +182,10 @@ class ProjectHolder(requests.Session):
     def matches_major_filter(self, version, major):
         if self.branches and major in self.branches and \
                 re.search(r"{}".format(self.branches[major]), str(version)):
-            log.info('{} matches major {}'.format(version, self.branches[major]))
+            log.info('%s matches major %s', version, self.branches[major])
             return True
         if str(version).startswith('{}.'.format(major)):
-            log.info('{} is under the desired major {}'.format(
-                version, major))
+            log.info('%s is under the desired major %s', version, major)
             return True
         if str(version) == major:
             return True
@@ -194,30 +193,30 @@ class ProjectHolder(requests.Session):
 
     def sanitize_version(self, version_s, pre_ok=False, major=None):
         """Extract version from tag name."""
-        log.info("Sanitizing string {} as a satisfying version.".format(version_s))
+        log.info("Sanitizing string %s as a satisfying version.", version_s)
         res = False
         if not matches_filter(self.only, True, version_s):
-            log.info('"{}" does not match the "only" constraint "{}"'.format(version_s, self.only))
+            log.info('"%s" does not match the "only" constraint "{}"', version_s, self.only)
             return False
         if not matches_filter(self.exclude, False, version_s):
-            log.info('"{}" does not match the "exclude" constraint "{}"'.format(version_s, self.exclude))
+            log.info('"%s" does not match the "exclude" constraint "%s"', version_s, self.exclude)
             return False
         try:
             char_fix_required = self.repo in self.LAST_CHAR_FIX_REQUIRED_ON
             v = Version(version_s, char_fix_required=char_fix_required)
             if not v.is_prerelease or pre_ok:
-                log.info("Parsed as Version OK. String representation: {}.".format(v))
+                log.info("Parsed as Version OK. String representation: %s.", v)
                 res = v
             else:
-                log.info("Parsed as unwanted pre-release version: {}.".format(v))
+                log.info("Parsed as unwanted pre-release version: %s.", v)
         except InvalidVersion:
-            log.info("Failed to parse {} as Version.".format(version_s))
+            log.info("Failed to parse %s as Version.", version_s)
             # attempt to remove extraneous chars and revalidate
             # we use findall for cases where "tag" may be 'foo/2.x/2.45'
             matches = re.findall(r'([0-9]+([.][0-9x]+)+(rc[0-9]?)?)', version_s)
             for s in matches:
                 version_s = s[0]
-                log.info("Sanitized tag name value to {}.".format(version_s))
+                log.info("Sanitized tag name value to %s.", version_s)
                 # 1.10.x is a dev release without clear version, so even pre ok will not get it
                 if not version_s.endswith('.x'):
                     # we know regex is valid version format, so no need to try catch
@@ -237,16 +236,15 @@ class ProjectHolder(requests.Session):
                         v = Version(version_s)
                         if not v.is_prerelease or pre_ok:
                             log.info("Parsed as Version OK")
-                            log.info("String representation of version is {}.".format(v))
+                            log.info("String representation of version is %s.", v)
                             res = v
                         else:
-                            log.info("Parsed as unwanted pre-release version: {}.".format(v))
+                            log.info("Parsed as unwanted pre-release version: %s.", v)
                     except InvalidVersion:
                         log.info('Still not a valid version after applying underscores fix')
         # apply --major filter
         if res and major and not self.matches_major_filter(res, major):
-            log.info('{} is not under the desired major {}'.format(
-                version_s, major))
+            log.info('%s is not under the desired major %s', version_s, major)
             res = False
         if res and self.even and not res.even:
             return False
