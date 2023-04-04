@@ -196,7 +196,7 @@ class ProjectHolder(requests.Session):
         log.info("Sanitizing string %s as a satisfying version.", version_s)
         res = False
         if not matches_filter(self.only, True, version_s):
-            log.info('"%s" does not match the "only" constraint "{}"', version_s, self.only)
+            log.info('"%s" does not match the "only" constraint "%s"', version_s, self.only)
             return False
         if not matches_filter(self.exclude, False, version_s):
             log.info('"%s" does not match the "exclude" constraint "%s"', version_s, self.exclude)

@@ -101,9 +101,7 @@ class GiteaRepoSession(ProjectHolder):
         }
         try:
             with open(cache_repo_names_file, 'w') as writer:
-                writer.write(
-                    json.dumps(cache)
-                )
+                json.dumps(cache, writer)
         except (IOError, ValueError):
             pass
         if not full_name:

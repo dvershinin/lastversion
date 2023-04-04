@@ -141,8 +141,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 if current_version != 'x':
                     repo_data['current_version'] = Version(current_version)
             except InvalidVersion:
-                log.critical('Failed to parse current version in {}. Tried {}'.format(
-                    repo, current_version))
+                log.critical('Failed to parse current version in %s. Tried %s', repo, current_version)
                 sys.exit(1)
             if upstream_name:
                 repo_data['name'] = upstream_name
