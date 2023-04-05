@@ -213,16 +213,15 @@ class GitHubRepoSession(ProjectHolder):
                         )
                     else:
                         w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
-                        if "GITHUB_API_TOKEN" not in os.environ \
-                                and 'GITHUB_TOKEN' not in os.environ:
+                        if not self.api_token:
                             w = "{} {}".format(w, TOKEN_PRO_TIP)
                         log.warning(w)
                         time.sleep(wait_for)
                     self.rate_limited_count = self.rate_limited_count + 1
                     return self.get(url)
                 raise ApiCredentialsError(
-                    'Exceeded API rate limit after waiting: {}'.format(
-                        r.json()['message'])
+                    'Exceeded GitHub API rate limits. Giving up due to high expected wait {}s. API says: {}'.format(
+                        wait_for, r.json()['message'])
                 )
             return self.get(url)
 
