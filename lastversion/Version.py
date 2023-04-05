@@ -40,6 +40,10 @@ class Version(PackagingVersion):
         # v4.0.0-pre-0 -> v4.0.0-pre0
         version = re.sub('-pre-(\\d+)', '-pre\\1', version, 1)
 
+        # v0.16.0-beta.rc4 -> v0.16.0-beta4
+        # both beta and rc? :) -> beta
+        version = re.sub(r'-beta[-.]rc(\d+)', '-beta\\1', version, 1)
+
         # many times they would tag foo-1.2.3 which would parse to LegacyVersion
         # we can avoid this, by reassigning to what comes after the dash:
         parts = version.split('-')
