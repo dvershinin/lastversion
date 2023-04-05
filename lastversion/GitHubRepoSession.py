@@ -47,6 +47,12 @@ class GitHubRepoSession(ProjectHolder):
 
     DEFAULT_HOSTNAME = 'github.com'
 
+    TOKEN_ENV_VARS = [
+        "LASTVERSION_GITHUB_API_TOKEN",
+        "GITHUB_API_TOKEN",
+        "GITHUB_TOKEN"
+    ]
+
     # one-word aliases or simply known popular repos to skip using search API
     KNOWN_REPOS_BY_NAME = {
         'php': {
@@ -147,7 +153,14 @@ class GitHubRepoSession(ProjectHolder):
         # lazy loaded dict cache of /releases response keyed by tag, only first page
         self.formal_releases_by_tag = None
         self.rate_limited_count = 0
-        self.api_token = os.getenv("LASTVERSION_GITHUB_API_TOKEN")
+        self.api_token = None
+        for var_name in self.TOKEN_ENV_VARS:
+            token = os.getenv(var_name)
+            if token:
+                self.api_token = token
+                log.info('Using API token %s.', var_name)
+                self.headers.update({'Authorization': "token {}".format(self.api_token)})
+                break
         if not self.api_token:
             self.api_token = os.getenv("GITHUB_API_TOKEN")
         if not self.api_token:
@@ -159,9 +172,7 @@ class GitHubRepoSession(ProjectHolder):
         self.headers.update({
             'Accept': 'application/vnd.github+json'
         })
-        if self.api_token:
-            log.info('Using API token.')
-            self.headers.update({'Authorization': "token {}".format(self.api_token)})
+
         if self.hostname != self.DEFAULT_HOSTNAME:
             self.api_base = 'https://{}/api/v3'.format(self.hostname)
         else:
