@@ -50,12 +50,12 @@ jobs:
         fi
         rm -rf libmozjpeg.spec
     - name: 'Upload brotli.spec artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: brotli.spec
         path: tests/brotli.spec
     - name: 'Upload nginx-module-immutable.spec artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: nginx-module-immutable.spec
         path: tests/nginx-module-immutable.spec

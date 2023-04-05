@@ -7,6 +7,7 @@ log = logging.getLogger(__name__)
 
 
 class SystemRepoSession(ProjectHolder):
+    """Version holder based on system package repositories."""
 
     def __init__(self, repo, hostname=None):
         super(SystemRepoSession, self).__init__()
