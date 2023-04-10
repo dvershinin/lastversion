@@ -194,7 +194,7 @@ class ProjectHolder(requests.Session):
     def sanitize_version(self, version_s, pre_ok=False, major=None):
         """Extract version from tag name."""
         log.info("Sanitizing string %s as a satisfying version.", version_s)
-        res = False
+        res = None
         if not matches_filter(self.only, True, version_s):
             log.info('"%s" does not match the "only" constraint "%s"', version_s, self.only)
             return False
