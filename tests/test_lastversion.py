@@ -160,7 +160,7 @@ def test_version_parse_with_dot_x():
 
     h = ProjectHolder()
 
-    assert h.sanitize_version(v) is False
+    assert h.sanitize_version(v) is None
 
 
 def test_version_parse_dev():

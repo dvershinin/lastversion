@@ -194,6 +194,7 @@ def download_file(url, local_filename=None):
             # bars are by KB
             num_bars = int(file_size / bar_size)
 
+            # noinspection PyTypeChecker
             pbar = tqdm.tqdm(
                 disable=None,  # disable on non-TTY
                 total=num_bars,
@@ -260,6 +261,7 @@ def extract_file(url):
             num_bars = int(file_size / bar_size)
 
             buffer = io.BytesIO()
+            # noinspection PyTypeChecker
             with tqdm.tqdm(
                 disable=None,  # disable on non-TTY
                 total=num_bars,

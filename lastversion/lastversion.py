@@ -22,6 +22,7 @@ try:
     # noinspection PyCompatibility
     from pathlib import Path
 except ImportError:
+    # noinspection PyUnresolvedReferences
     from pathlib2 import Path  # python 2 backport
 import yaml
 from packaging.version import InvalidVersion
@@ -48,15 +49,15 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
     Args:
         major (str): Only consider versions which are "descendants" of this major version string
         short_urls (bool): Whether we should try to return shorter URLs for release data
-        assets_filter (str): Regular expression for filtering assets for the latest release
+        assets_filter (Union[str, Pattern]): Regular expression for filtering assets for the latest release
         only (str): Only consider tags with this text. Useful for repos with multiple projects.
                     The argument supports negation and regular expressions. To indicate a regex,
                     start it with tilde sign, to negate the expression, start it with exclamation
                     point. See ``Examples``.
         repo (str): Repository specifier in any form.
-        output_format (str): Affects return format. Possible values `version`, `json`, `dict`,
+        output_format (str): Affects the return format. Possible values `version`, `json`, `dict`,
                              `assets`, `source`, `tag`.
-        pre_ok (bool): Specifies whether pre-releases can be accepted as newer version.
+        pre_ok (bool): Specifies whether pre-releases can be accepted as a newer version.
         at (str): Specifies repo hosting more precisely, only useful if repo argument was
                   specified as one word.
         having_asset (Union[str, bool]): Only consider releases with the given asset.
@@ -76,7 +77,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         <Version('3.0.7')>
 
     Returns:
-        Version: Newer version object, if found and `output_format` is `version`.
+        Union[Version, dict]: Newer version object, if found and `output_format` is `version`.
     Returns:
         str: Single string containing tag, if found and `output_format` is `tag`
 

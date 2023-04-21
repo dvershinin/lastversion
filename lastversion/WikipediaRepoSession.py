@@ -82,7 +82,6 @@ class WikipediaRepoSession(ProjectHolder):
         self.set_repo(repo)
 
     def get_latest(self, pre_ok=False, major=None):
-        ret = None
         tag_name = None
         tag = {}
         r = self.get('https://{}/wiki/{}'.format(self.hostname, self.repo))
@@ -112,10 +111,8 @@ class WikipediaRepoSession(ProjectHolder):
         # Remove unicode stuff (for Python 2)
         tag_name = tag_name.encode("ascii", "ignore").decode()
         version = self.sanitize_version(tag_name, pre_ok, major)
-        if not version:
-            return None
-        if not ret or version > ret['version']:
+        if version:
             tag['tag_name'] = tag_name
             tag['version'] = version
-            ret = tag
-        return ret
+            return tag
+        return None

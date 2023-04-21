@@ -19,10 +19,6 @@ TOKEN_PRO_TIP = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
                 'https://github.com/dvershinin/lastversion#tips'
 
 
-def set_matching_from_tag(ret, tag):
-    ret = tag
-
-
 def asset_matches(asset, search, regex_matching):
     """Check if the asset equals to string or satisfies a regular expression
     Args:

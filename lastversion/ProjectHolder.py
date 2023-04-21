@@ -192,15 +192,24 @@ class ProjectHolder(requests.Session):
         return False
 
     def sanitize_version(self, version_s, pre_ok=False, major=None):
-        """Extract version from tag name."""
+        """
+        Extract a version from tag name; that satisfies this holder's filters, etc.
+
+        Returns:
+            Version or None: The return value can be a Version object or None.
+        """
         log.info("Sanitizing string %s as a satisfying version.", version_s)
+
         res = None
+
         if not matches_filter(self.only, True, version_s):
             log.info('"%s" does not match the "only" constraint "%s"', version_s, self.only)
-            return False
+            return None
+
         if not matches_filter(self.exclude, False, version_s):
             log.info('"%s" does not match the "exclude" constraint "%s"', version_s, self.exclude)
-            return False
+            return None
+
         try:
             char_fix_required = self.repo in self.LAST_CHAR_FIX_REQUIRED_ON
             v = Version(version_s, char_fix_required=char_fix_required)
@@ -217,16 +226,16 @@ class ProjectHolder(requests.Session):
             for s in matches:
                 version_s = s[0]
                 log.info("Sanitized tag name value to %s.", version_s)
-                # 1.10.x is a dev release without clear version, so even pre ok will not get it
+                # 1.10.x is a dev release without a clear version, so even pre ok will not get it
                 if not version_s.endswith('.x'):
-                    # we know regex is valid version format, so no need to try catch
+                    # we know regex is a valid version format, so no need to try catch
                     res = Version(version_s)
                 if res:
-                    # satisfy on the first matched version-like string, e.g. 5.2.6-3.12
+                    # Satisfy on the first matched version-like string, e.g. 5.2.6-3.12
                     break
             if not matches:
                 log.info("Did not find anything that looks like a version in the tag")
-                # as a last resort, let's try to convert underscores to dots, while stripping out
+                # As the last resort, let's try to convert underscores to dots, while stripping out
                 # any "alphanumeric_". many hg repos do this, e.g. PROJECT_1_2_3
                 parts = version_s.split('_')
                 if len(parts) >= 2 and parts[0].isalpha():
@@ -245,9 +254,11 @@ class ProjectHolder(requests.Session):
         # apply --major filter
         if res and major and not self.matches_major_filter(res, major):
             log.info('%s is not under the desired major %s', version_s, major)
-            res = False
+            return None
+
         if res and self.even and not res.even:
-            return False
+            return None
+
         return res
 
     def _type(self):
