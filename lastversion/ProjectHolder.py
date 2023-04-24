@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import json
 import logging
 import os
 import platform
@@ -86,6 +86,8 @@ class ProjectHolder(requests.Session):
         self.mount("http://", cache_adapter)
         self.mount("https://", cache_adapter)
 
+        self.names_cache_filename = "{}/repos.json".format(self.cache_dir)
+
         self.headers.update({'User-Agent': '{}/{}'.format(app_name, __version__)})
         log.info('Created instance of %s', type(self).__name__)
         self.branches = None
@@ -100,6 +102,24 @@ class ProjectHolder(requests.Session):
         # in some case we do not specify repo, but feed is discovered, no repo is given then
         self.feed_url = None
         self.even = False
+
+    def get_name_cache(self):
+        """Return name cache from file."""
+        try:
+            with open(self.names_cache_filename, 'r') as reader:
+                cache = json.load(reader)
+            return cache
+        except (IOError, ValueError) as e:
+            log.warning("Error reading cache file: %s", e)
+            return {}
+
+    def update_name_cache(self, cache_data):
+        """Update name cache file with new data."""
+        try:
+            with open(self.names_cache_filename, 'w') as writer:
+                json.dump(cache_data, writer)
+        except (IOError, ValueError) as e:
+            log.warning("Error writing to cache file: %s", e)
 
     def is_valid(self):
         """Check if project holder is valid instance."""

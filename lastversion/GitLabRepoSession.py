@@ -1,8 +1,8 @@
 import logging
 import os
+import platform
 import re
 from datetime import timedelta
-import platform
 
 from dateutil import parser
 

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.14] - 2023-04-24
+### Fixed
+* Fix URL encoded tag names #99
+
 ## [2.4.13] - 2023-03-28
 ### Fixed
 * Downloading GitLab `--assets` is now possible

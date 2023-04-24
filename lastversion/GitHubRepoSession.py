@@ -1,4 +1,3 @@
-import json
 import logging
 import math
 import os
@@ -9,6 +8,7 @@ from datetime import timedelta
 
 import feedparser
 from dateutil import parser
+from six.moves.urllib.parse import unquote
 
 from .ProjectHolder import ProjectHolder
 from .utils import ApiCredentialsError, BadProjectError
@@ -89,12 +89,8 @@ class GitHubRepoSession(ProjectHolder):
     def find_repo_by_name_only(self, repo):
         if repo.startswith(('https://', 'http://')):
             return None
-        cache_repo_names_file = "{}/repos.json".format(self.cache_dir)
-        try:
-            with open(cache_repo_names_file, 'r') as reader:
-                cache = json.load(reader)
-        except (IOError, ValueError):
-            cache = {}
+        cache = self.get_name_cache()
+
         try:
             if repo in cache and time.time() - cache[repo]['updated_at'] < 3600 * 24 * 30:
                 log.info("Found %s in repo short name cache", repo)
@@ -105,6 +101,7 @@ class GitHubRepoSession(ProjectHolder):
                 return cache[repo]['repo']
         except TypeError:
             pass
+
         log.info("Making query against GitHub API to search repo %s", repo)
         r = self.get(
             '{}/search/repositories'.format(self.api_base),
@@ -131,11 +128,9 @@ class GitHubRepoSession(ProjectHolder):
             'repo': full_name,
             'updated_at': int(time.time())
         }
-        try:
-            with open(cache_repo_names_file, 'w') as writer:
-                json.dump(cache, writer)
-        except (IOError, ValueError):
-            pass
+
+        self.update_name_cache(cache)
+
         if not full_name:
             raise BadProjectError(
                 'No project found on GitHub for search query: {}'.format(repo)
@@ -532,6 +527,7 @@ class GitHubRepoSession(ProjectHolder):
             for tag in feed_entries:
                 # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
                 tag_name = tag['link'].split('/')[-1]
+                tag_name = unquote(tag_name)
                 log.info('Checking tag %s', tag_name)
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:

@@ -10,3 +10,15 @@ def test_ndk():
     output = latest(repo)
 
     assert output == version.parse("0.3.2")
+
+
+def test_url_decoded():
+    """
+    Test a GitHub project with URL decoded characters.
+    Tags contain '@' sign.
+    """
+    repo = "https://github.com/lastversion-test-repos/n8n"
+
+    output = latest(repo)
+
+    assert output == version.parse("0.225.1")
