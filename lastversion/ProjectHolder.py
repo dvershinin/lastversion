@@ -105,12 +105,12 @@ class ProjectHolder(requests.Session):
 
     def get_name_cache(self):
         """Return name cache from file."""
+        if not os.path.exists(self.names_cache_filename):
+            return {}
         try:
             with open(self.names_cache_filename, 'r') as reader:
                 cache = json.load(reader)
             return cache
-        except FileNotFoundError:
-            return {}
         except (IOError, ValueError) as e:
             log.warning("Error reading cache file: %s", e)
             return {}
