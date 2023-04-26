@@ -702,4 +702,9 @@ The `lastversion.latest` function accepts 3 arguments
 *   `at`, specifies project location when using one-word repo names, one of 
  `github`, `gitlab`, `bitbucket`, `pip`, `hg`, `sf`, `website-feed`, `local`
 
+## Using in Continuous Integration
+
+You can also use `lastversion` directly in your GitHub action workflows, 
+with [`lastversion-action`](https://github.com/dvershinin/lastversion-action).
+
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)

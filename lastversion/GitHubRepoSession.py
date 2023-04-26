@@ -153,9 +153,7 @@ class GitHubRepoSession(ProjectHolder):
                 self.headers.update({'Authorization': "token {}".format(self.api_token)})
                 break
         if not self.api_token:
-            self.api_token = os.getenv("GITHUB_API_TOKEN")
-        if not self.api_token:
-            self.api_token = os.getenv("GITHUB_TOKEN")
+            log.info('No API token found in environment variables %s.', self.TOKEN_ENV_VARS)
         self.hostname = hostname
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME

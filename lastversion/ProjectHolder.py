@@ -109,6 +109,8 @@ class ProjectHolder(requests.Session):
             with open(self.names_cache_filename, 'r') as reader:
                 cache = json.load(reader)
             return cache
+        except FileNotFoundError:
+            return {}
         except (IOError, ValueError) as e:
             log.warning("Error reading cache file: %s", e)
             return {}
