@@ -4,7 +4,7 @@ import logging
 import os
 import platform
 import re
-
+import io
 import requests
 from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
@@ -108,7 +108,7 @@ class ProjectHolder(requests.Session):
         if not os.path.exists(self.names_cache_filename):
             return {}
         try:
-            with open(self.names_cache_filename, 'r', encoding='utf-8') as reader:
+            with io.open(self.names_cache_filename, 'r', encoding='utf-8') as reader:
                 cache = json.load(reader)
             return cache
         except (IOError, ValueError) as e:
@@ -119,7 +119,7 @@ class ProjectHolder(requests.Session):
         """Update name cache file with new data."""
         try:
             ensure_directory_exists(self.cache_dir)
-            with open(self.names_cache_filename, 'w', encoding='utf-8') as writer:
+            with io.open(self.names_cache_filename, 'w', encoding='utf-8') as writer:
                 json.dump(cache_data, writer)
         except (IOError, ValueError) as e:
             log.warning("Error writing to cache file: %s", e)

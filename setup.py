@@ -8,7 +8,7 @@ lastversion
 """
 
 from setuptools import find_packages, setup
-from io import open
+import io
 import os
 import re
 
@@ -53,7 +53,7 @@ docs_requires = [
     "markdown-include"
 ]
 
-with open("README.md", "r", encoding="utf-8") as fh:
+with io.open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 base_dir = os.path.dirname(__file__)
