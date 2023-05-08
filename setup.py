@@ -14,15 +14,28 @@ import re
 
 _version_re = re.compile(r"__version__\s=\s'(.*)'")
 
-# require at least requests==2.6.1 due to cachecontrol's bug:
-# https://github.com/ionrock/cachecontrol/issues/137
-# feedparser 6 dropped Python 2 support
-install_requires = ['requests>=2.6.1', 'packaging', 'cachecontrol', 'lockfile', 'appdirs',
-                    'feedparser <= 5.2.1; python_version < "3.0.0"',
-                    'feedparser; python_version >= "3.0.0"',
-                    'python-dateutil', 'PyYAML', 'tqdm',
-                    'six', 'beautifulsoup4',
-                    'distro']
+
+install_requires = [
+    # require at least requests==2.6.1 due to cachecontrol's bug:
+    # https://github.com/ionrock/cachecontrol/issues/137
+    'requests>=2.6.1',
+    'packaging',
+    # latest 0.12.12 uses filelock instead of lockfile, we have to update our packaging before switching to it
+    'cachecontrol==0.12.6',
+    'lockfile',
+    'appdirs',
+    # feedparser 6 dropped Python 2 support
+    'feedparser <= 5.2.1; python_version < "3.0.0"',
+    'feedparser; python_version >= "3.0.0"',
+    'python-dateutil',
+    'PyYAML',
+    'tqdm',
+    'six',
+    'beautifulsoup4',
+    'distro',
+    # pin due to https://github.com/ionrock/cachecontrol/issues/292
+    'urllib3 < 2'
+]
 tests_requires = [
     "pytest>=4.4.0",
     "flake8",
