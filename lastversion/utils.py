@@ -5,7 +5,7 @@ import platform
 import re
 import sys
 import tarfile
-
+import errno
 import distro
 import requests
 import tqdm
@@ -317,3 +317,22 @@ def rpm_installed_version(name):
         for h in mi:
             return h['version']
     return None
+
+
+def ensure_directory_exists(directory_path):
+    """
+    Ensure that the given directory exists.
+    Workaround for `exist_ok=True` not being available in Python 2.7.
+
+    Args:
+        directory_path (str):
+
+    Returns:
+
+    """
+
+    try:
+        os.makedirs(directory_path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise

@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [2.4.15] - 2023-05-08
 ### Fixed
 * Pinned some dependency versions to avoid breakage
+* Removed unnecessary warnings
 
 ## [2.4.14] - 2023-04-24
 ### Fixed

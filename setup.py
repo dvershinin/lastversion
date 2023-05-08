@@ -20,7 +20,8 @@ install_requires = [
     # https://github.com/ionrock/cachecontrol/issues/137
     'requests>=2.6.1',
     'packaging',
-    # latest 0.12.12 uses filelock instead of lockfile, we have to update our packaging before switching to it
+    # latest 0.12.12 uses filelock instead of lockfile,
+    # we have to update our packaging before switching to it
     'cachecontrol==0.12.6',
     'lockfile',
     'appdirs',

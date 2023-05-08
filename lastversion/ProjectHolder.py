@@ -19,7 +19,7 @@ from .__about__ import __version__
 # information for a project based on its URL or name (see LocalVersionSession)
 # it is instantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
-from .utils import asset_does_not_belong_to_machine
+from .utils import asset_does_not_belong_to_machine, ensure_directory_exists
 
 log = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ class ProjectHolder(requests.Session):
         if not os.path.exists(self.names_cache_filename):
             return {}
         try:
-            with open(self.names_cache_filename, 'r') as reader:
+            with open(self.names_cache_filename, 'r', encoding='utf-8') as reader:
                 cache = json.load(reader)
             return cache
         except (IOError, ValueError) as e:
@@ -118,7 +118,8 @@ class ProjectHolder(requests.Session):
     def update_name_cache(self, cache_data):
         """Update name cache file with new data."""
         try:
-            with open(self.names_cache_filename, 'w') as writer:
+            ensure_directory_exists(self.cache_dir)
+            with open(self.names_cache_filename, 'w', encoding='utf-8') as writer:
                 json.dump(cache_data, writer)
         except (IOError, ValueError) as e:
             log.warning("Error writing to cache file: %s", e)
