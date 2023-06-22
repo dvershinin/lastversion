@@ -1,5 +1,5 @@
 import re
-
+from datetime import datetime
 from packaging.version import Version as PackagingVersion, InvalidVersion
 
 
@@ -148,10 +148,27 @@ class Version(PackagingVersion):
         # type: () -> int
         return self.release[2] if len(self.release) >= 3 else 0
 
+    @staticmethod
+    def is_not_date(num):
+        """Helper function to determine if a number is not a date"""
+        num_str = str(num)
+        try:
+            # Attempt to parse the number as a date
+            datetime.strptime(num_str, '%Y%m%d')
+            return False
+        except ValueError:
+            # If parsing fails, the number is not a date
+            return True
+
     @property
     def is_prerelease(self):
+        """
+        Version is a prerelease if it contains all the following:
+        * 90+ micro component
+        * no date in micro component
+        """
         # type: () -> bool
-        if self.major and self.minor and self.micro >= 90:
+        if self.major and self.minor and self.micro >= 90 and self.is_not_date(self.micro):
             return True
         return self.dev is not None or self.pre is not None
 

@@ -135,14 +135,14 @@ def test_brotli():
 
 def test_changed_format():
     """
-    Test a repo which changed tag format from v20150121 to v2.0.1.
+    Test a repo which changed the tag format from v20150121 to v2.0.1.
     Disregard "higher" number by checking that v20150121 release is too old.
     """
-    repo = "https://github.com/nginx-shib/nginx-http-shibboleth/releases"
+    repo = "https://github.com/lastversion-test-repos/nginx-http-shibboleth/releases"
 
     output = latest(repo)
 
-    assert output == version.parse("2.0.1")
+    assert output == version.parse("2.0.2")
 
 
 def test_major():

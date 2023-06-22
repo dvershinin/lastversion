@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.4.16] - 2023-06-22
+### Fixed
+* Wrong version parsing with number in name #102
+* 90+ versions that look like dates triggered pre-release detection
+
 ## [2.4.15] - 2023-05-08
 ### Fixed
 * Pinned some dependency versions to avoid breakage

@@ -222,6 +222,12 @@ class ProjectHolder(requests.Session):
         """
         log.info("Sanitizing string %s as a satisfying version.", version_s)
 
+        # for libssh2-x.x.x should remove project name prefix to prevent `2` going into the version
+        prefix = "{}-".format(self.name)
+        if version_s.startswith(prefix):
+            version_s = version_s[len(prefix):]
+            log.info("Removed project name prefix, working now on string '%s'", version_s)
+
         res = None
 
         if not matches_filter(self.only, True, version_s):
