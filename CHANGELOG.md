@@ -1,7 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [2.4.16] - 2023-06-22
+## [3.0.0] - 2023-06-22
+### Changed
+* Python 2 no longer supported
 ### Fixed
 * Wrong version parsing with number in name #102
 * 90+ versions that look like dates triggered pre-release detection

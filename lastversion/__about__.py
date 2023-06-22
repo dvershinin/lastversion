@@ -1,2 +1,2 @@
-__version__ = '2.4.16'
+__version__ = '3.0.0'
 __self__ = "dvershinin/lastversion"
