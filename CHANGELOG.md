@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.0.1] - 2023-07-15
+### Changed
+* Relaxed CacheControl dependency versions constraints
+
 ## [3.0.0] - 2023-06-22
 ### Changed
 * Python 2 no longer supported

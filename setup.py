@@ -20,9 +20,10 @@ install_requires = [
     # https://github.com/ionrock/cachecontrol/issues/137
     'requests>=2.6.1',
     'packaging',
-    # latest 0.12.12 uses filelock instead of lockfile,
-    # we have to update our packaging before switching to it
-    'cachecontrol==0.12.6',
+    # Cachecontrol 0.12.12 uses filelock instead of lockfile, and reverts to lockfile in 0.12.14.
+    # Newer versions use filelock, but most distros package cachecontrol 0.12.11.
+    # Ideally we can specify 0.12.14, but pip doesn't allow this, so just pin to what we can
+    'cachecontrol<=0.12.11',
     'lockfile',
     'appdirs',
     # feedparser 6 dropped Python 2 support
