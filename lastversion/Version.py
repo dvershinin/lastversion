@@ -56,6 +56,9 @@ class Version(PackagingVersion):
             # https://www.python.org/dev/peps/pep-0440/#developmental-releases
             if part in ['devel', 'test', 'dev']:
                 part = 'dev0'
+            elif part in ['alpha']:
+                # "4.3.0-alpha"
+                part = 'a0'
             elif part in ['beta']:
                 # "4.3.0-beta"
                 part = 'b0'

@@ -111,9 +111,7 @@ class GiteaRepoSession(ProjectHolder):
         # dict holding repo/owner to feed contents of releases atom
         self.feed_contents = {}
         self.rate_limited_count = 0
-        self.api_token = os.getenv("GITHUB_API_TOKEN")
-        if not self.api_token:
-            self.api_token = os.getenv("GITHUB_TOKEN")
+        self.api_token = os.getenv("GITEA_API_TOKEN")
         self.hostname = hostname
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME

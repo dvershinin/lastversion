@@ -26,11 +26,11 @@ def test_tdesktop():
 
 def test_mautic_pre():
     """Test Mautic."""
-    repo = "mautic/mautic"
+    repo = "https://github.com/lastversion-test-repos/mautic"
 
     output = latest(repo, 'version', True)
 
-    assert output >= version.parse("2.15.2")
+    assert str(output) == "5.0.0a1"
 
 
 def test_monit():
@@ -334,7 +334,7 @@ def test_cli_get_tag():
 
 def test_main_assets():
     """Test CLI with --format assets."""
-    repo = 'mautic/mautic'
+    repo = 'https://github.com/lastversion-test-repos/mautic'
 
     process = subprocess.Popen(
         ['lastversion', repo, '--format', 'assets'],
@@ -343,7 +343,7 @@ def test_main_assets():
     )
     out, err = process.communicate()
 
-    assert "update.zip" in str(out)
+    assert "4.4.9-update.zip" in str(out)
 
 
 def test_tag_mess():
