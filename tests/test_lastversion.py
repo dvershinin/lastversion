@@ -334,10 +334,10 @@ def test_cli_get_tag():
 
 def test_main_assets():
     """Test CLI with --format assets."""
-    repo = 'https://github.com/lastversion-test-repos/mautic'
+    repo = 'https://github.com/mautic/mautic'
 
     process = subprocess.Popen(
-        ['lastversion', repo, '--format', 'assets'],
+        ['lastversion', repo, '--format', 'assets', '--major', '4'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )

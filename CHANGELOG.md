@@ -1,13 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [3.0.2] - 2023-07-15
-### Changed
-* Fixed "1.2.3-alpha" unnumbered pre-release detection
-
 ## [3.0.1] - 2023-07-15
 ### Changed
 * Relaxed CacheControl dependency versions constraints
+* Fixed "1.2.3-alpha" unnumbered pre-release detection
 
 ## [3.0.0] - 2023-06-22
 ### Changed
