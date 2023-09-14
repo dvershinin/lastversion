@@ -34,3 +34,14 @@ def test_high_micro_is_not_beta():
     output = latest(repo)
 
     assert output == version.parse("2.1.20230410")
+
+
+def test_semver_preferred():
+    """
+    Test a GitHub project with a semver version number for releases and a high version number for pre-releases
+    """
+    repo = "https://github.com/lastversion-test-repos/kibana"
+
+    output = latest(repo)
+
+    assert output == version.parse("8.10.0")

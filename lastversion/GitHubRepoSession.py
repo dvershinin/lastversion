@@ -520,6 +520,8 @@ class GitHubRepoSession(ProjectHolder):
 
         # if major, filter out tags to check for major
 
+        seen_semver = False
+
         feed_entries = self.get_releases_feed_entries()
         if feed_entries:
             for tag in feed_entries:
@@ -531,9 +533,21 @@ class GitHubRepoSession(ProjectHolder):
                 if not version:
                     log.info('We did not find a valid version in %s tag', tag_name)
                     continue
-                if ret and ret['version'] > version:
+                if version.is_semver():
+                    seen_semver = True
+                comparable = ret and ret['version'].is_semver() == version.is_semver()
+                if not comparable:
+                    log.info('Tag %s is not comparable to current selection', tag_name)
+                # current tag and chosen tag are only comparable if they are both same semver or not
+                if comparable and ret['version'] > version:
                     log.info(
                         'Tag %s does not contain newer version than we already found', tag_name
+                    )
+                    continue
+                # if we have seen a semver tag, then any non-semver can be discarded
+                if seen_semver and not version.is_semver():
+                    log.info(
+                        'Tag %s does not contain a semver version and we already found a semver version', tag_name
                     )
                     continue
                 tag_date = parser.parse(tag['updated'])

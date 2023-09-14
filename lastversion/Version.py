@@ -6,8 +6,8 @@ from packaging.version import Version as PackagingVersion, InvalidVersion
 class Version(PackagingVersion):
     """
     This class abstracts handling of a project's versions. It implements the
-    scheme defined in PEP 440. A `Version` instance is comparison
-    aware and can be compared and sorted using the standard Python interfaces.
+    scheme defined in PEP 440. A `Version` instance is comparison-aware and can be compared and sorted using
+    the standard Python interfaces.
 
     This class is descendant from Version found in `packaging.version`,
     and implements some additional, "AI"-like normalization during instantiation.
@@ -23,6 +23,10 @@ class Version(PackagingVersion):
     def fix_letter_post_release(self, match):
         self.fixed_letter_post_release = True
         return match.group(1) + '.post' + str(ord(match.group(2)))
+
+    def is_semver(self):
+        """Check if this a semantic version"""
+        return self.base_version.count('.') == 2
 
     def __init__(self, version, char_fix_required=False):
         """Instantiate the `Version` object.
@@ -83,7 +87,7 @@ class Version(PackagingVersion):
         if char_fix_required:
             version = re.sub('(\\d)([a-z])$', self.fix_letter_post_release, version, 1)
         # release-3_0_2 is often seen on Mercurial holders
-        # note that above code removes "release-" already, so we are left with "3_0_2"
+        # note that the above code removes "release-" already, so we are left with "3_0_2"
         if re.search(r'^(?:\d+_)+(?:\d+)', version):
             version = version.replace('_', '.')
         # finally, split by dot "delimiter", see if there are common words which are definitely
