@@ -6,8 +6,8 @@ from packaging.version import Version as PackagingVersion, InvalidVersion
 class Version(PackagingVersion):
     """
     This class abstracts handling of a project's versions. It implements the
-    scheme defined in PEP 440. A `Version` instance is comparison-aware and can be compared and sorted using
-    the standard Python interfaces.
+    scheme defined in PEP 440. A `Version` instance is comparison-aware and
+    can be compared and sorted using the standard Python interfaces.
 
     This class is descendant from Version found in `packaging.version`,
     and implements some additional, "AI"-like normalization during instantiation.

@@ -547,7 +547,7 @@ class GitHubRepoSession(ProjectHolder):
                 # if we have seen a semver tag, then any non-semver can be discarded
                 if seen_semver and not version.is_semver():
                     log.info(
-                        'Tag %s does not contain a semver version and we already found a semver version', tag_name
+                        'Tag %s is not a semver and we already found a semver', tag_name
                     )
                     continue
                 tag_date = parser.parse(tag['updated'])

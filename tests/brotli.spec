@@ -117,7 +117,7 @@ cd build
 %make_install
 
 # I couldn't find the option to not build the static libraries
-%__rm "%{buildroot}%{_libdir}/"*.a
+%__rm -rf "%{buildroot}%{_libdir}/"*.a
 
 cd ..
 # Must do the python2 install first because the scripts in /usr/bin are
