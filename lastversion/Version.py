@@ -222,6 +222,7 @@ class Version(PackagingVersion):
 
     @property
     def even(self):
+        """Check if this is an even minor version"""
         return self.minor and not self.minor % 2
 
     def sem_extract_base(self, level=None):
@@ -233,9 +234,9 @@ class Version(PackagingVersion):
             # get major
             return Version(str(self.major))
         if level == 'minor':
-            return Version("{}.{}".format(self.major, self.minor))
+            return Version(f"{self.major}.{self.minor}")
         if level == 'patch':
-            return Version("{}.{}.{}".format(self.major, self.minor, self.micro))
+            return Version(f"{self.major}.{self.minor}.{self.micro}")
         return self
 
     def __str__(self):

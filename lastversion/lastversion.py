@@ -586,7 +586,9 @@ def main(argv=None):
         if args.action == 'install':
             app_images = [asset for asset in res['assets'] if asset.endswith('.AppImage')]
             if app_images:
-                return install_app_image(app_images[0], install_name=res.get('install_name', args.repo))
+                return install_app_image(
+                    app_images[0], install_name=res.get('install_name', args.repo)
+                )
             rpms = [asset for asset in res['assets'] if asset.endswith('.rpm')]
             if not rpms:
                 log.error('No assets found to install')

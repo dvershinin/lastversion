@@ -63,7 +63,6 @@ def asset_does_not_belong_to_machine(asset_name):
     Returns:
 
     """
-
     # replace underscore with dash so that our shiny word boundary regexes won't break
     asset_name = asset_name.replace('_', '-')
     asset_ext = os.path.splitext(asset_name)[1].lstrip('.')
@@ -130,7 +129,6 @@ def extract_appimage_desktop_file(appimage_path):
         str: Path to the extracted desktop file
 
     """
-
     temp_dir = tempfile.mkdtemp()
 
     # Extract the contents of the AppImage file to a temporary directory
@@ -149,8 +147,9 @@ def extract_appimage_desktop_file(appimage_path):
     # Install the .desktop file
     if desktop_file:
         # if xdg-desktop-menu is not available, we can't install the .desktop file
-        if shutil.which("xdg-desktop-menu"):
-            subprocess.call(["xdg-desktop-menu", "install", desktop_file])
+        xdg_desktop_menu_path = shutil.which("xdg-desktop-menu")
+        if xdg_desktop_menu_path:
+            subprocess.call([xdg_desktop_menu_path, "install", desktop_file])
         else:
             log.warning("xdg-desktop-menu is not available, can't install the .desktop file")
 
