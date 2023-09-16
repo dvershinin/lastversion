@@ -28,14 +28,57 @@ class Version(PackagingVersion):
         """Check if this a semantic version"""
         return self.base_version.count('.') == 2
 
-    def __init__(self, version, char_fix_required=False):
-        """Instantiate the `Version` object.
+    @staticmethod
+    def part_to_pypi(part):
+        """
+        Convert a version part to a PyPI compatible string
+        See https://peps.python.org/pep-0440/
+        Helps devel releases to be correctly identified
+        See https://www.python.org/dev/peps/pep-0440/#developmental-releases
+        """
+        if part in ['devel', 'test', 'dev']:
+            part = 'dev0'
+        elif part in ['alpha']:
+            # "4.3.0-alpha"
+            part = 'a0'
+        elif part in ['beta']:
+            # "4.3.0-beta"
+            part = 'b0'
+            # if part starts with rc<num>., discard non-relevant info while preserving RC level
+        elif re.search('^rc(\\d+)\\.', part):
+            # rc2.windows.1 => rc2.post1
+            sub_parts = part.split('.')
+            part = sub_parts[0]
+            for sub in sub_parts[1:]:
+                if sub.isdigit():
+                    # use first numeric as post-release to RC
+                    part += ".post" + sub
+        else:
+            # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
+            # p12 => post12
+            part = re.sub('^p(\\d+)$', 'post\\1', part, 1)
+        if part.isalpha():
+            # it's meaningless to us if it has only letters
+            part = None
+        return part
+
+    @staticmethod
+    def join_dashed_number_status(version):
+        """
+        Join status with its number when separated by dash in a version string.
+        E.g., 4.27-chaos-preview-3 -> 4.27-chaos-pre3
+        Helps devel releases to be correctly identified
+        # https://www.python.org/dev/peps/pep-0440/#developmental-releases
 
         Args:
-            version (str): The version-like string
-            char_fix_required (bool): Should we treat alphanumerics as part of version
+            version:
+
+        Returns:
+            str:
         """
-        self.fixed_letter_post_release = False
+        version = re.sub('-devel$', '-dev0', version, 1)
+        # help post (patch) releases to be correctly identified (e.g., Magento 2.3.4-p2)
+        version = re.sub('-p(\\d+)$', '-post\\1', version, 1)
 
         # 4.27-chaos-preview-3 -> 4.27-chaos-pre3
         version = re.sub('-preview-(\\d+)', '-pre\\1', version, 1)
@@ -47,32 +90,29 @@ class Version(PackagingVersion):
         # v0.16.0-beta.rc4 -> v0.16.0-beta4
         # both beta and rc? :) -> beta
         version = re.sub(r'-beta[-.]rc(\d+)', '-beta\\1', version, 1)
+        return version
 
-        # many times they would tag foo-1.2.3 which would parse to LegacyVersion
-        # we can avoid this, by reassigning to what comes after the dash:
+    def __init__(self, version, char_fix_required=False):
+        """Instantiate the `Version` object.
+
+        Args:
+            version (str): The version-like string
+            char_fix_required (bool): Should we treat alphanumerics as part of version
+        """
+        self.fixed_letter_post_release = False
+
+        # Join status with its number when separated by dash in a version string, e.g., preview-3 -> pre3
+        version = self.join_dashed_number_status(version)
+
+        # parse out version components separated by dash
         parts = version.split('-')
 
-        # TODO test v5.12-rc1-dontuse -> v5.12.rc1
-        # go through parts separated by dot, detect beta level, and weed out numberless info:
+        # go through parts which were separated by dash, detect beta level, and weed out numberless info:
         parts_n = []
         for part in parts:
-            # help devel releases to be correctly identified
-            # https://www.python.org/dev/peps/pep-0440/#developmental-releases
-            if part in ['devel', 'test', 'dev']:
-                part = 'dev0'
-            elif part in ['alpha']:
-                # "4.3.0-alpha"
-                part = 'a0'
-            elif part in ['beta']:
-                # "4.3.0-beta"
-                part = 'b0'
-            else:
-                # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
-                # p12 => post12
-                part = re.sub('^p(\\d+)$', 'post\\1', part, 1)
-            if not part.isalpha():
+            part = self.part_to_pypi(part)
+            if part:
                 parts_n.append(part)
-
         if not parts_n:
             raise InvalidVersion("Invalid version: '{0}'".format(version))
         # remove *any* non-digits which appear at the beginning of the version string

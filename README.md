@@ -542,7 +542,7 @@ lastversion 1.2.3 -gt 1.2.4
 #> 1.2.4
 ```
 
-See exit codes below, to find whether the first argument is a higher version, or the second.
+See the exit codes below, to find whether the first argument is a higher version, or the second.
 
 The `--sem` option described earlier will affect both what's being printed and what semantic
 versioning base level is being compared, thus the result.
@@ -584,12 +584,15 @@ fi
 
 Exit status codes are the usual means of communicating a command's execution success or failure. 
 So `lastversion` follows this: successful command returns `0` while anything else is an error of 
-some kind:
+some kind.
+For example, when the latest stable release version if found, `0` is returned.
+`0` is also returned for `-gt` comparison when leftmost argument is newer than rightmost argument.
  
 Exit status code `1` is returned for cases like no release tag existing for repository at all, or 
 repository does not exist.
 
-Exit status code `2` is returned for `-gt` version comparison negative lookup.
+Exit status code `2` is returned for `-gt` version comparison negative lookup, that is when rightmost argument is newer
+than leftmost argument.
 
 Exit status code `3` is returned when filtering assets of last release yields empty URL set 
 (no match)

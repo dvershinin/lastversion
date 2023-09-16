@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.1.1] - 2023-09-16
+### Changed
+* Some code refactoring and better identifying of pre-releases
+
 ## [3.1.1] - 2023-09-14
 ### Changed
 * GitHub: when a semver version is detected, it is now used as a constraint #109

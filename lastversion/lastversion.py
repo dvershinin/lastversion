@@ -263,31 +263,17 @@ def check_version(value):
     In lastversion CLI app, this is used as argument parser helper for --newer-than (-gt) option.
 
     Args:
-        value (str): Free-format string which is meant to contain user-supplied version
+        value (str): Free-format string which is meant to contain a user-supplied version
 
     Raises:
-        argparse.ArgumentTypeError: Exception in case version was not found in the input string
+        argparse.ArgumentTypeError: Exception in a case version was not found in the input string
 
     Returns:
         Version: Parsed version object
 
     """
-    """
-    Argument parser helper for --newer-than (-gt) option
-    :param value:
-    :type value:
-    :return:
-    :rtype:
-    """
-    try:
-        # TODO use sanitize_version so that we can just pass tags as values
-        # help devel releases to be correctly identified
-        # https://www.python.org/dev/peps/pep-0440/#developmental-releases
-        value = re.sub('-devel$', '.dev0', value, 1)
-        # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
-        value = re.sub('-p(\\d+)$', '.post\\1', value, 1)
-        value = Version(value)
-    except InvalidVersion:
+    value = parse_version(value)
+    if not value:
         raise argparse.ArgumentTypeError("%s is an invalid version value" % value)
     return value
 
@@ -386,9 +372,15 @@ def install_app_image(url, install_name):
     extract_appimage_desktop_file(app_file_name)
 
 
-def main():
-    """The entrypoint to CLI app."""
+def main(argv=None):
+    """
+    The entrypoint to CLI app.
+
+    Args:
+        argv: List of arguments, helps test CLI without resorting to subprocess module.
+    """
     epilog = None
+
     if "GITHUB_API_TOKEN" not in os.environ and "GITHUB_TOKEN" not in os.environ:
         epilog = TOKEN_PRO_TIP
     parser = argparse.ArgumentParser(description='Find the latest software release.',
@@ -453,7 +445,7 @@ def main():
                         pre=False, assets=False, newer_than=False, filter=False,
                         shorter_urls=False, major=None, assumeyes=False, at=None,
                         having_asset=None, even=False)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.repo == "self":
         args.repo = __self__
@@ -510,7 +502,7 @@ def main():
                 print("Stable: {}".format(not v.is_prerelease))
             else:
                 print(v)
-            sys.exit(0)
+            return sys.exit(0)
 
     if args.action == 'install':
         # we can only install assets
@@ -550,7 +542,7 @@ def main():
         base_compare = parse_version(args.repo)
         if base_compare:
             print(max([args.newer_than, base_compare]))
-            sys.exit(2 if base_compare <= args.newer_than else 0)
+            return sys.exit(2 if base_compare <= args.newer_than else 0)
 
     # other action are either getting release or doing something with release (extend get action)
     try:
