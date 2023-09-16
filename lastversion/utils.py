@@ -1,3 +1,4 @@
+"""Utility functions for lastversion."""
 import io
 import logging
 import os
@@ -6,10 +7,14 @@ import re
 import sys
 import tarfile
 import errno
+import subprocess
+import tempfile
+import urllib
+import shutil
 import distro
 import requests
 import tqdm
-from six.moves import urllib
+
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +37,8 @@ extension_distros = {
     'deb': ['ubuntu', 'debian'],
     'rpm': ['rhel', 'centos', 'fedora', 'amazon', 'cloudlinux'],
     'apk': ['alpine'],
-    'dmg': ['darwin']
+    'dmg': ['darwin'],
+    'AppImage': ['linux']
 }
 
 # matches *start* of sys.platform value to words in asset name
@@ -48,49 +54,59 @@ non_amd64_markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'a
                      'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64', 'armhf', 'armv7hl']
 
 
-def asset_does_not_belong_to_machine(asset):
+def asset_does_not_belong_to_machine(asset_name):
     """
-    Checks whether a given asset name is likely unusable on this machine
-    An asset belongs to machine as long as this returns False
-    :param asset:
-    :type asset: str
-    :return:
-    :rtype:
+    Check if asset's name contains words that indicate it's not meant for this machine
+    Args:
+        asset_name: Base name of asset, e.g. `example.zip`
+
+    Returns:
+
     """
+
     # replace underscore with dash so that our shiny word boundary regexes won't break
-    asset = asset.replace('_', '-')
-    # bail if asset's extension "belongs" to other OS-es (simple)
-    for os_name, ext in os_extensions.items():
-        if os.name != os_name and asset.endswith(ext):
-            return True
+    asset_name = asset_name.replace('_', '-')
+    asset_ext = os.path.splitext(asset_name)[1].lstrip('.')
+    # bail if asset's extension "belongs" to other OS (simple)
+    if asset_ext:
+        for os_name, ext in os_extensions.items():
+            if os.name != os_name and asset_ext == ext:
+                return True
     for pf, pf_words in platform_markers.items():
         if not sys.platform.startswith(pf):
-            for pfWord in pf_words:
-                r = re.compile(r'\b{}(\d+)?\b'.format(pfWord), flags=re.IGNORECASE)
-                matches = r.search(asset)
+            for pf_word in pf_words:
+                r = re.compile(r'\b{}(\d+)?\b'.format(pf_word), flags=re.IGNORECASE)
+                matches = r.search(asset_name)
                 if matches:
                     return True
     if sys.platform.startswith('linux'):
         # Weeding out non-matching Linux distros
         for ext, ext_distros in extension_distros.items():
-            if asset.endswith("." + ext) and distro.id() not in ext_distros:
+            if asset_name.endswith("." + ext) and distro.id() not in ext_distros:
                 return True
     # weed out non-64 bit stuff from x86_64 bit OS
-    # caution: may be false positive with 32 bit Python on 64-bit OS
+    # caution: may be false positive with 32-bit Python on 64-bit OS
     if platform.machine() in ['x86_64', 'AMD64']:
         for non_amd64_word in non_amd64_markers:
             r = re.compile(r'\b{}\b'.format(non_amd64_word), flags=re.IGNORECASE)
-            if r.search(asset):
+            if r.search(asset_name):
                 return True
             r = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
-            if r.search(asset):
+            if r.search(asset_name):
                 return True
     return False
 
 
-# monkey patching older requests library's response class, so it can use context manager
-# https://github.com/psf/requests/issues/4136
 def requests_response_patched_enter(self):
+    """
+    Monkey patching older requests library's response class, so it can use context manager
+    See https://github.com/psf/requests/issues/4136
+    Args:
+        self:
+
+    Returns:
+
+    """
     return self
 
 
@@ -114,9 +130,6 @@ def extract_appimage_desktop_file(appimage_path):
         str: Path to the extracted desktop file
 
     """
-    import shutil
-    import subprocess
-    import tempfile
 
     temp_dir = tempfile.mkdtemp()
 
@@ -133,9 +146,13 @@ def extract_appimage_desktop_file(appimage_path):
         if desktop_file:
             break
 
-    # Copy the .desktop file to the current directory
+    # Install the .desktop file
     if desktop_file:
-        shutil.copy(desktop_file, ".")
+        # if xdg-desktop-menu is not available, we can't install the .desktop file
+        if shutil.which("xdg-desktop-menu"):
+            subprocess.call(["xdg-desktop-menu", "install", desktop_file])
+        else:
+            log.warning("xdg-desktop-menu is not available, can't install the .desktop file")
 
     # Remove the temporary directory
     shutil.rmtree(temp_dir)
@@ -208,7 +225,7 @@ def download_file(url, local_filename=None):
                         f.write(chunk)
                         # we fetch 8 KB, so we update progress by +8x
                         pbar.update(chunk_bar_size)
-            pbar.set_description('Downloaded {}'.format(local_filename))
+            pbar.set_description(f"Downloaded {local_filename}")
             pbar.close()
     except KeyboardInterrupt:
         pbar.close()
@@ -219,6 +236,7 @@ def download_file(url, local_filename=None):
 
 
 def is_within_directory(directory, target):
+    """Check if the target path is within the directory path."""
     abs_directory = os.path.abspath(directory)
     abs_target = os.path.abspath(target)
 

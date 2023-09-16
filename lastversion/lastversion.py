@@ -364,7 +364,7 @@ def install_app_image(url, install_name):
     """
     home_dir = os.path.expanduser('~')
     apps_dir = os.path.join(home_dir, 'Applications')
-    app_file_name = os.path.join(apps_dir, install_name)
+    app_file_name = os.path.join(apps_dir, f"{install_name}.AppImage")
 
     Path(apps_dir).mkdir(exist_ok=True, parents=True)
     download_file(url, app_file_name)
@@ -586,7 +586,7 @@ def main(argv=None):
         if args.action == 'install':
             app_images = [asset for asset in res['assets'] if asset.endswith('.AppImage')]
             if app_images:
-                return install_app_image(app_images[0], install_name=args.repo)
+                return install_app_image(app_images[0], install_name=res.get('install_name', args.repo))
             rpms = [asset for asset in res['assets'] if asset.endswith('.rpm')]
             if not rpms:
                 log.error('No assets found to install')

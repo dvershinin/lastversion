@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.1.2] - 2023-09-16
+### Fixed
+* Fixed AppImage installation #107
+
 ## [3.1.1] - 2023-09-16
 ### Changed
 * Some code refactoring and better identifying of pre-releases

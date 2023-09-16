@@ -504,10 +504,15 @@ class GitHubRepoSession(ProjectHolder):
             return []
         return feed.entries
 
+    def enrich_release_info(self, release):
+        """Enrich release info with data from repo."""
+        release['install_name'] = self.name
+        return release
+
     def get_latest(self, pre_ok=False, major=None):
         """
         Get the latest release satisfying "pre-releases are OK" or major/branch constraints
-        Strives to fetch formal API release if it exists, because it has useful information
+        Strive to fetch formal API release if it exists, because it has useful information
         like assets.
         """
         # data of selected tag, always contains ['version', 'tag_name', 'tag_date', 'type'] will
@@ -584,7 +589,7 @@ class GitHubRepoSession(ProjectHolder):
         # simply because feeds list stuff in order of recency
         # however, still use /tags unless releases.atom has data within a year
         if ret and ret['tag_date'].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
-            return ret
+            return self.enrich_release_info(ret)
 
         log.info('Feed contained none or only tags older than 1 year. Switching to API')
 
@@ -607,7 +612,7 @@ class GitHubRepoSession(ProjectHolder):
             # only formal releases which we enumerated above already, have assets
             # so there is no point looking in the tags/graphql below
             # return whatever we got
-            return ret
+            return self.enrich_release_info(ret)
 
         # formal release may not exist at all, or be "late/old" in case
         # actual release is only a simple tag so let's try /tags
@@ -617,7 +622,7 @@ class GitHubRepoSession(ProjectHolder):
         else:
             ret = self.find_in_tags(ret, pre_ok, major)
 
-        return ret
+        return self.enrich_release_info(ret)
 
     def set_matching_formal_release(self, ret, formal_release, version, pre_ok,
                                     data_type='release'):

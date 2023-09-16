@@ -1,3 +1,4 @@
+"""Version class for lastversion"""
 import re
 from datetime import datetime
 from packaging.version import Version as PackagingVersion, InvalidVersion
@@ -101,13 +102,13 @@ class Version(PackagingVersion):
         """
         self.fixed_letter_post_release = False
 
-        # Join status with its number when separated by dash in a version string, e.g., preview-3 -> pre3
+        # Join status with its number, e.g., preview-3 -> pre3
         version = self.join_dashed_number_status(version)
 
         # parse out version components separated by dash
         parts = version.split('-')
 
-        # go through parts which were separated by dash, detect beta level, and weed out numberless info:
+        # go through parts which were separated by dash, normalize and exclude irrelevant
         parts_n = []
         for part in parts:
             part = self.part_to_pypi(part)
