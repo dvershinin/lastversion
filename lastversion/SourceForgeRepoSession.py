@@ -1,4 +1,5 @@
 import datetime
+from urllib.parse import urlunparse, urlparse
 
 import feedparser
 
@@ -18,6 +19,25 @@ class SourceForgeRepoSession(ProjectHolder):
         super(SourceForgeRepoSession, self).__init__()
         self.hostname = hostname
         self.set_repo(repo)
+
+    @staticmethod
+    def get_normalized_url(download_url):
+        """Get normalized URL for a download URL, without /download suffix."""
+        parsed_url = urlparse(download_url)
+
+        if parsed_url.netloc == 'sourceforge.net' and 'projects' in parsed_url.path and 'files' in parsed_url.path:
+            path_parts = parsed_url.path.strip('/').split('/')
+            project_name = path_parts[1]
+            file_name = path_parts[3]
+
+            new_scheme = 'https'
+            new_netloc = 'downloads.sourceforge.net'
+            new_path = f'/{project_name}/{file_name}'
+
+            transformed_url = urlunparse((new_scheme, new_netloc, new_path, '', '', ''))
+            return transformed_url
+
+        return None
 
     def get_latest(self, pre_ok=False, major=None):
         ret = None
@@ -39,3 +59,7 @@ class SourceForgeRepoSession(ProjectHolder):
                 # converting from struct
                 tag['tag_date'] = datetime.datetime(*tag['published_parsed'][:6])
         return ret
+
+    def release_download_url(self, release, shorter=False):
+        """Get download URL for a release."""
+        return self.get_normalized_url(release['link'])

@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.3.0] - 2023-09-19
+### Added
+* Ability to fetch `--source` URLs for SourceForge projects
+
+## [3.1.2] - 2023-09-16
+### Fixed
+* Fixed AppImage installation #107
+
 ## [3.1.2] - 2023-09-16
 ### Fixed
 * Fixed AppImage installation #107
