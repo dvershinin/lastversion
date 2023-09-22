@@ -103,6 +103,9 @@ class GitLabRepoSession(ProjectHolder):
             if assets_filter and not re.search(assets_filter, asset['name']):
                 continue
             if not assets_filter and asset_does_not_belong_to_machine(asset['name']):
+                log.info(
+                    'Skipping asset %s as it does not belong to this machine.', asset['name']
+                )
                 continue
             urls.append(asset['url'])
 

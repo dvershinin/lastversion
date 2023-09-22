@@ -37,8 +37,7 @@ extension_distros = {
     'deb': ['ubuntu', 'debian'],
     'rpm': ['rhel', 'centos', 'fedora', 'amazon', 'cloudlinux'],
     'apk': ['alpine'],
-    'dmg': ['darwin'],
-    'AppImage': ['linux']
+    'dmg': ['darwin']
 }
 
 # matches *start* of sys.platform value to words in asset name
@@ -80,9 +79,10 @@ def asset_does_not_belong_to_machine(asset_name):
                     return True
     if sys.platform.startswith('linux'):
         # Weeding out non-matching Linux distros
-        for ext, ext_distros in extension_distros.items():
-            if asset_name.endswith("." + ext) and distro.id() not in ext_distros:
-                return True
+        if asset_ext != 'AppImage':
+            for ext, ext_distros in extension_distros.items():
+                if asset_name.endswith("." + ext) and distro.id() not in ext_distros:
+                    return True
     # weed out non-64 bit stuff from x86_64 bit OS
     # caution: may be false positive with 32-bit Python on 64-bit OS
     if platform.machine() in ['x86_64', 'AMD64']:

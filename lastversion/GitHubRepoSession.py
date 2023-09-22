@@ -506,7 +506,8 @@ class GitHubRepoSession(ProjectHolder):
 
     def enrich_release_info(self, release):
         """Enrich release info with data from repo."""
-        release['install_name'] = self.name
+        if release:
+            release['install_name'] = self.name
         return release
 
     def get_latest(self, pre_ok=False, major=None):

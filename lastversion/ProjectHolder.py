@@ -255,9 +255,13 @@ class ProjectHolder(requests.Session):
                 version_s = s[0]
                 log.info("Sanitized tag name value to %s.", version_s)
                 # 1.10.x is a dev release without a clear version, so even pre ok will not get it
-                if not version_s.endswith('.x'):
+                #if not version_s.endswith('.x'):
+                try:
                     # we know regex is a valid version format, so no need to try catch
                     res = Version(version_s)
+                except InvalidVersion:
+                    log.info("Failed to parse %s as Version.", version_s)
+                    continue
                 if res:
                     # Satisfy on the first matched version-like string, e.g. 5.2.6-3.12
                     break
@@ -328,6 +332,9 @@ class ProjectHolder(requests.Session):
                 if assets_filter and not re.search(assets_filter, asset['name']):
                     continue
                 if not assets_filter and asset_does_not_belong_to_machine(asset['name']):
+                    log.info(
+                        'Asset %s does not belong to this machine, skipping', asset['name']
+                    )
                     continue
                 urls.append(asset['browser_download_url'])
         else:
