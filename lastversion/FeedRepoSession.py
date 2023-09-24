@@ -64,6 +64,7 @@ class FeedRepoSession(ProjectHolder):
         self.feed_url = feeds[0]
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         ret = None
         # to leverage cachecontrol, we fetch the feed using requests as usual,
         # then feed the feed to feedparser as a raw string

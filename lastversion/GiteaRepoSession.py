@@ -303,7 +303,6 @@ class GiteaRepoSession(ProjectHolder):
                 if not found_asset:
                     log.info('Desired asset not found in the release.')
                     return ret
-        # formal_release['tag_name'] = tag_name
         formal_release['tag_date'] = parser.parse(formal_release['published_at'])
         formal_release['version'] = version
         formal_release['type'] = data_type

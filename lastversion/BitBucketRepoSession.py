@@ -25,6 +25,7 @@ class BitBucketRepoSession(ProjectHolder):
         self.set_repo(repo)
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         response = self.get("https://api.bitbucket.org/2.0/repositories/{}/downloads".format(
             self.repo))
         data = response.json()

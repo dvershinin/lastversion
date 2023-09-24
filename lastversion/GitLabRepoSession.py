@@ -61,6 +61,7 @@ class GitLabRepoSession(ProjectHolder):
         return self.formal_releases_by_tag.get(tag)
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         ret = None
 
         # gitlab returns tags by updated in desc order, this is just what we want :)

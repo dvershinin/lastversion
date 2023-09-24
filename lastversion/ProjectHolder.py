@@ -254,10 +254,8 @@ class ProjectHolder(requests.Session):
             for s in matches:
                 version_s = s[0]
                 log.info("Sanitized tag name value to %s.", version_s)
-                # 1.10.x is a dev release without a clear version, so even pre ok will not get it
-                #if not version_s.endswith('.x'):
+                # now we may have gotten a non-version like 2.x, so let's try to parse it
                 try:
-                    # we know regex is a valid version format, so no need to try catch
                     res = Version(version_s)
                 except InvalidVersion:
                     log.info("Failed to parse %s as Version.", version_s)

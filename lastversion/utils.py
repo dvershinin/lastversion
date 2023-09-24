@@ -53,6 +53,53 @@ non_amd64_markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'a
                      'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64', 'armhf', 'armv7hl']
 
 
+def is_file_ext_not_compatible_with_os(file_ext):
+    """
+    Check if the file extension is not compatible with the OS
+    Returns:
+
+    """
+    for os_name, ext in os_extensions.items():
+        if os.name != os_name and file_ext == ext:
+            return True
+    return False
+
+
+def is_asset_name_compatible_with_platform(asset_name):
+    """Check if an asset's name contains words that indicate it's meant for another platform"""
+    for pf, pf_words in platform_markers.items():
+        if not sys.platform.startswith(pf):
+            for pf_word in pf_words:
+                r = re.compile(r'\b{}(\d+)?\b'.format(pf_word), flags=re.IGNORECASE)
+                matches = r.search(asset_name)
+                if matches:
+                    return True
+    return False
+
+
+def is_not_compatible_to_distro(asset_ext):
+    """Check if the file extension is not compatible with the current Linux distro"""
+    # Weeding out non-matching Linux distros
+    if asset_ext != 'AppImage':
+        for ext, ext_distros in extension_distros.items():
+            if asset_ext == ext and distro.id() not in ext_distros:
+                return True
+
+    return False
+
+
+def not_amd64_asset(asset_name):
+    """Check if an asset's name contains words that indicate it's not meant for 64-bit OS"""
+    for non_amd64_word in non_amd64_markers:
+        r = re.compile(r'\b{}\b'.format(non_amd64_word), flags=re.IGNORECASE)
+        if r.search(asset_name):
+            return True
+        r = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
+        if r.search(asset_name):
+            return True
+    return False
+
+
 def asset_does_not_belong_to_machine(asset_name):
     """
     Check if asset's name contains words that indicate it's not meant for this machine
@@ -65,34 +112,27 @@ def asset_does_not_belong_to_machine(asset_name):
     # replace underscore with dash so that our shiny word boundary regexes won't break
     asset_name = asset_name.replace('_', '-')
     asset_ext = os.path.splitext(asset_name)[1].lstrip('.')
-    # bail if asset's extension "belongs" to other OS (simple)
-    if asset_ext:
-        for os_name, ext in os_extensions.items():
-            if os.name != os_name and asset_ext == ext:
-                return True
-    for pf, pf_words in platform_markers.items():
-        if not sys.platform.startswith(pf):
-            for pf_word in pf_words:
-                r = re.compile(r'\b{}(\d+)?\b'.format(pf_word), flags=re.IGNORECASE)
-                matches = r.search(asset_name)
-                if matches:
-                    return True
-    if sys.platform.startswith('linux'):
-        # Weeding out non-matching Linux distros
-        if asset_ext != 'AppImage':
-            for ext, ext_distros in extension_distros.items():
-                if asset_name.endswith("." + ext) and distro.id() not in ext_distros:
-                    return True
+
+    if not asset_ext:
+        # We don't know. Maybe compatible, maybe not. Let's not filter it out.
+        return False
+
+    # Bail if asset's extension "belongs" to other OS (simple)
+    if is_file_ext_not_compatible_with_os(asset_ext):
+        return True
+
+    if is_asset_name_compatible_with_platform(asset_name):
+        return True
+
+    # Bail if asset's extension "belongs" to other linux distros (complex)
+    if sys.platform.startswith('linux') and is_not_compatible_to_distro(asset_ext):
+        return True
+
     # weed out non-64 bit stuff from x86_64 bit OS
     # caution: may be false positive with 32-bit Python on 64-bit OS
-    if platform.machine() in ['x86_64', 'AMD64']:
-        for non_amd64_word in non_amd64_markers:
-            r = re.compile(r'\b{}\b'.format(non_amd64_word), flags=re.IGNORECASE)
-            if r.search(asset_name):
-                return True
-            r = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
-            if r.search(asset_name):
-                return True
+    if platform.machine() in ['x86_64', 'AMD64'] is not_amd64_asset(asset_name):
+        return True
+
     return False
 
 
@@ -136,7 +176,7 @@ def extract_appimage_desktop_file(appimage_path):
 
     # Search the temporary directory for the .desktop file
     desktop_file = None
-    for root, dirs, files in os.walk(temp_dir):
+    for root, _, files in os.walk(temp_dir):
         for file in files:
             if file.endswith(".desktop"):
                 desktop_file = os.path.join(root, file)

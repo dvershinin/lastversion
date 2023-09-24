@@ -18,6 +18,7 @@ class HelmChartRepoSession(ProjectHolder):
         self.url = repo
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         # https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core/Chart.yaml
         # https://raw.githubusercontent.com/bitnami/charts/master/bitnami/aspnet-core/Chart.yaml
         url = self.url

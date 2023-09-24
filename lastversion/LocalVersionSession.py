@@ -17,6 +17,7 @@ class LocalVersionSession(ProjectHolder):
         self.hostname = hostname
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         if pre_ok:
             log.info('--pre is not supported for local version sources')
         if not major:
