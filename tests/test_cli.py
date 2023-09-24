@@ -101,3 +101,14 @@ def test_cli_gt_stable_vs_rc(capsys):
     captured = capsys.readouterr()
     assert "2.41.0" == captured.out.rstrip()
     assert not exit_code  # Check the exit code is correct
+
+
+def test_cli_get_assets(capsys):
+    """Test that the CLI --assets return AppImage on Linux."""
+    if sys.platform == 'linux':
+        with captured_exit_code() as get_exit_code:
+            main(['--assets', 'https://github.com/lastversion-test-repos/OneDriveGUI'])
+        exit_code = get_exit_code()
+
+        captured = capsys.readouterr()
+        assert '.AppImage' in captured.out
