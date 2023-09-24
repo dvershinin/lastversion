@@ -6,7 +6,7 @@ from .__about__ import __version__
 
 
 class VersionAction(Action):
-
+    """Custom argparse action to show program's version and exit."""
     def __init__(self,
                  option_strings,
                  version=None,

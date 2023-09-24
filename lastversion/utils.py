@@ -59,10 +59,7 @@ def is_file_ext_not_compatible_with_os(file_ext):
     Returns:
 
     """
-    for os_name, ext in os_extensions.items():
-        if os.name != os_name and file_ext == ext:
-            return True
-    return False
+    return any(os.name != os_name and file_ext == ext for os_name, ext in os_extensions.items())
 
 
 def is_asset_name_compatible_with_platform(asset_name):

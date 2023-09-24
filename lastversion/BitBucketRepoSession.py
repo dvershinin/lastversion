@@ -8,7 +8,7 @@ class BitBucketRepoSession(ProjectHolder):
     KNOWN_REPO_URLS = {
         'mmonit.com': {
             'repo': 'tildeslash/monit',
-            # get URL from official website because it is a "prepared" source
+            # get URL from the official website because it is a "prepared" source
             'release_url_format': "https://mmonit.com/{name}/dist/{name}-{version}.tar.gz"
         }
     }

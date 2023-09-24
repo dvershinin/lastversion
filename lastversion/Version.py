@@ -214,8 +214,10 @@ class Version(PackagingVersion):
         Version is a prerelease if it contains all the following:
         * 90+ micro component
         * no date in micro component
+
+        Returns:
+            bool:
         """
-        # type: () -> bool
         if self.major and self.minor and self.micro >= 90 and self.is_not_date(self.micro):
             return True
         return self.dev is not None or self.pre is not None

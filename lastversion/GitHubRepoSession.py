@@ -53,7 +53,7 @@ class GitHubRepoSession(ProjectHolder):
     KNOWN_REPOS_BY_NAME = {
         'php': {
             'repo': 'php/php-src',
-            # get URL from official website because it is a "prepared" source
+            # get URL from the official website because it is a "prepared" source
             'release_url_format': "https://www.php.net/distributions/php-{version}.tar.gz"
         },
         'linux': {'repo': 'torvalds/linux'},
@@ -139,7 +139,7 @@ class GitHubRepoSession(ProjectHolder):
 
     def __init__(self, repo, hostname):
         super(GitHubRepoSession, self).__init__()
-        # dict holding repo/owner to feed contents of releases atom
+        # dict holding repo/owner to feed contents of releases' atom
         self.feed_contents = {}
         # lazy loaded dict cache of /releases response keyed by tag, only first page
         self.formal_releases_by_tag = None

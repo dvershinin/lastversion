@@ -45,13 +45,13 @@ class SystemRepoSession(ProjectHolder):
         ret = None
         # noinspection PyUnresolvedReferences
         import yum
-        yumLoggers = ['yum.filelogging.RPMInstallCallback', 'yum.verbose.Repos',
-                      'yum.verbose.plugin',
-                      'yum.Depsolve', 'yum.verbose', 'yum.plugin', 'yum.Repos', 'yum',
-                      'yum.verbose.YumBase',
-                      'yum.filelogging', 'yum.verbose.YumPlugins', 'yum.RepoStorage', 'yum.YumBase',
-                      'yum.filelogging.YumBase', 'yum.verbose.Depsolve']
-        for logger in yumLoggers:
+        yum_loggers = ['yum.filelogging.RPMInstallCallback', 'yum.verbose.Repos',
+                       'yum.verbose.plugin',
+                       'yum.Depsolve', 'yum.verbose', 'yum.plugin', 'yum.Repos', 'yum',
+                       'yum.verbose.YumBase',
+                       'yum.filelogging', 'yum.verbose.YumPlugins', 'yum.RepoStorage', 'yum.YumBase',
+                       'yum.filelogging.YumBase', 'yum.verbose.Depsolve']
+        for logger in yum_loggers:
             logging.getLogger(logger).setLevel(logging.CRITICAL)
         yb = yum.YumBase()
         yb.preconf.debuglevel = 0

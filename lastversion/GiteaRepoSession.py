@@ -108,7 +108,7 @@ class GiteaRepoSession(ProjectHolder):
 
     def __init__(self, repo, hostname):
         super(GiteaRepoSession, self).__init__()
-        # dict holding repo/owner to feed contents of releases atom
+        # dict holding repo/owner to feed contents of releases' atom
         self.feed_contents = {}
         self.rate_limited_count = 0
         self.api_token = os.getenv("GITEA_API_TOKEN")
@@ -261,25 +261,25 @@ class GiteaRepoSession(ProjectHolder):
     def get_latest(self, pre_ok=False, major=None):
         """
         Gets the latest release satisfying "pre-releases are OK" or major/branch constraints
-        Strives to fetch formal API release if it exists, because it has useful information
+        Strive to fetch formal API release if it exists, because it has useful information
         like assets.
         """
 
         if self.having_asset:
-            # only formal releases which we enumerated above already, have assets
+            # only formal releases which we enumerated above already, have assets,
             # so there is no point looking in the tags/graphql below
             # return whatever we got
             return None
 
         # formal release may not exist at all, or be "late/old" in case
-        # actual release is only a simple tag so let's try /tags
+        # actual release is only a simple tag, so let's try /tags
         ret = self.find_in_tags(pre_ok, major)
 
         return ret
 
     def set_matching_formal_release(self, ret, formal_release, version, pre_ok,
                                     data_type='release'):
-        """Set current release selection to this formal release if matching conditions."""
+        """Set the current release selection to this formal release if matching conditions."""
         if not pre_ok and formal_release['prerelease']:
             log.info(
                 "Found formal release for this tag which is unwanted "
