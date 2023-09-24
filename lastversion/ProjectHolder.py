@@ -82,12 +82,13 @@ class ProjectHolder(requests.Session):
         log.info("Using cache directory: %s.", self.cache_dir)
         self.cache = FileCache(self.cache_dir)
         cache_adapter = CacheControlAdapter(cache=self.cache)
+        # noinspection HttpUrlsUsage
         self.mount("http://", cache_adapter)
         self.mount("https://", cache_adapter)
 
         self.names_cache_filename = "{}/repos.json".format(self.cache_dir)
 
-        self.headers.update({'User-Agent': '{}/{}'.format(app_name, __version__)})
+        self.headers.update({'User-Agent': f'{app_name}/{__version__}'})
         log.info('Created instance of %s', type(self).__name__)
         self.branches = None
         self.only = None
@@ -177,7 +178,7 @@ class ProjectHolder(requests.Session):
         """Check if repo is a known repo for this type of project holder."""
         if repo.startswith(('https://', 'http://')):
             for url in cls.KNOWN_REPO_URLS:
-                if repo.startswith((url, "https://{}".format(url), "http://{}".format(url))):
+                if repo.startswith((url, f"https://{url}", f"http://{url}")):
                     log.info('%s Starts with %s', repo, url)
                     return cls.KNOWN_REPO_URLS[url]
         else:
@@ -203,10 +204,10 @@ class ProjectHolder(requests.Session):
 
     def matches_major_filter(self, version, major):
         if self.branches and major in self.branches and \
-                re.search(r"{}".format(self.branches[major]), str(version)):
+                re.search(fr"{self.branches[major]}", str(version)):
             log.info('%s matches major %s', version, self.branches[major])
             return True
-        if str(version).startswith('{}.'.format(major)):
+        if str(version).startswith(f'{major}.'):
             log.info('%s is under the desired major %s', version, major)
             return True
         if str(version) == major:
@@ -299,7 +300,7 @@ class ProjectHolder(requests.Session):
         """Get release download URL."""
         if not self.RELEASE_URL_FORMAT:
             raise NotImplementedError(
-                'Getting release URL for {} is not implemented'.format(self._type()))
+                f'Getting release URL for {self._type()} is not implemented')
         ext = 'zip' if os.name == 'nt' else 'tar.gz'
 
         fmt = self.SHORT_RELEASE_URL_FORMAT if shorter and self.SHORT_RELEASE_URL_FORMAT else \
@@ -344,4 +345,4 @@ class ProjectHolder(requests.Session):
     def get_canonical_link(self):
         if self.feed_url:
             return self.feed_url
-        return 'https://{}/{}'.format(self.hostname, self.repo)
+        return f'https://{self.hostname}/{self.repo}'

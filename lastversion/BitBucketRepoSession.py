@@ -26,8 +26,7 @@ class BitBucketRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
-        response = self.get("https://api.bitbucket.org/2.0/repositories/{}/downloads".format(
-            self.repo))
+        response = self.get(f"https://api.bitbucket.org/2.0/repositories/{self.repo}/downloads")
         data = response.json()
         release = data['values'][0]
         version = self.sanitize_version(release['name'], pre_ok, major)

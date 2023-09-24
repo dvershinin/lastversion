@@ -87,6 +87,7 @@ class GitHubRepoSession(ProjectHolder):
     SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
     def find_repo_by_name_only(self, repo):
+        # noinspection HttpUrlsUsage
         if repo.startswith(('https://', 'http://')):
             return None
         cache = self.get_name_cache()
@@ -96,7 +97,7 @@ class GitHubRepoSession(ProjectHolder):
                 log.info("Found %s in repo short name cache", repo)
                 if not cache[repo]['repo']:
                     raise BadProjectError(
-                        'No project found on GitHub for search query: {}'.format(repo)
+                        f'No project found on GitHub for search query: {repo}'
                     )
                 return cache[repo]['repo']
         except TypeError:
@@ -104,9 +105,9 @@ class GitHubRepoSession(ProjectHolder):
 
         log.info("Making query against GitHub API to search repo %s", repo)
         r = self.get(
-            '{}/search/repositories'.format(self.api_base),
+            f'{self.api_base}/search/repositories',
             params={
-                'q': "{} in:name".format(repo),
+                'q': f"{repo} in:name",
                 'sort': 'stars',
                 'per_page': 1
             }
@@ -116,9 +117,7 @@ class GitHubRepoSession(ProjectHolder):
             return None
         if r.status_code != 200:
             raise BadProjectError(
-                'Error while identifying full repository on GitHub for search query: {}. Status: {}'.format(
-                    repo, r.status_code
-                )
+                f'Error while identifying full repository on GitHub for search query: {repo}. Status: {r.status_code}'
             )
         data = r.json()
         full_name = ''
@@ -133,7 +132,7 @@ class GitHubRepoSession(ProjectHolder):
 
         if not full_name:
             raise BadProjectError(
-                'No project found on GitHub for search query: {}'.format(repo)
+                f'No project found on GitHub for search query: {repo}'
             )
         return full_name
 
@@ -150,7 +149,7 @@ class GitHubRepoSession(ProjectHolder):
             if token:
                 self.api_token = token
                 log.info('Using API token %s.', var_name)
-                self.headers.update({'Authorization': "token {}".format(self.api_token)})
+                self.headers.update({'Authorization': f"token {self.api_token}"})
                 break
         if not self.api_token:
             log.info('No API token found in environment variables %s.', self.TOKEN_ENV_VARS)
@@ -163,9 +162,9 @@ class GitHubRepoSession(ProjectHolder):
         })
 
         if self.hostname != self.DEFAULT_HOSTNAME:
-            self.api_base = 'https://{}/api/v3'.format(self.hostname)
+            self.api_base = f'https://{self.hostname}/api/v3'
         else:
-            self.api_base = 'https://api.{}'.format(self.DEFAULT_HOSTNAME)
+            self.api_base = f'https://api.{self.DEFAULT_HOSTNAME}'
         if '/' not in repo:
             official_repo = self.try_get_official(repo)
             if official_repo:
@@ -180,7 +179,7 @@ class GitHubRepoSession(ProjectHolder):
         self.set_repo(repo)
 
     def get_rate_limit_url(self):
-        return '{}/rate_limit'.format(self.api_base)
+        return f'{self.api_base}/rate_limit'
 
     def get(self, url, **kwargs):
         """Send GET request and account for GitHub rate limits and such."""
@@ -196,8 +195,7 @@ class GitHubRepoSession(ProjectHolder):
                 and 'X-RateLimit-Remaining' in r.headers:
             if self.rate_limited_count > 2:
                 raise ApiCredentialsError(
-                    'API requests were denied after retrying {} times'.format(
-                        self.rate_limited_count)
+                    f'API requests were denied after retrying {self.rate_limited_count} times'
                 )
             remaining = int(r.headers['X-RateLimit-Remaining'])
             # 1 sec to account for skewed clock between GitHub and client
@@ -212,9 +210,9 @@ class GitHubRepoSession(ProjectHolder):
                             'be reinstated'
                         )
                     else:
-                        w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
+                        w = f'Waiting {wait_for} seconds for API quota reinstatement.'
                         if not self.api_token:
-                            w = "{} {}".format(w, TOKEN_PRO_TIP)
+                            w = f"{w} {TOKEN_PRO_TIP}"
                         log.warning(w)
                         time.sleep(wait_for)
                     self.rate_limited_count = self.rate_limited_count + 1
@@ -230,28 +228,28 @@ class GitHubRepoSession(ProjectHolder):
         return r
 
     def rate_limit(self):
-        url = '{}/rate_limit'.format(self.api_base)
+        url = f'{self.api_base}/rate_limit'
         return self.get(url)
 
     def repo_query(self, uri):
         """API query for a repository"""
-        url = '{}/repos/{}{}'.format(self.api_base, self.repo, uri)
+        url = f'{self.api_base}/repos/{self.repo}{uri}'
         return self.get(url)
 
     def repo_license(self, tag):
-        r = self.repo_query('/license?ref={}'.format(tag))
+        r = self.repo_query(f'/license?ref={tag}')
         if r.status_code == 200:
             # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag
             # we have to double-check whether the license file exists "at release tag"
             license_data = r.json()
             license_path = license_data['path']
-            license_r = self.repo_query('/contents/{}?ref={}'.format(license_path, tag))
+            license_r = self.repo_query(f'/contents/{license_path}?ref={tag}')
             if license_r.status_code == 200:
                 return license_data
         return None
 
     def repo_readme(self, tag):
-        r = self.repo_query('/readme?ref={}'.format(tag))
+        r = self.repo_query(f'/readme?ref={tag}')
         if r.status_code == 200:
             return r.json()
         return None
@@ -331,7 +329,7 @@ class GitHubRepoSession(ProjectHolder):
             owner, name = self.repo.split('/')
             query = query_fmt % (owner, name, cursor)
             log.info('Running query %s', query)
-            r = self.post('{}/graphql'.format(self.api_base), json={'query': query})
+            r = self.post(f'{self.api_base}/graphql', json={'query': query})
             log.info('Requested graphql with cursor "%s"', cursor)
             if r.status_code != 200:
                 log.info("query returned non 200 response code %s", r.status_code)
@@ -339,7 +337,7 @@ class GitHubRepoSession(ProjectHolder):
             j = r.json()
             if 'errors' in j and j['errors'][0]['type'] == 'NOT_FOUND':
                 raise BadProjectError(
-                    'No such project found on GitHub: {}'.format(self.repo)
+                    f'No such project found on GitHub: {self.repo}'
                 )
             if not j['data']['repository']['tags']['edges']:
                 log.info('No tags in GraphQL response: %s', r.text)
@@ -398,7 +396,7 @@ class GitHubRepoSession(ProjectHolder):
         self.ensure_formal_releases_fetched()
         # no releases in /releases means no
         if self.formal_releases_by_tag and tag not in self.formal_releases_by_tag:
-            r = self.repo_query('/releases/tags/{}'.format(tag))
+            r = self.repo_query(f'/releases/tags/{tag}')
             if r.status_code == 200:
                 self.formal_releases_by_tag[tag] = r.json()
 
@@ -407,7 +405,7 @@ class GitHubRepoSession(ProjectHolder):
     def find_in_tags(self, ret, pre_ok, major):
         """
         Find a more recent release in the /tags API endpoint.
-        Finding in /tags requires paging through ALL of them, because the API does not list them
+        Finding in /tags requires paging through ALL of them because the API does not list them
         in order of recency, thus this is very slow.
         We need to check all tags commit dates simply because the most recent wins
         We don't check tags which:
@@ -430,7 +428,7 @@ class GitHubRepoSession(ProjectHolder):
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue
-            c = self.repo_query('/git/commits/{}'.format(t['commit']['sha']))
+            c = self.repo_query(f'/git/commits/{t["commit"]["sha"]}')
             d = c.json()['committer']['date']
             d = parser.parse(d)
 
@@ -458,7 +456,7 @@ class GitHubRepoSession(ProjectHolder):
         The `releases.atom` feed includes non-formal releases which are just tags, so we are good.
         Based on testing, edited old releases don't jump forward in the list and stay behind (good).
         The only downside is they don't bear pre-release mark (unlike API), and have limited data.
-        We work around these by checking pre-release flag and get full release data via API.
+        We work around these by checking the pre-release flag and get full release data via API.
         """
         if self.repo in self.feed_contents:
             return self.feed_contents[self.repo]
@@ -468,11 +466,11 @@ class GitHubRepoSession(ProjectHolder):
             # authorization header may cause a false positive 200 response with an empty feed!
             'Authorization': ''
         }
-        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, self.repo), headers=headers)
+        r = self.get(f'https://{self.hostname}/{self.repo}/releases.atom', headers=headers)
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
         if r.status_code == 404 and not rename_checked:
-            # #44: in some network locations, GitHub returns 404 (as opposed to 301 redirect) for the renamed
+            # #44: in some network locations, GitHub returns 404 (as opposed to a 301 redirect) for the renamed
             # repositories /releases.atom. When we get a 404, we lazily load repo info via API, and hopefully
             # get redirect there as well as the new repo full name
             r = self.repo_query('')
@@ -587,7 +585,7 @@ class GitHubRepoSession(ProjectHolder):
                     log.info("Selected version as current selection: %s.", version)
 
         # we are good with release from feeds only without looking at the API
-        # simply because feeds list stuff in order of recency
+        # simply because feeds list stuff in order of recency,
         # however, still use /tags unless releases.atom has data within a year
         if ret and ret['tag_date'].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
             return self.enrich_release_info(ret)
@@ -598,7 +596,7 @@ class GitHubRepoSession(ProjectHolder):
         # this may be required in cases
         # releases.atom has limited/no tags (#63), and all those are beta / invalid / non-versions
         # likewise, we want an older branch (major), which is not there in releases.atom
-        # due to limited nature of data inside it
+        # due to the limited nature of data inside it
 
         self.ensure_formal_releases_fetched()
         for tag_name in self.formal_releases_by_tag:
@@ -610,13 +608,13 @@ class GitHubRepoSession(ProjectHolder):
                 ret = self.set_matching_formal_release(ret, release, version, pre_ok)
 
         if self.having_asset:
-            # only formal releases which we enumerated above already, have assets
+            # only formal releases which we enumerated above already, have assets,
             # so there is no point looking in the tags/graphql below
             # return whatever we got
             return self.enrich_release_info(ret)
 
         # formal release may not exist at all, or be "late/old" in case
-        # actual release is only a simple tag so let's try /tags
+        # actual release is only a simple tag, so let's try /tags
         if self.api_token:
             # GraphQL requires auth
             ret = self.find_in_tags_via_graphql(ret, pre_ok, major)
@@ -627,7 +625,7 @@ class GitHubRepoSession(ProjectHolder):
 
     def set_matching_formal_release(self, ret, formal_release, version, pre_ok,
                                     data_type='release'):
-        """Set current release selection to this formal release if matching conditions."""
+        """Set the current release selection to this formal release if matching conditions."""
         if not pre_ok and formal_release['prerelease']:
             log.info(
                 "Found formal release for this tag which is unwanted "
@@ -658,14 +656,14 @@ class GitHubRepoSession(ProjectHolder):
         return formal_release
 
     def try_get_official(self, repo):
-        """Check existence of repo/repo
+        """Check the existence of repo/repo
 
         Returns:
             str: updated repo
         """
-        official_repo = "{repo}/{repo}".format(repo=repo)
+        official_repo = f"{repo}/{repo}"
         log.info('Checking existence of %s', official_repo)
-        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, official_repo))
+        r = self.get(f'https://{self.hostname}/{official_repo}/releases.atom')
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
         if r.status_code == 200:

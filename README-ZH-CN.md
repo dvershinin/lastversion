@@ -460,7 +460,7 @@ export GITLAB_PA_TOKEN=xxxxxxxxxxxxxxx
 from lastversion import lastversion
 latest_version = lastversion.has_update(repo="mautic/mautic", current_version='1.2.3')
 if latest_version:
-    print('Newer Mautic version is available: {}'.format(str(latest_version)))
+    print(f'Newer Mautic version is available: {latest_version}')
 else:
     print('No update is available')
 ```
@@ -475,7 +475,7 @@ else:
 from lastversion import lastversion
 latest_version = lastversion.has_update(repo="requests", at='pip', current_version='1.2.3')
 if latest_version:
-    print('Newer Requests library is available: {}'.format(str(latest_version)))
+    print(f'Newer Requests library is available: {latest_version}')
 else:
     print('No update is available')
 ```
@@ -493,7 +493,7 @@ from packaging import version
 
 latest_mautic_version = lastversion.latest("mautic/mautic", output_format='version', pre_ok=True)
 
-print('Latest Mautic version: {}'.format(str(latest_mautic_version)))
+print(f'Latest Mautic version: {latest_mautic_version}')
 
 if latest_mautic_version >= version.parse('1.8.1'):
     print('It is newer')

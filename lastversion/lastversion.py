@@ -41,6 +41,7 @@ from .utils import download_file, extract_file, rpm_installed_version, ApiCreden
 log = logging.getLogger(__name__)
 
 
+# noinspection GrazieInspection
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
            short_urls=False, major=None, only=None, at=None,
            having_asset=None, exclude=None, even=False):
@@ -53,7 +54,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         only (str): Only consider tags with this text. Useful for repos with multiple projects.
                     The argument supports negation and regular expressions. To indicate a regex,
                     start it with tilde sign, to negate the expression, start it with exclamation
-                    point. See ``Examples``.
+                    point. See `Examples`.
         repo (str): Repository specifier in any form.
         output_format (str): Affects the return format. Possible values `version`, `json`, `dict`,
                              `assets`, `source`, `tag`.
@@ -84,6 +85,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
     """
     repo_data = {}
 
+    # noinspection HttpUrlsUsage
     if repo.endswith('.yml') and not repo.startswith(('http://', 'https://')):
         with open(repo) as fpi:
             repo_data = yaml.safe_load(fpi)
@@ -100,10 +102,10 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         at = 'helm_chart'
 
     if repo.endswith('.spec'):
-        # repo is specified inside the .spec file
+        # The repo is specified inside the .spec file
         # GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
         # no upstream_github global means that the spec was not prepared for lastversion
-        # optional: use of spec_tag macros if the source is from GitHub. in edge cases we check
+        # optional: use of spec_tag macros if the source is from GitHub. In edge cases we check
         # new version via GitHub, but prepared sources are elsewhere
         with open(repo) as f:
             name = None
@@ -200,7 +202,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 str(version),
                 version_macro
             )
-            # spec_tag_no_prefix is the helpful macro which will allow us to know where tarball
+            # spec_tag_no_prefix is the helpful macro that will allow us to know where tarball
             # extracts to (GitHub-specific)
             if release['spec_tag'].startswith('v{}'.format(version_macro)) or \
                     re.match(r'^v\d', release['spec_tag']):
@@ -244,12 +246,12 @@ def has_update(repo, current_version, pre_ok=False, at=None):
     Args:
         repo (str): Repository specifier in any form.
         current_version (str): A version you want to check update for.
-        pre_ok (bool): Specifies whether pre-releases can be accepted as newer version.
+        pre_ok (bool): Specifies whether pre-releases can be accepted as a newer version.
         at (str): Specifies repo hosting more precisely, only useful if repo argument was
                   specified as one word.
 
     Returns:
-        Version: Newer version as object, if found. Otherwise, False
+        Version: Newer version as an object, if found. Otherwise, False
 
     """
     latest_version = latest(repo, output_format='version', pre_ok=pre_ok, at=at)
@@ -565,7 +567,7 @@ def main(argv=None):
                 # there is only one source, but we need an array
                 res = [res]
             download_name = None
-            # save with custom filename, if there's one file to download
+            # save with custom filename if there's one file to download
             if len(res) == 1:
                 download_name = args.download
             for url in res:

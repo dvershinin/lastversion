@@ -26,15 +26,15 @@ class GitLabRepoSession(ProjectHolder):
             self.hostname = self.DEFAULT_HOSTNAME
         if self.pa_token:
             log.info('Using Personal Access token.')
-            self.headers.update({'Private-Token': "{}".format(self.pa_token)})
-        self.api_base = 'https://{}/api/v4'.format(self.hostname)
+            self.headers.update({'Private-Token': self.pa_token})
+        self.api_base = f'https://{self.hostname}/api/v4'
         self.set_repo(repo)
         self.repo_id = self.repo.replace('/', '%2F')
         # lazy loaded dict cache of /releases response keyed by tag, only first page
         self.formal_releases_by_tag = None
 
     def repo_query(self, uri):
-        url = '{}/projects/{}{}'.format(self.api_base, self.repo_id, uri)
+        url = f'{self.api_base}/projects/{self.repo_id}{uri}'
         return self.get(url)
 
     def ensure_formal_releases_fetched(self):
@@ -54,7 +54,7 @@ class GitLabRepoSession(ProjectHolder):
         self.ensure_formal_releases_fetched()
         # no releases in /releases means no
         if self.formal_releases_by_tag and tag not in self.formal_releases_by_tag:
-            r = self.repo_query('/releases/{}'.format(tag))
+            r = self.repo_query(f'/releases/{tag}')
             if r.status_code == 200:
                 self.formal_releases_by_tag[tag] = r.json()
 
@@ -64,7 +64,7 @@ class GitLabRepoSession(ProjectHolder):
         """Get the latest release."""
         ret = None
 
-        # gitlab returns tags by updated in desc order, this is just what we want :)
+        # gitlab returns tags by updated in desc order; this is just what we want :)
         r = self.repo_query('/repository/tags')
         if r.status_code == 200:
             for t in r.json():

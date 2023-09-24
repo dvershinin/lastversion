@@ -1,3 +1,4 @@
+"""Provides class to represent a WordPress plugin project holder."""
 import logging
 
 from .ProjectHolder import ProjectHolder
@@ -7,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class WordPressPluginRepoSession(ProjectHolder):
-    """A class to represent a WordPress plugin  project holder."""
+    """A class to represent a WordPress plugin project holder."""
     DEFAULT_HOSTNAME = 'wordpress.org'
     REPO_URL_PROJECT_COMPONENTS = 1
     # For project URLs, e.g. https://wordpress.org/plugins/opcache-reset/
@@ -17,11 +18,11 @@ class WordPressPluginRepoSession(ProjectHolder):
     def get_project(self):
         """Get project JSON data."""
         project = None
-        url = 'https://api.{}/plugins/info/1.0/{}.json'.format(self.hostname, self.repo)
+        url = f'https://api.{self.hostname}/plugins/info/1.0/{self.repo}.json'
         log.info('Requesting %s', url)
-        r = self.get(url)
-        if r.status_code == 200:
-            project = r.json()
+        response = self.get(url)
+        if response.status_code == 200:
+            project = response.json()
         return project
 
     def __init__(self, repo, hostname=None):
@@ -34,15 +35,12 @@ class WordPressPluginRepoSession(ProjectHolder):
         self.project = self.get_project()
         if hostname and not self.project:
             raise BadProjectError(
-                'The project {} does not exist in WordPress plugin directory'.format(
-                    repo
-                )
+                f'The project {repo} does not exist in WordPress plugin directory'
             )
 
     def release_download_url(self, release, shorter=False):
         """Get release download URL."""
-        return 'https://downloads.wordpress.org/plugin/{}.{}.zip'.format(
-            self.repo, release['version'])
+        return f'https://downloads.wordpress.org/plugin/{self.repo}.{release["version"]}.zip'
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release for this project."""
@@ -75,8 +73,8 @@ class WordPressPluginRepoSession(ProjectHolder):
     @staticmethod
     def make_canonical_link(repo):
         """Make canonical link from repo."""
-        return 'https://{}/plugins/{}/'.format(WordPressPluginRepoSession.DEFAULT_HOSTNAME, repo)
+        return f'https://{WordPressPluginRepoSession.DEFAULT_HOSTNAME}/plugins/{repo}/'
 
     def get_canonical_link(self):
         """Get canonical link from repo."""
-        return 'https://{}/plugins/{}/'.format(self.hostname, self.repo)
+        return f'https://{self.hostname}/plugins/{self.repo}/'

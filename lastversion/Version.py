@@ -115,7 +115,7 @@ class Version(PackagingVersion):
             if part:
                 parts_n.append(part)
         if not parts_n:
-            raise InvalidVersion("Invalid version: '{0}'".format(version))
+            raise InvalidVersion(f"Invalid version: '{version}'")
         # remove *any* non-digits which appear at the beginning of the version string
         # e.g. Rhino1_7_13_Release does not even bother to put a delimiter...
         # such string at the beginning typically do not convey stability level,

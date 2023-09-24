@@ -39,11 +39,20 @@ class HolderFactory:
 
     @staticmethod
     def guess_from_homepage(repo, hostname):
+        """
+        Try to guess the right holder for a given repo and domain.
+        Args:
+            repo:
+            hostname:
+
+        Returns:
+
+        """
         # repo auto-discovery failed for detected/default provider
         # now we simply try website provider based on the hostname/RSS feeds in HTML or GitHub links
         holder = FeedRepoSession(repo, hostname)
         if not holder.is_valid():
-            # re-use soup from feed holder object
+            # re-use soup from the feed holder object
             log.info('Have not found any RSS feed for the website %s', hostname)
             github_link = holder.home_soup.select_one("a[href*='github.com']")
             if github_link:
@@ -75,7 +84,7 @@ class HolderFactory:
                 break
         if known_repo:
             repo = known_repo['repo']
-            # known repo tells us hosted domain of e.g. mercurial web
+            # Known repo tells us hosted domain of e.g., mercurial web
             if 'hostname' in known_repo:
                 hostname = known_repo['hostname']
         else:

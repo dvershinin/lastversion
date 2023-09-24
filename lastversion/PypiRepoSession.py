@@ -19,7 +19,7 @@ class PypiRepoSession(ProjectHolder):
     def get_project(self):
         """Get project JSON data."""
         project = None
-        url = 'https://{}/pypi/{}/json'.format(self.hostname, self.repo)
+        url = f'https://{self.hostname}/pypi/{self.repo}/json'
         log.info('Requesting %s', url)
         r = self.get(url)
         if r.status_code == 200:
@@ -80,7 +80,9 @@ class PypiRepoSession(ProjectHolder):
 
     @staticmethod
     def make_canonical_link(repo):
-        return 'https://{}/project/{}/'.format(PypiRepoSession.DEFAULT_HOSTNAME, repo)
+        """Make canonical link for a repo."""
+        return f'https://{PypiRepoSession.DEFAULT_HOSTNAME}/project/{repo}/'
 
     def get_canonical_link(self):
-        return 'https://{}/project/{}/'.format(self.hostname, self.repo)
+        """Get the canonical link for a repo."""
+        return f'https://{self.hostname}/project/{self.repo}/'

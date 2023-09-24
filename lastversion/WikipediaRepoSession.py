@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 
 def remove_words(title):
+    """Remove words from a title that are not part of the version."""
     parts = title.split(' ')
     parts_n = []
     for part in parts:
@@ -20,6 +21,8 @@ def remove_words(title):
 
 
 class WikipediaRepoSession(ProjectHolder):
+    """Wikipedia repo session."""
+
     KNOWN_REPOS_BY_NAME = {
         'alpine': {
             'repo': 'Alpine_Linux',
@@ -82,9 +85,10 @@ class WikipediaRepoSession(ProjectHolder):
         self.set_repo(repo)
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         tag_name = None
         tag = {}
-        r = self.get('https://{}/wiki/{}'.format(self.hostname, self.repo))
+        r = self.get(f'https://{self.hostname}/wiki/{self.repo}')
         soup = BeautifulSoup(r.text, "html.parser")
         # we only need the first one
         infobox = soup.select_one(".infobox")
@@ -101,7 +105,7 @@ class WikipediaRepoSession(ProjectHolder):
                 tag_name = release_data.text
                 tag_name = tag_name.replace(' Service Pack ', '.post')
                 # remove alphas from beginning
-                tag_name = remove_words(tag_name).split('/')[0]
+                tag_name = remove_words(tag_name).split('/', maxsplit=1)[0]
                 # Remove unicode stuff (for Python 2)
                 tag['title'] = release_data.text.encode("ascii", "ignore").decode()
                 log.info('Pre-parsed title: %s', tag['title'])

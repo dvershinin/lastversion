@@ -38,7 +38,7 @@ class FeedRepoSession(ProjectHolder):
                 if href:
                     possible_feeds.append(href)
         parsed_url = urlparse(site)
-        base = "{}://{}".format(parsed_url.scheme, parsed_url.hostname)
+        base = f"{parsed_url.scheme}://{parsed_url.hostname}"
         a_tags = html.findAll("a")
         for a in a_tags:
             href = a.get("href", None)
@@ -66,7 +66,7 @@ class FeedRepoSession(ProjectHolder):
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
         ret = None
-        # To leverage cachecontrol, we fetch the feed using requests as usual,
+        # To leverage `cachecontrol`, we fetch the feed using requests as usual,
         # then feed the feed to feedparser as a raw string
         # e.g. https://hg.nginx.org/nginx/atom-tags
         # https://pythonhosted.org/feedparser/common-atom-elements.html

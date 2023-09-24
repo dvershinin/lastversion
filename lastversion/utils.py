@@ -362,6 +362,7 @@ def rpm_installed_version(name):
         string: Version of the installed packaged, or None
     """
     try:
+        # noinspection PyUnresolvedReferences,PyPackageRequirements
         import rpm
     except ImportError:
         return False

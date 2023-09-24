@@ -53,9 +53,10 @@ class GiteaRepoSession(ProjectHolder):
     SHORT_RELEASE_URL_FORMAT = RELEASE_URL_FORMAT
 
     def find_repo_by_name_only(self, repo):
+        # noinspection HttpUrlsUsage
         if repo.startswith(('https://', 'http://')):
             return None
-        cache_repo_names_file = "{}/repos.json".format(self.cache_dir)
+        cache_repo_names_file = f"{self.cache_dir}/repos.json"
         try:
             with open(cache_repo_names_file, 'r') as reader:
                 cache = json.load(reader)
@@ -73,9 +74,9 @@ class GiteaRepoSession(ProjectHolder):
             pass
         log.info("Making query against GitHub API to search repo %s", repo)
         r = self.get(
-            '{}/search/repositories'.format(self.api_base),
+            f'{self.api_base}/search/repositories',
             params={
-                'q': "{} in:name".format(repo)
+                'q': f"{repo} in:name"
             }
         )
         if r.status_code == 404:
@@ -83,9 +84,7 @@ class GiteaRepoSession(ProjectHolder):
             return None
         if r.status_code != 200:
             raise BadProjectError(
-                'Error while identifying full repository on GitHub for search query: {}'.format(
-                    repo
-                )
+                f'Error while identifying full repository on GitHub for search query: {repo}'
             )
         data = r.json()
         full_name = ''
@@ -102,7 +101,7 @@ class GiteaRepoSession(ProjectHolder):
             pass
         if not full_name:
             raise BadProjectError(
-                'No project found on GitHub for search query: {}'.format(repo)
+                f'No project found on GitHub for search query: {repo}'
             )
         return full_name
 
@@ -121,11 +120,11 @@ class GiteaRepoSession(ProjectHolder):
         })
         if self.api_token:
             log.info('Using API token.')
-            self.headers.update({'Authorization': "token {}".format(self.api_token)})
+            self.headers.update({'Authorization': f"token {self.api_token}"})
         if self.hostname != self.DEFAULT_HOSTNAME:
-            self.api_base = 'https://{}/api/v1'.format(self.hostname)
+            self.api_base = f'https://{self.hostname}/api/v1'
         else:
-            self.api_base = 'https://{}/api/v1'.format(self.DEFAULT_HOSTNAME)
+            self.api_base = f'https://{self.DEFAULT_HOSTNAME}/api/v1'
         if '/' not in repo:
             official_repo = self.try_get_official(repo)
             if official_repo:
@@ -140,7 +139,7 @@ class GiteaRepoSession(ProjectHolder):
         self.set_repo(repo)
 
     def get_rate_limit_url(self):
-        return '{}/rate_limit'.format(self.api_base)
+        return f'{self.api_base}/rate_limit'
 
     def get(self, url, **kwargs):
         """Send GET request and account for GitHub rate limits and such."""
@@ -156,8 +155,7 @@ class GiteaRepoSession(ProjectHolder):
                 and 'X-RateLimit-Remaining' in r.headers:
             if self.rate_limited_count > 2:
                 raise ApiCredentialsError(
-                    'API requests were denied after retrying {} times'.format(
-                        self.rate_limited_count)
+                    f'API requests were denied after retrying {self.rate_limited_count} times'
                 )
             remaining = int(r.headers['X-RateLimit-Remaining'])
             # 1 sec to account for skewed clock between GitHub and client
@@ -175,14 +173,13 @@ class GiteaRepoSession(ProjectHolder):
                         w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
                         if "GITHUB_API_TOKEN" not in os.environ \
                                 and 'GITHUB_TOKEN' not in os.environ:
-                            w = "{} {}".format(w, TOKEN_PRO_TIP)
+                            w = f"{w} {TOKEN_PRO_TIP}"
                         log.warning(w)
                         time.sleep(wait_for)
                     self.rate_limited_count = self.rate_limited_count + 1
                     return self.get(url)
                 raise ApiCredentialsError(
-                    'Exceeded API rate limit after waiting: {}'.format(
-                        r.json()['message'])
+                    f'Exceeded API rate limit after waiting: {r.json()["message"]}'
                 )
             return self.get(url)
 
@@ -191,33 +188,33 @@ class GiteaRepoSession(ProjectHolder):
         return r
 
     def rate_limit(self):
-        url = '{}/rate_limit'.format(self.api_base)
+        url = f'{self.api_base}/rate_limit'
         return self.get(url)
 
     def repo_query(self, uri):
-        url = '{}/repos/{}{}'.format(self.api_base, self.repo, uri)
+        url = f'{self.api_base}/repos/{self.repo}{uri}'
         return self.get(url)
 
     def repo_license(self, tag):
-        r = self.repo_query('/license?ref={}'.format(tag))
+        r = self.repo_query(f'/license?ref={tag}')
         if r.status_code == 200:
             # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag
             # we have to double-check whether the license file exists "at release tag"
             license_data = r.json()
             license_path = license_data['path']
-            license_r = self.repo_query('/contents/{}?ref={}'.format(license_path, tag))
+            license_r = self.repo_query(f'/contents/{license_path}?ref={tag}')
             if license_r.status_code == 200:
                 return license_data
         return None
 
     def repo_readme(self, tag):
-        r = self.repo_query('/readme?ref={}'.format(tag))
+        r = self.repo_query(f'/readme?ref={tag}')
         if r.status_code == 200:
             return r.json()
         return None
 
     def get_formal_release_for_tag(self, tag):
-        r = self.repo_query('/releases/tags/{}'.format(tag))
+        r = self.repo_query(f'/releases/tags/{tag}')
         if r.status_code == 200:
             # noinspection SpellCheckingInspection
             return r.json()
@@ -310,14 +307,14 @@ class GiteaRepoSession(ProjectHolder):
         return formal_release
 
     def try_get_official(self, repo):
-        """Check existence of repo/repo
+        """Check the existence of repo/repo
 
         Returns:
             str: updated repo
         """
-        official_repo = "{repo}/{repo}".format(repo=repo)
+        official_repo = f"{repo}/{repo}"
         log.info('Checking existence of %s', official_repo)
-        r = self.get('https://{}/{}/releases.atom'.format(self.hostname, official_repo))
+        r = self.get(f'https://{self.hostname}/{official_repo}/releases.atom')
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
         self.cookies.clear()
         if r.status_code == 200:

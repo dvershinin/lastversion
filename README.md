@@ -639,7 +639,7 @@ You can use `lastversion.has_update(...)` to find whether an update for existing
 from lastversion import has_update
 latest_version = has_update(repo="mautic/mautic", current_version='1.2.3')
 if latest_version:
-    print('Newer Mautic version is available: {}'.format(str(latest_version)))
+    print(f'Newer Mautic version is available: {latest_version}')
 else:
     print('No update is available')
 ```
@@ -656,7 +656,7 @@ library:
 from lastversion import has_update
 latest_version = has_update(repo="requests", at='pip', current_version='1.2.3')
 if latest_version:
-    print('Newer Requests library is available: {}'.format(str(latest_version)))
+    print('Newer Requests library is available: {latest_version}')
 else:
     print('No update is available')
 ```
@@ -675,7 +675,7 @@ from packaging import version
 
 latest_mautic_version = latest("mautic/mautic", output_format='version', pre_ok=True)
 
-print('Latest Mautic version: {}'.format(str(latest_mautic_version)))
+print(f'Latest Mautic version: {latest_mautic_version}')
 
 if latest_mautic_version >= version.parse('1.8.1'):
     print('It is newer')

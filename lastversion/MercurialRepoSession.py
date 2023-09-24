@@ -41,7 +41,7 @@ class MercurialRepoSession(ProjectHolder):
         # then feed the feed to feedparser as a raw string
         # e.g. https://hg.nginx.org/nginx/atom-tags
         # https://pythonhosted.org/feedparser/common-atom-elements.html
-        r = self.get('https://{}/{}/atom-tags'.format(self.hostname, self.repo))
+        r = self.get(f'https://{self.hostname}/{self.repo}/atom-tags')
         feed = feedparser.parse(r.text)
         for tag in feed.entries:
             tag_name = tag['title']

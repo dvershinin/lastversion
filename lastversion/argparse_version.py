@@ -7,6 +7,8 @@ from .__about__ import __version__
 
 class VersionAction(Action):
     """Custom argparse action to show program's version and exit."""
+
+    # noinspection PyShadowingBuiltins
     def __init__(self,
                  option_strings,
                  version=None,
@@ -22,7 +24,7 @@ class VersionAction(Action):
         self.version = version
 
     def __call__(self, parser, namespace, values, option_string=None):
-        version = '%(prog)s {version}'.format(version=__version__)
+        version = f'%(prog)s {__version__}'
         last_version = lastversion.latest(lastversion.__self__)
         if __version__ == str(last_version):
             version += ', up to date'

@@ -14,12 +14,13 @@ class SystemRepoSession(ProjectHolder):
         self.set_repo(repo)
 
     def dnf_get_available_version(self, pre_ok, major):
+        """Get the latest release available via `dnf`."""
         ret = None
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences,PyPackageRequirements
         import dnf
         with dnf.Base() as base:
-            RELEASEVER = dnf.rpm.detect_releasever(base.conf.installroot)
-            base.conf.substitutions['releasever'] = RELEASEVER
+            releasever = dnf.rpm.detect_releasever(base.conf.installroot)
+            base.conf.substitutions['releasever'] = releasever
             # Repositories are needed if we want to install anything.
             base.read_all_repos()
             # A sack is needed for querying.
@@ -42,8 +43,9 @@ class SystemRepoSession(ProjectHolder):
         return ret
 
     def yum_get_available_version(self, pre_ok, major):
+        """Get the latest release available via `yum`."""
         ret = None
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences,PyPackageRequirements
         import yum
         yum_loggers = ['yum.filelogging.RPMInstallCallback', 'yum.verbose.Repos',
                        'yum.verbose.plugin',
@@ -63,14 +65,14 @@ class SystemRepoSession(ProjectHolder):
             if not ret or ret['version'] < version:
                 ret = {
                     'version': version,
-                    'tag_name': pkg.vr,
-                    # 'tag_date': ?
+                    'tag_name': pkg.vr
                 }
         return ret
 
     def apt_get_available_version(self, pre_ok, major):
+        """Get the latest release available via `apt`."""
         ret = None
-        # noinspection PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences,PyPackageRequirements
         import apt
         cache = apt.cache.Cache()
         cache.update()
@@ -89,6 +91,7 @@ class SystemRepoSession(ProjectHolder):
         return ret
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         try:
             return self.dnf_get_available_version(pre_ok, major)
         except ImportError:

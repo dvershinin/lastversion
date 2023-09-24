@@ -22,7 +22,7 @@ class LocalVersionSession(ProjectHolder):
             log.info('--pre is not supported for local version sources')
         if not major:
             major = 'stable'
-        ver_file = '/usr/local/share/builder/{}-{}.ver'.format(self.repo, major)
+        ver_file = f'/usr/local/share/builder/{self.repo}-{major}.ver'
         with open(ver_file, 'r') as f:
             version = f.read().replace('\n', '')
             return {
