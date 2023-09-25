@@ -26,8 +26,10 @@ class Version(PackagingVersion):
         return match.group(1) + '.post' + str(ord(match.group(2)))
 
     def is_semver(self):
-        """Check if this a semantic version"""
-        return self.base_version.count('.') == 2
+        """
+        Check if this a semantic version or a shorthand of semantic version
+        """
+        return self.base_version.count('.') >= 1
 
     @staticmethod
     def part_to_pypi(part):

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.3.2] - 2023-09-25
+### Fixed
+* Fix regression in semver preference
+
 ## [3.3.1] - 2023-09-22
 ### Fixed
 * Fixed AppImage installation #107

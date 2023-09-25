@@ -45,3 +45,14 @@ def test_semver_preferred():
     output = latest(repo)
 
     assert output == version.parse("8.10.0")
+
+
+def test_semver_shorthand_preferred():
+    """
+    Test a GitHub project with a shorthand semver version number for releases
+    """
+    repo = "https://github.com/lastversion-test-repos/cgal"
+
+    output = latest(repo)
+
+    assert output == version.parse("5.6")
