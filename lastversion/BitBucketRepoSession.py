@@ -8,8 +8,10 @@ class BitBucketRepoSession(ProjectHolder):
     KNOWN_REPO_URLS = {
         'mmonit.com': {
             'repo': 'tildeslash/monit',
-            # get URL from the official website because it is a "prepared" source
-            'release_url_format': "https://mmonit.com/{name}/dist/{name}-{version}.tar.gz"
+            # get URL from the official website because it is a "prepared"
+            # source that has the `./configure` script available
+            'release_url_format': "https://mmonit.com/{name}/dist/{name}-"
+                                  "{version}.tar.gz"
         }
     }
 
@@ -26,7 +28,9 @@ class BitBucketRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
-        response = self.get(f"https://api.bitbucket.org/2.0/repositories/{self.repo}/downloads")
+        response = self.get(
+            f"https://api.bitbucket.org/2.0/repositories/{self.repo}/downloads"
+        )
         data = response.json()
         release = data['values'][0]
         version = self.sanitize_version(release['name'], pre_ok, major)

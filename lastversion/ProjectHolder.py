@@ -4,6 +4,7 @@ import logging
 import os
 import platform
 import re
+
 import requests
 from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
@@ -160,12 +161,17 @@ class ProjectHolder(requests.Session):
             log.info('Only considering releases with asset "%s"', having_asset)
         return self
 
+    @staticmethod
+    def is_link(repo):
+        """Check if repo is a link."""
+        return repo.startswith(('https://', 'http://'))
+
     @classmethod
     def get_host_repo_for_link(cls, repo):
         """Return hostname and repo from a link."""
         hostname = None
         # return repo modified to result of extraction
-        if repo.startswith(('https://', 'http://')):
+        if cls.is_link(repo):
             # parse hostname for passing to whatever holder selected
             url_parts = repo.split('/')
             hostname = url_parts[2]
@@ -176,7 +182,7 @@ class ProjectHolder(requests.Session):
     @classmethod
     def is_official_for_repo(cls, repo):
         """Check if repo is a known repo for this type of project holder."""
-        if repo.startswith(('https://', 'http://')):
+        if cls.is_link(repo):
             for url in cls.KNOWN_REPO_URLS:
                 if repo.startswith((url, f"https://{url}", f"http://{url}")):
                     log.info('%s Starts with %s', repo, url)
@@ -190,7 +196,7 @@ class ProjectHolder(requests.Session):
     @classmethod
     def get_matching_hostname(cls, repo):
         """Find matching hostname between repo and holder's default hostname."""
-        if not repo.startswith(('http://', 'https://')):
+        if not cls.is_link(repo):
             return None
         if not cls.DEFAULT_HOSTNAME and not cls.SUBDOMAIN_INDICATOR:
             return None

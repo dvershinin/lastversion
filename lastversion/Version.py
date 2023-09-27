@@ -1,6 +1,7 @@
 """Version class for lastversion"""
 import re
 from datetime import datetime
+
 from packaging.version import Version as PackagingVersion, InvalidVersion
 
 
@@ -10,25 +11,35 @@ class Version(PackagingVersion):
     scheme defined in PEP 440. A `Version` instance is comparison-aware and
     can be compared and sorted using the standard Python interfaces.
 
-    This class is descendant from Version found in `packaging.version`,
-    and implements some additional, "AI"-like normalization during instantiation.
+    This class is descendant from `Version` found in `packaging.version`,
+    and implements some additional normalization during instantiation.
 
     Args:
         version (str): The string representation of a version which will be
                       parsed and normalized before use.
     Raises:
-        InvalidVersion: If the ``version`` does not conform to PEP 440 in
-                        any way then this exception will be raised.
+        InvalidVersion: If the `version`` does not conform to PEP 440 in
+                        any way, then this exception will be raised.
     """
+
+    # Precompile the regular expressions
+    rc_pattern = re.compile(r'^rc(\d+)\.')
+    post_pattern = re.compile(r'^p(\d+)$')
+
+    part_to_pypi_dict = {
+        'devel': 'dev0',
+        'test': 'dev0',
+        'dev': 'dev0',
+        'alpha': 'a0',
+        'beta': 'b0'
+    }
 
     def fix_letter_post_release(self, match):
         self.fixed_letter_post_release = True
         return match.group(1) + '.post' + str(ord(match.group(2)))
 
     def is_semver(self):
-        """
-        Check if this a semantic version or a shorthand of semantic version
-        """
+        """Check if this a (shorthand) semantic version"""
         return self.base_version.count('.') >= 1
 
     @staticmethod
@@ -39,30 +50,30 @@ class Version(PackagingVersion):
         Helps devel releases to be correctly identified
         See https://www.python.org/dev/peps/pep-0440/#developmental-releases
         """
-        if part in ['devel', 'test', 'dev']:
-            part = 'dev0'
-        elif part in ['alpha']:
-            # "4.3.0-alpha"
-            part = 'a0'
-        elif part in ['beta']:
-            # "4.3.0-beta"
-            part = 'b0'
-            # if part starts with rc<num>., discard non-relevant info while preserving RC level
-        elif re.search('^rc(\\d+)\\.', part):
+        # Lookup in the dictionary
+        if part in Version.part_to_pypi_dict:
+            return Version.part_to_pypi_dict[part]
+
+        # Check for rc patterns
+        rc_match = Version.rc_pattern.search(part)
+        if rc_match:
             # rc2.windows.1 => rc2.post1
             sub_parts = part.split('.')
             part = sub_parts[0]
             for sub in sub_parts[1:]:
                 if sub.isdigit():
-                    # use first numeric as post-release to RC
                     part += ".post" + sub
-        else:
-            # help post (patch) releases to be correctly identified (e.g. Magento 2.3.4-p2)
-            # p12 => post12
-            part = re.sub('^p(\\d+)$', 'post\\1', part, 1)
+            return part
+
+        # Check for the post-patterns
+        post_match = Version.post_pattern.sub(r'post\1', part)
+        if post_match != part:
+            return post_match
+
+        # If the part contains only alphabets, set it to None
         if part.isalpha():
-            # it's meaningless to us if it has only letters
-            part = None
+            return None
+
         return part
 
     @staticmethod

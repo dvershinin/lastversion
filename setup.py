@@ -26,9 +26,7 @@ install_requires = [
     'cachecontrol<=0.12.11',
     'lockfile',
     'appdirs',
-    # feedparser 6 dropped Python 2 support
-    'feedparser <= 5.2.1; python_version < "3.0.0"',
-    'feedparser; python_version >= "3.0.0"',
+    'feedparser',
     'python-dateutil',
     'PyYAML',
     'tqdm',

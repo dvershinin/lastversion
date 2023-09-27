@@ -24,7 +24,9 @@ class HelmChartRepoSession(ProjectHolder):
         url = self.url
         host = urlparse(url).hostname
         if host in ['github.com']:
-            url = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+            url = url.replace(
+                'github.com', 'raw.githubusercontent.com'
+            ).replace('/blob/', '/')
         r = self.get(url)
         chart_data = yaml.safe_load(r.text)
         return {

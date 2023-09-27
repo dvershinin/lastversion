@@ -198,7 +198,7 @@ class GitHubRepoSession(ProjectHolder):
                     f'API requests were denied after retrying {self.rate_limited_count} times'
                 )
             remaining = int(r.headers['X-RateLimit-Remaining'])
-            # 1 sec to account for skewed clock between GitHub and client
+            # One sec to account for skewed clock between GitHub and client
             wait_for = float(r.headers['X-RateLimit-Reset']) - time.time() + 1.0
             wait_for = math.ceil(wait_for)
             if not remaining:
@@ -405,13 +405,12 @@ class GitHubRepoSession(ProjectHolder):
     def find_in_tags(self, ret, pre_ok, major):
         """
         Find a more recent release in the /tags API endpoint.
-        Finding in /tags requires paging through ALL of them because the API does not list them
-        in order of recency, thus this is very slow.
-        We need to check all tags commit dates simply because the most recent wins
-        We don't check tags which:
-
-        * marked pre-release in releases endpoints
-        * has a beta-like, non-version tag name
+        Finding in `/tags` requires paging through ALL of them because the API
+         does not list them in order of recency, thus this is very slow.
+        We need to check all tags commit dates because of the most recent wins.
+        We don't check tags which are:
+          * marked pre-release in releases endpoints
+          * has a beta-like, non-version tag name
 
         # in: current release to be returned, output: newer release to be returned
         """

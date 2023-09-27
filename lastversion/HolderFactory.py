@@ -49,14 +49,20 @@ class HolderFactory:
 
         """
         # repo auto-discovery failed for detected/default provider
-        # now we simply try website provider based on the hostname/RSS feeds in HTML or GitHub links
+        # now we simply try website provider based on the hostname/RSS feeds
+        # in HTML or GitHub links
         holder = FeedRepoSession(repo, hostname)
         if not holder.is_valid():
             # re-use soup from the feed holder object
-            log.info('Have not found any RSS feed for the website %s', hostname)
+            log.info(
+                'Have not found any RSS feed for the website %s',
+                hostname
+            )
             github_link = holder.home_soup.select_one("a[href*='github.com']")
             if github_link:
-                hostname, repo = GitHubRepoSession.get_host_repo_for_link(github_link['href'])
+                hostname, repo = GitHubRepoSession.get_host_repo_for_link(
+                    github_link['href']
+                )
                 holder = GitHubRepoSession(repo, hostname)
         return holder
 

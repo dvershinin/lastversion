@@ -107,7 +107,9 @@ class WikipediaRepoSession(ProjectHolder):
                 # remove alphas from beginning
                 tag_name = remove_words(tag_name).split('/', maxsplit=1)[0]
                 # Remove unicode stuff (for Python 2)
-                tag['title'] = release_data.text.encode("ascii", "ignore").decode()
+                tag['title'] = release_data.text.encode(
+                    "ascii", "ignore"
+                ).decode()
                 log.info('Pre-parsed title: %s', tag['title'])
                 break
         if not tag_name:

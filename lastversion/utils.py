@@ -1,20 +1,20 @@
 """Utility functions for lastversion."""
+import errno
 import io
 import logging
 import os
 import platform
 import re
+import shutil
+import subprocess
 import sys
 import tarfile
-import errno
-import subprocess
 import tempfile
 import urllib
-import shutil
+
 import distro
 import requests
 import tqdm
-
 
 log = logging.getLogger(__name__)
 
@@ -385,7 +385,6 @@ def ensure_directory_exists(directory_path):
     Returns:
 
     """
-
     try:
         os.makedirs(directory_path)
     except OSError as e:

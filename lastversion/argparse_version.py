@@ -1,3 +1,4 @@
+"""Provides a custom argparse action to show program's version and exit."""
 import sys as _sys
 from argparse import SUPPRESS, Action
 

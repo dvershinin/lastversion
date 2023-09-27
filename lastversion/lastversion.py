@@ -17,13 +17,8 @@ import os
 import re
 import sys
 from os.path import expanduser
+from pathlib import Path
 
-try:
-    # noinspection PyCompatibility
-    from pathlib import Path
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    from pathlib2 import Path  # python 2 backport
 import yaml
 from packaging.version import InvalidVersion
 from six.moves.urllib.parse import urlparse
@@ -35,7 +30,8 @@ from .Version import Version
 from .__about__ import __self__
 from .argparse_version import VersionAction
 from .spdx_id_to_rpmspec import rpmspec_licenses
-from .utils import download_file, extract_file, rpm_installed_version, ApiCredentialsError, \
+from .utils import download_file, extract_file, rpm_installed_version, \
+    ApiCredentialsError, \
     BadProjectError, extract_appimage_desktop_file
 
 log = logging.getLogger(__name__)
@@ -48,9 +44,12 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
     r"""Find the latest release version for a project.
 
     Args:
-        major (str): Only consider versions which are "descendants" of this major version string
-        short_urls (bool): Whether we should try to return shorter URLs for release data
-        assets_filter (Union[str, Pattern]): Regular expression for filtering assets for the latest release
+        major (str): Only consider versions which are "descendants" of this
+          major version string
+        short_urls (bool): Whether we should try to return shorter URLs for
+          release data
+        assets_filter (Union[str, Pattern]): Regular expression for filtering
+          assets for the latest release
         only (str): Only consider tags with this text. Useful for repos with multiple projects.
                     The argument supports negation and regular expressions. To indicate a regex,
                     start it with tilde sign, to negate the expression, start it with exclamation
@@ -98,6 +97,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
                 repo = repo_data['repo']
                 repo_data['name'] = name
 
+    # noinspection HttpUrlsUsage
     if repo.startswith(('http://', 'https://')) and repo.endswith('Chart.yaml'):
         at = 'helm_chart'
 

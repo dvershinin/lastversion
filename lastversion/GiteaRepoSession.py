@@ -45,8 +45,8 @@ class GiteaRepoSession(ProjectHolder):
     2) likely has been accessed by someone in CDN and thus faster
     3) provides more or less unique filenames once the stuff is downloaded
     See https://fedoraproject.org/wiki/Packaging:SourceURL#Git_Tags
-    We use variation of this: it does not need a parsed version (thus works for --pre better)
-    and it is not broken on fancy release tags like v1.2.3-stable
+    We use variation of this: it does not need a parsed version (works for 
+    --pre better) and it is not broken on fancy release tags like v1.2.3-stable
     https://github.com/OWNER/PROJECT/archive/%{git_tag}/%{git_tag}-%{version}.tar.gz
     """
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
@@ -67,7 +67,7 @@ class GiteaRepoSession(ProjectHolder):
                 log.info("Found %s in repo short name cache", repo)
                 if not cache[repo]['repo']:
                     raise BadProjectError(
-                        'No project found on GitHub for search query: {}'.format(repo)
+                        f'No project found on GitHub for search query: {repo}'
                     )
                 # return cache[repo]['repo']
         except TypeError:
@@ -80,11 +80,13 @@ class GiteaRepoSession(ProjectHolder):
             }
         )
         if r.status_code == 404:
-            # when not found, skip using this holder in the factory by not setting self.repo
+            # when not found, skip using this holder in the factory by not
+            # setting self.repo
             return None
         if r.status_code != 200:
             raise BadProjectError(
-                f'Error while identifying full repository on GitHub for search query: {repo}'
+                f'Error while identifying full repository on GitHub for '
+                f'search query: {repo}'
             )
         data = r.json()
         full_name = ''
@@ -133,7 +135,10 @@ class GiteaRepoSession(ProjectHolder):
             else:
                 repo = self.find_repo_by_name_only(repo)
                 if repo:
-                    log.info('Using repo %s obtained from search API', self.repo)
+                    log.info(
+                        'Using repo %s obtained from search API',
+                        self.repo
+                    )
                 else:
                     return
         self.set_repo(repo)
@@ -147,18 +152,21 @@ class GiteaRepoSession(ProjectHolder):
         log.info('Got HTTP status code %s from %s', r.status_code, url)
         if r.status_code == 401:
             if self.api_token:
-                raise ApiCredentialsError('API request was denied despite using an API token. '
-                                          'Missing scopes?')
-            raise ApiCredentialsError('Denied API access. Please set GITHUB_API_TOKEN env var '
-                                      'as per https://github.com/dvershinin/lastversion#tips')
+                raise ApiCredentialsError(
+                    'API request was denied despite using an API token. '
+                    'Missing scopes?')
+            raise ApiCredentialsError(
+                'Denied API access. Please set GITHUB_API_TOKEN env var as '
+                'per https://github.com/dvershinin/lastversion#tips')
         if r.status_code == 403 and 'X-RateLimit-Reset' in r.headers \
                 and 'X-RateLimit-Remaining' in r.headers:
             if self.rate_limited_count > 2:
                 raise ApiCredentialsError(
-                    f'API requests were denied after retrying {self.rate_limited_count} times'
+                    f'API requests were denied after retrying '
+                    f'{self.rate_limited_count} times'
                 )
             remaining = int(r.headers['X-RateLimit-Remaining'])
-            # 1 sec to account for skewed clock between GitHub and client
+            # One sec to account for skewed clock between GitHub and client
             wait_for = float(r.headers['X-RateLimit-Reset']) - time.time() + 1.0
             wait_for = math.ceil(wait_for)
             if not remaining:
@@ -261,7 +269,6 @@ class GiteaRepoSession(ProjectHolder):
         Strive to fetch formal API release if it exists, because it has useful information
         like assets.
         """
-
         if self.having_asset:
             # only formal releases which we enumerated above already, have assets,
             # so there is no point looking in the tags/graphql below
@@ -315,7 +322,8 @@ class GiteaRepoSession(ProjectHolder):
         official_repo = f"{repo}/{repo}"
         log.info('Checking existence of %s', official_repo)
         r = self.get(f'https://{self.hostname}/{official_repo}/releases.atom')
-        # API requests are varied by cookie, we don't want serializer for cache fail because of that
+        # API requests are varied by cookie, we don't want serializer for
+        # cache fail because of that
         self.cookies.clear()
         if r.status_code == 200:
             self.feed_contents[official_repo] = r.text

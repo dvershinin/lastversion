@@ -66,9 +66,9 @@ class FeedRepoSession(ProjectHolder):
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
         ret = None
-        # To leverage `cachecontrol`, we fetch the feed using requests as usual,
-        # then feed the feed to feedparser as a raw string
-        # e.g. https://hg.nginx.org/nginx/atom-tags
+        # To leverage `cachecontrol`, we fetch the feed using requests as
+        # usual, then feed the feed to feedparser as a raw string e.g.
+        # https://hg.nginx.org/nginx/atom-tags
         # https://pythonhosted.org/feedparser/common-atom-elements.html
         r = self.get(self.feed_url)
         feed = feedparser.parse(r.text)
@@ -83,7 +83,11 @@ class FeedRepoSession(ProjectHolder):
                 tag['version'] = version
                 if 'published_parsed' in tag:
                     # converting from struct
-                    tag['tag_date'] = datetime.datetime(*tag['published_parsed'][:6])
+                    tag['tag_date'] = datetime.datetime(
+                        *tag['published_parsed'][:6]
+                    )
                 elif 'updated_parsed' in tag:
-                    tag['tag_date'] = datetime.datetime(*tag['updated_parsed'][:6])
+                    tag['tag_date'] = datetime.datetime(
+                        *tag['updated_parsed'][:6]
+                    )
         return ret
