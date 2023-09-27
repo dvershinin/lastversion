@@ -26,6 +26,15 @@ class Version(PackagingVersion):
     rc_pattern = re.compile(r'^rc(\d+)\.')
     post_pattern = re.compile(r'^p(\d+)$')
 
+    regex_dashed_substitutions = [
+        (re.compile(r'-devel$'), '-dev0'),
+        (re.compile(r'-p(\d+)$'), '-post\\1'),
+        (re.compile(r'-preview-(\d+)'), '-pre\\1'),
+        (re.compile(r'-early-access-(\d+)'), '-alpha\\1'),
+        (re.compile(r'-pre-(\d+)'), '-pre\\1'),
+        (re.compile(r'-beta[-.]rc(\d+)'), '-beta\\1')
+    ]
+
     part_to_pypi_dict = {
         'devel': 'dev0',
         'test': 'dev0',
@@ -90,20 +99,35 @@ class Version(PackagingVersion):
         Returns:
             str:
         """
-        version = re.sub('-devel$', '-dev0', version, 1)
-        # help post (patch) releases to be correctly identified (e.g., Magento 2.3.4-p2)
-        version = re.sub('-p(\\d+)$', '-post\\1', version, 1)
+        for regex, substitution in Version.regex_dashed_substitutions:
+            version = regex.sub(substitution, version)
+        return version
 
-        # 4.27-chaos-preview-3 -> 4.27-chaos-pre3
-        version = re.sub('-preview-(\\d+)', '-pre\\1', version, 1)
-        # 5.0.0-early-access-2 -> 5.0.0-alpha2
-        version = re.sub('-early-access-(\\d+)', '-alpha\\1', version, 1)
-        # v4.0.0-pre-0 -> v4.0.0-pre0
-        version = re.sub('-pre-(\\d+)', '-pre\\1', version, 1)
+    def filter_relevant_parts(self, version):
+        """
+        Filter out irrelevant parts from version string.
+        Parse out version components separated by dash.
+        """
+        parts = version.split('-')
 
-        # v0.16.0-beta.rc4 -> v0.16.0-beta4
-        # both beta and rc? :) -> beta
-        version = re.sub(r'-beta[-.]rc(\d+)', '-beta\\1', version, 1)
+        # go through parts which were separated by dash, normalize and
+        # exclude irrelevant
+        parts_n = []
+        for part in parts:
+            part = self.part_to_pypi(part)
+            if part:
+                parts_n.append(part)
+        if not parts_n:
+            raise InvalidVersion(f"Invalid version: '{version}'")
+        # Remove *any* non-digits which appear at the beginning of the
+        # version string e.g. Rhino1_7_13_Release does not even bother to
+        # put a delimiter... such string at the beginning typically do not
+        # convey stability level, so we are fine to remove them (unlike the
+        # ones in the tail)
+        parts_n[0] = re.sub('^[^0-9]+', '', parts_n[0], 1)
+
+        # go back to full string parse out
+        version = ".".join(parts_n)
         return version
 
     def __init__(self, version, char_fix_required=False):
@@ -117,35 +141,16 @@ class Version(PackagingVersion):
 
         # Join status with its number, e.g., preview-3 -> pre3
         version = self.join_dashed_number_status(version)
-
-        # parse out version components separated by dash
-        parts = version.split('-')
-
-        # go through parts which were separated by dash, normalize and exclude irrelevant
-        parts_n = []
-        for part in parts:
-            part = self.part_to_pypi(part)
-            if part:
-                parts_n.append(part)
-        if not parts_n:
-            raise InvalidVersion(f"Invalid version: '{version}'")
-        # remove *any* non-digits which appear at the beginning of the version string
-        # e.g. Rhino1_7_13_Release does not even bother to put a delimiter...
-        # such string at the beginning typically do not convey stability level,
-        # so we are fine to remove them (unlike the ones in the tail)
-        parts_n[0] = re.sub('^[^0-9]+', '', parts_n[0], 1)
-
-        # go back to full string parse out
-        version = ".".join(parts_n)
+        version = self.filter_relevant_parts(version)
 
         if char_fix_required:
             version = re.sub('(\\d)([a-z])$', self.fix_letter_post_release, version, 1)
-        # release-3_0_2 is often seen on Mercurial holders
-        # note that the above code removes "release-" already, so we are left with "3_0_2"
+        # release-3_0_2 is often seen on Mercurial holders note that the
+        # above code removes "release-" already, so we are left with "3_0_2"
         if re.search(r'^(?:\d+_)+(?:\d+)', version):
             version = version.replace('_', '.')
-        # finally, split by dot "delimiter", see if there are common words which are definitely
-        # removable
+        # finally, split by dot "delimiter", see if there are common words
+        # which are definitely removable
         parts = version.split('.')
         version = []
         for p in parts:
@@ -243,7 +248,7 @@ class Version(PackagingVersion):
     def sem_extract_base(self, level=None):
         """
         Return Version with desired semantic version level base
-        E.g. for 5.9.3 it will return 5.9 (patch is None)
+        E.g., for 5.9.3 it will return 5.9 (patch is None)
         """
         if level == 'major':
             # get major

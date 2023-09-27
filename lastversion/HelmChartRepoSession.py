@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 
 class HelmChartRepoSession(ProjectHolder):
 
+    # noinspection PyUnusedLocal
     def __init__(self, repo, hostname=None):
         super(HelmChartRepoSession, self).__init__()
         if not repo.endswith('Chart.yaml'):

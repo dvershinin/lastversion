@@ -164,6 +164,7 @@ class ProjectHolder(requests.Session):
     @staticmethod
     def is_link(repo):
         """Check if repo is a link."""
+        # noinspection HttpUrlsUsage
         return repo.startswith(('https://', 'http://'))
 
     @classmethod

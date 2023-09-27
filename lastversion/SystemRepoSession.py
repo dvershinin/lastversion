@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 class SystemRepoSession(ProjectHolder):
     """Version holder based on system package repositories."""
 
+    # noinspection PyUnusedLocal
     def __init__(self, repo, hostname=None):
         super(SystemRepoSession, self).__init__()
         self.set_repo(repo)

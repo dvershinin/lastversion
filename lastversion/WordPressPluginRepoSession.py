@@ -35,7 +35,8 @@ class WordPressPluginRepoSession(ProjectHolder):
         self.project = self.get_project()
         if hostname and not self.project:
             raise BadProjectError(
-                f'The project {repo} does not exist in WordPress plugin directory'
+                f'The project {repo} does not exist in WordPress plugin '
+                f'directory'
             )
 
     def release_download_url(self, release, shorter=False):
