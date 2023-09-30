@@ -196,7 +196,8 @@ class ProjectHolder(requests.Session):
 
     @classmethod
     def get_matching_hostname(cls, repo):
-        """Find matching hostname between repo and holder's default hostname."""
+        """Find matching hostname between repo and holder's default
+        hostname."""
         if not cls.is_link(repo):
             return None
         if not cls.DEFAULT_HOSTNAME and not cls.SUBDOMAIN_INDICATOR:

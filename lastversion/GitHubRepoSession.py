@@ -11,7 +11,7 @@ from dateutil import parser
 from six.moves.urllib.parse import unquote
 
 from .ProjectHolder import ProjectHolder
-from .utils import ApiCredentialsError, BadProjectError
+from .exceptions import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
 

@@ -26,7 +26,8 @@ A tiny command-line utility that helps to answer a simple question:
 *   PyPI
 *   Mercurial
 *   SourceForge
-*   Wikipedia    
+*   Wikipedia
+*   WordPress plugin directory
 *   Arbitrary software sites which publish releases in RSS/ATOM feeds
 
 ## Why you need `lastversion`

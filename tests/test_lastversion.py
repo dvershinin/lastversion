@@ -9,7 +9,7 @@ from lastversion.ProjectHolder import ProjectHolder
 from lastversion.Version import Version
 from lastversion.lastversion import latest
 
-from lastversion.utils import BadProjectError
+from lastversion.exceptions import BadProjectError
 
 # change dir to tests directory to make relative paths possible
 os.chdir(os.path.dirname(os.path.realpath(__file__)))

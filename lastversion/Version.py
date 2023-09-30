@@ -175,7 +175,7 @@ class Version(PackagingVersion):
         A tuple of integers giving the components of the release segment
         of this Version instance; that is, the 1.2.3 part of the version
         number, including trailing zeroes but not including the epoch or
-        any prerelease/development/postrelease suffixes
+        any prerelease/development/post-release suffixes
         """
         _release = self._version.release
         return _release

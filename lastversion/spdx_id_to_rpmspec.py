@@ -1,6 +1,8 @@
-# Maps SPDX ID from https://spdx.org/licenses/
-# to corresponding short name license as recommended by Fedora
-# https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
+"""
+Maps SPDX ID from https://spdx.org/licenses/ to corresponding short name
+license as recommended by Fedora
+https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing#Good_Licenses
+"""
 rpmspec_licenses = {
    'Apache-1.0': 'ASL 1.0',
    'Apache-1.1': 'ASL 1.1',

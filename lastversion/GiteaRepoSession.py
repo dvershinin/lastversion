@@ -8,7 +8,7 @@ import time
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
-from .utils import ApiCredentialsError, BadProjectError
+from .exceptions import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
 
@@ -53,8 +53,7 @@ class GiteaRepoSession(ProjectHolder):
     SHORT_RELEASE_URL_FORMAT = RELEASE_URL_FORMAT
 
     def find_repo_by_name_only(self, repo):
-        # noinspection HttpUrlsUsage
-        if repo.startswith(('https://', 'http://')):
+        if self.is_link(repo):
             return None
         cache_repo_names_file = f"{self.cache_dir}/repos.json"
         try:

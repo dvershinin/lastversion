@@ -10,24 +10,39 @@ import subprocess
 import sys
 import tarfile
 import tempfile
-import urllib
+from urllib.parse import unquote
 
 import distro
 import requests
 import tqdm
 
+from .exceptions import TarPathTraversalException
+
+PY7ZR_AVAILABLE = False
+try:
+    # noinspection PyUnresolvedReferences
+    import py7zr
+
+    PY7ZR_AVAILABLE = True
+except ImportError:
+    pass
+
+RPM_AVAILABLE = False
+try:
+    # noinspection PyUnresolvedReferences,PyPackageRequirements
+    import rpm
+
+    RPM_AVAILABLE = True
+except ImportError:
+    pass
+
 log = logging.getLogger(__name__)
+content_disposition_regex = re.compile(
+    r"filename(?P<priority>\*)?=((?P<encoding>[\S-]+)'')?(?P<filename>[^;]*)"
+)
 
-
-class ApiCredentialsError(Exception):
-    """Raised when there's an API error related to credentials"""
-
-
-class BadProjectError(Exception):
-    """Raised when no such project exists"""
-
-
-# matches os.name to known extensions that are meant *mostly* to run on it, and not other os.name-s
+# matches os.name to known extensions that are meant *mostly* to run on it,
+# and not other os.name-s
 os_extensions = {
     'nt': ('.exe', '.msi', '.msi.asc', '.msi.sha256'),
     'posix': ('.tgz', '.tar.gz')
@@ -49,8 +64,11 @@ platform_markers = {
 }
 
 # this is all too simple for now
-non_amd64_markers = ['i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'armv7l',
-                     'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64', 'armhf', 'armv7hl']
+# noinspection SpellCheckingInspection
+non_amd64_markers = [
+    'i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'armv7l',
+    'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64', 'armhf', 'armv7hl'
+]
 
 
 def is_file_ext_not_compatible_with_os(file_ext):
@@ -59,23 +77,31 @@ def is_file_ext_not_compatible_with_os(file_ext):
     Returns:
 
     """
-    return any(os.name != os_name and file_ext == ext for os_name, ext in os_extensions.items())
+    return any(
+        os.name != os_name and file_ext == ext
+        for os_name, ext in os_extensions.items()
+    )
 
 
 def is_asset_name_compatible_with_platform(asset_name):
-    """Check if an asset's name contains words that indicate it's meant for another platform"""
-    for pf, pf_words in platform_markers.items():
-        if not sys.platform.startswith(pf):
+    """Check if an asset's name contains words that indicate it's meant for
+    another platform"""
+    for platform_name, pf_words in platform_markers.items():
+        if not sys.platform.startswith(platform_name):
             for pf_word in pf_words:
-                r = re.compile(r'\b{}(\d+)?\b'.format(pf_word), flags=re.IGNORECASE)
-                matches = r.search(asset_name)
+                regex = re.compile(
+                    fr'\b{pf_word}(\d+)?\b', flags=re.IGNORECASE)
+                matches = regex.search(asset_name)
                 if matches:
                     return True
     return False
 
 
 def is_not_compatible_to_distro(asset_ext):
-    """Check if the file extension is not compatible with the current Linux distro"""
+    """Check if the file extension is not compatible with the current Linux
+    distro"""
+    if not sys.platform.startswith('linux'):
+        return False
     # Weeding out non-matching Linux distros
     if asset_ext != 'AppImage':
         for ext, ext_distros in extension_distros.items():
@@ -85,28 +111,34 @@ def is_not_compatible_to_distro(asset_ext):
     return False
 
 
-def not_amd64_asset(asset_name):
-    """Check if an asset's name contains words that indicate it's not meant for 64-bit OS"""
+def is_not_compatible_bitness(asset_name):
+    """Check if an asset's name contains words that indicate it's not meant
+    for 64-bit OS"""
+    if platform.machine() not in ['x86_64', 'AMD64']:
+        return False
     for non_amd64_word in non_amd64_markers:
-        r = re.compile(r'\b{}\b'.format(non_amd64_word), flags=re.IGNORECASE)
-        if r.search(asset_name):
+        regex = re.compile(fr'\b{non_amd64_word}\b', flags=re.IGNORECASE)
+        if regex.search(asset_name):
             return True
-        r = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
-        if r.search(asset_name):
+        regex = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
+        if regex.search(asset_name):
             return True
     return False
 
 
 def asset_does_not_belong_to_machine(asset_name):
     """
-    Check if asset's name contains words that indicate it's not meant for this machine
+    Check if an asset's name contains words that indicate it's not meant for
+    this machine
+
     Args:
-        asset_name: Base name of asset, e.g. `example.zip`
+        asset_name (str): Base name of asset, e.g. `example.zip`
 
     Returns:
 
     """
-    # replace underscore with dash so that our shiny word boundary regexes won't break
+    # replace underscore with dash so that our shiny word boundary regexes
+    # won't break
     asset_name = asset_name.replace('_', '-')
     asset_ext = os.path.splitext(asset_name)[1].lstrip('.')
 
@@ -122,12 +154,12 @@ def asset_does_not_belong_to_machine(asset_name):
         return True
 
     # Bail if asset's extension "belongs" to other linux distros (complex)
-    if sys.platform.startswith('linux') and is_not_compatible_to_distro(asset_ext):
+    if is_not_compatible_to_distro(asset_ext):
         return True
 
     # weed out non-64 bit stuff from x86_64 bit OS
     # caution: may be false positive with 32-bit Python on 64-bit OS
-    if platform.machine() in ['x86_64', 'AMD64'] is not_amd64_asset(asset_name):
+    if is_not_compatible_bitness(asset_name):
         return True
 
     return False
@@ -135,7 +167,8 @@ def asset_does_not_belong_to_machine(asset_name):
 
 def requests_response_patched_enter(self):
     """
-    Monkey patching older requests library's response class, so it can use context manager
+    Monkey patching older requests library's response class, so it can use
+    context manager.
     See https://github.com/psf/requests/issues/4136
     Args:
         self:
@@ -147,7 +180,9 @@ def requests_response_patched_enter(self):
 
 
 # noinspection PyUnusedLocal
+# pylint: disable=unused-argument
 def requests_response_patched_exit(self, *args):
+    """Patched exit method for requests.Response"""
     self.close()
 
 
@@ -183,12 +218,16 @@ def extract_appimage_desktop_file(appimage_path):
 
     # Install the .desktop file
     if desktop_file:
-        # if xdg-desktop-menu is not available, we can't install the .desktop file
+        # if xdg-desktop-menu is not available, we can't install the
+        # .desktop file
         xdg_desktop_menu_path = shutil.which("xdg-desktop-menu")
         if xdg_desktop_menu_path:
             subprocess.call([xdg_desktop_menu_path, "install", desktop_file])
         else:
-            log.warning("xdg-desktop-menu is not available, can't install the .desktop file")
+            log.warning(
+                "xdg-desktop-menu is not available, can't install the "
+                ".desktop file"
+            )
 
     # Remove the temporary directory
     shutil.rmtree(temp_dir)
@@ -198,20 +237,21 @@ def get_content_disposition_filename(response):
     """Get the preferred filename from the `Content-Disposition` header.
 
     Examples:
-        `attachment; filename="emulationstation-de-2.0.0-x64.deb"; filename*=UTF-8''emulationstation-de-2.0.0-x64.deb`
+        `attachment; filename="emulation-station-de-2.0.0-x64.deb";
+        filename*=UTF-8''emulation-station-de-2.0.0-x64.deb`
 
     """
     filename = None
     content_disp = response.headers.get('content-disposition')
     if not content_disp or not content_disp.startswith('attachment;'):
         return None
-    for m in re.finditer(r"filename(?P<priority>\*)?=((?P<encoding>[\S-]+)'')?(?P<filename>[^;]*)", content_disp):
-        filename = m.group('filename')
-        encoding = m.group('encoding')
+    for match in re.finditer(content_disposition_regex, content_disp):
+        filename = match.group('filename')
+        encoding = match.group('encoding')
         if encoding:
-            filename = urllib.parse.unquote(filename)
+            filename = unquote(filename)
             filename = filename.encode(encoding).decode('utf-8')
-        if m.group('priority'):
+        if match.group('priority'):
             break
     return filename
 
@@ -221,7 +261,7 @@ def download_file(url, local_filename=None):
 
     Args:
         url (str): URL to download from
-        local_filename (:obj:`str`, optional): Destination filename
+        local_filename (str, optional): Destination filename
             Defaults to current directory plus base name of the URL.
     Returns:
         str: Destination filename, on success
@@ -230,15 +270,16 @@ def download_file(url, local_filename=None):
     if local_filename is None:
         local_filename = url.split('/')[-1]
     try:
-        # NOTE the stream=True parameter below
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            if '.' not in local_filename and 'Content-Disposition' in r.headers:
-                disp_filename = get_content_disposition_filename(r)
+        # Note that the stream=True parameter below
+        with requests.get(url, stream=True, timeout=5) as response:
+            response.raise_for_status()
+            if '.' not in local_filename and \
+                    'Content-Disposition' in response.headers:
+                disp_filename = get_content_disposition_filename(response)
                 if disp_filename:
                     local_filename = disp_filename
             # content-length may be empty, default to 0
-            file_size = int(r.headers.get('Content-Length', 0))
+            file_size = int(response.headers.get('Content-Length', 0))
             bar_size = 1024
             # fetch 8 KB at a time
             chunk_size = 8192
@@ -252,13 +293,13 @@ def download_file(url, local_filename=None):
                 disable=None,  # disable on non-TTY
                 total=num_bars,
                 unit='KB',
-                desc='Downloading {}'.format(local_filename),
+                desc=f'Downloading {local_filename}',
                 leave=True  # progressbar stays
             )
-            with open(local_filename, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=chunk_size):
+            with open(local_filename, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=chunk_size):
                     if chunk:  # filter out keep-alive new chunks
-                        f.write(chunk)
+                        file.write(chunk)
                         # we fetch 8 KB, so we update progress by +8x
                         pbar.update(chunk_bar_size)
             pbar.set_description(f"Downloaded {local_filename}")
@@ -292,20 +333,47 @@ def safe_extract(tar, path=".", members=None):
     for member in tar.getmembers():
         member_path = os.path.join(path, member.name)
         if not is_within_directory(path, member_path):
-            raise Exception("Attempted Path Traversal in Tar File")
+            raise TarPathTraversalException(
+                "Attempted Path Traversal in Tar File"
+            )
 
     tar.extractall(path, members)
 
 
+def extract_tar(buffer, mode):
+    """Extract a tar archive while stripping the top level dir.
+
+    Args:
+        buffer ():
+        mode ():
+    """
+    smart_members = []
+    with tarfile.open(fileobj=buffer, mode=mode) as tar_file:
+        all_members = tar_file.getmembers()
+        if not all_members:
+            log.critical('No or not an archive')
+        root_dir = all_members[0].path
+        root_dir_with_slash_len = len(root_dir) + 1
+        for member in tar_file.getmembers():
+            if member.path.startswith(root_dir + "/"):
+                member.path = member.path[root_dir_with_slash_len:]
+                smart_members.append(member)
+        safe_extract(tar_file, members=smart_members)
+
+
 def extract_file(url):
     """Extract an archive while stripping the top level dir."""
-    smart_members = []
+    if url.endswith('.7z') and not PY7ZR_AVAILABLE:
+        log.critical(
+            'pip install py7zr to support .7z archives'
+        )
+        return
     try:
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
+        with requests.get(url, stream=True, timeout=5) as response:
+            response.raise_for_status()
             # Download the file in chunks and save it to a memory buffer
             # content-length may be empty, default to 0
-            file_size = int(r.headers.get('Content-Length', 0))
+            file_size = int(response.headers.get('Content-Length', 0))
             bar_size = 1024
             # fetch 8 KB at a time
             chunk_size = 8192
@@ -317,35 +385,29 @@ def extract_file(url):
             buffer = io.BytesIO()
             # noinspection PyTypeChecker
             with tqdm.tqdm(
-                disable=None,  # disable on non-TTY
-                total=num_bars,
-                unit='KB',
-                desc=url.split('/')[-1]
+                    disable=None,  # disable on non-TTY
+                    total=num_bars,
+                    unit='KB',
+                    desc=url.split('/')[-1]
             ) as pbar:
-                for chunk in r.iter_content(chunk_size=chunk_size):
+                for chunk in response.iter_content(chunk_size=chunk_size):
                     if chunk:
                         buffer.write(chunk)
                         pbar.update(chunk_bar_size)
 
-            # Process the file in memory (e.g. extract its contents)
+            # Process the file in memory (e.g., extract its contents)
             buffer.seek(0)
-            # Process the buffer (e.g. extract its contents)
+            # Process the buffer (e.g., extract its contents)
 
             mode = 'r:gz'
             if url.endswith('.tar.xz'):
                 mode = 'r:xz'
-
-            with tarfile.open(fileobj=buffer, mode=mode) as tar_file:
-                all_members = tar_file.getmembers()
-                if not all_members:
-                    log.critical('No or not an archive')
-                root_dir = all_members[0].path
-                root_dir_with_slash_len = len(root_dir) + 1
-                for member in tar_file.getmembers():
-                    if member.path.startswith(root_dir + "/"):
-                        member.path = member.path[root_dir_with_slash_len:]
-                        smart_members.append(member)
-                safe_extract(tar_file, members=smart_members)
+            elif url.endswith('.7z'):
+                if PY7ZR_AVAILABLE:
+                    with py7zr.SevenZipFile(buffer) as archive:
+                        archive.extractall()
+                return  # Exit the function after extracting
+            extract_tar(buffer, mode)
     except KeyboardInterrupt:
         pbar.close()
         log.warning('Cancelled')
@@ -361,16 +423,13 @@ def rpm_installed_version(name):
     Returns:
         string: Version of the installed packaged, or None
     """
-    try:
-        # noinspection PyUnresolvedReferences,PyPackageRequirements
-        import rpm
-    except ImportError:
+    if not RPM_AVAILABLE:
         return False
-    ts = rpm.TransactionSet()
-    mi = ts.dbMatch('name', name)
-    if mi:
-        for h in mi:
-            return h['version']
+    transaction_set = rpm.TransactionSet()
+    match_iterator = transaction_set.dbMatch('name', name)
+    if match_iterator:
+        for header in match_iterator:
+            return header['version']
     return None
 
 
@@ -387,6 +446,6 @@ def ensure_directory_exists(directory_path):
     """
     try:
         os.makedirs(directory_path)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
             raise

@@ -31,8 +31,8 @@ from .__about__ import __self__
 from .argparse_version import VersionAction
 from .spdx_id_to_rpmspec import rpmspec_licenses
 from .utils import download_file, extract_file, rpm_installed_version, \
-    ApiCredentialsError, \
-    BadProjectError, extract_appimage_desktop_file
+    extract_appimage_desktop_file
+from lastversion.exceptions import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
 

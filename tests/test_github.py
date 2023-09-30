@@ -1,6 +1,12 @@
+"""Test GitHub projects."""
+import os
+from tempfile import TemporaryDirectory
+
 from packaging import version
 
+from lastversion import main
 from lastversion.lastversion import latest
+from .helpers import captured_exit_code
 
 
 def test_ndk():
@@ -38,7 +44,8 @@ def test_high_micro_is_not_beta():
 
 def test_semver_preferred():
     """
-    Test a GitHub project with a semver version number for releases and a high version number for pre-releases
+    Test a GitHub project with a semver version number for releases and a
+    high version number for pre-releases
     """
     repo = "https://github.com/lastversion-test-repos/kibana"
 
@@ -54,3 +61,18 @@ def test_github_semver_shorthand_preferred():
     output = latest(repo)
 
     assert output == version.parse("5.6")
+
+
+def test_github_extract_wordpress():
+    """
+    Test extracting a GitHub WordPress project into the current directory.
+    Once extracted, `index.php` should be in the current directory
+    """
+    repo = "https://github.com/lastversion-test-repos/WordPress"
+    with captured_exit_code():
+        # switch to temporary directory
+        with TemporaryDirectory() as tmp_dir:
+            os.chdir(tmp_dir)
+            main(["extract", repo])
+            assert os.path.exists("index.php")
+            assert os.path.exists("wp-config-sample.php")

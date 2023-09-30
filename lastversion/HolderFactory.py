@@ -13,7 +13,7 @@ from .SourceForgeRepoSession import SourceForgeRepoSession
 from .SystemRepoSession import SystemRepoSession
 from .WikipediaRepoSession import WikipediaRepoSession
 from .WordPressPluginRepoSession import WordPressPluginRepoSession
-from .utils import BadProjectError
+from .exceptions import BadProjectError
 
 log = logging.getLogger(__name__)
 

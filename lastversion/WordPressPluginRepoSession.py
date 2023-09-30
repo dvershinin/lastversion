@@ -2,7 +2,7 @@
 import logging
 
 from .ProjectHolder import ProjectHolder
-from .utils import BadProjectError
+from .exceptions import BadProjectError
 
 log = logging.getLogger(__name__)
 
