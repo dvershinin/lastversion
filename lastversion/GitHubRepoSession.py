@@ -206,11 +206,12 @@ class GitHubRepoSession(ProjectHolder):
                 if wait_for < 300:
                     if wait_for < 0:
                         log.warning(
-                            'Exceeded API quota. Repeating request because quota is about to '
-                            'be reinstated'
+                            'Exceeded API quota. Repeating request because '
+                            'quota is about to be reinstated'
                         )
                     else:
-                        w = f'Waiting {wait_for} seconds for API quota reinstatement.'
+                        w = (f'Waiting {wait_for} seconds for API quota '
+                             f'reinstatement.')
                         if not self.api_token:
                             w = f"{w} {TOKEN_PRO_TIP}"
                         log.warning(w)
@@ -218,8 +219,9 @@ class GitHubRepoSession(ProjectHolder):
                     self.rate_limited_count = self.rate_limited_count + 1
                     return self.get(url)
                 raise ApiCredentialsError(
-                    'Exceeded GitHub API rate limits. Giving up due to high expected wait {}s. API says: {}'.format(
-                        wait_for, r.json()['message'])
+                    f'Exceeded GitHub API rate limits. Giving up due to high '
+                    f'expected wait {wait_for}s. API says: '
+                    f'{r.json()["message"]}'
                 )
             return self.get(url)
 
@@ -228,6 +230,7 @@ class GitHubRepoSession(ProjectHolder):
         return r
 
     def rate_limit(self):
+        """Get rate limit info."""
         url = f'{self.api_base}/rate_limit'
         return self.get(url)
 
@@ -249,6 +252,7 @@ class GitHubRepoSession(ProjectHolder):
         return None
 
     def repo_readme(self, tag):
+        """API query for a repository's README"""
         r = self.repo_query(f'/readme?ref={tag}')
         if r.status_code == 200:
             return r.json()
@@ -350,7 +354,8 @@ class GitHubRepoSession(ProjectHolder):
                 if not version:
                     continue
                 if 'tagger' in node['target']:
-                    # use date of annotated tag as it better corresponds to "release date"
+                    # use date of annotated tag as it better corresponds to
+                    # "release date"
                     log.info('Using annotated tag date')
                     d = node['target']['tagger']['date']
                 else:
@@ -359,11 +364,13 @@ class GitHubRepoSession(ProjectHolder):
                     d = node['target']['author']['date']
                 tag_date = parser.parse(d)
                 if ret and tag_date + timedelta(days=365) < ret['tag_date']:
-                    log.info('The version %s is newer, but is too old!', version)
+                    log.info('The version %s is newer, but is too old!',
+                             version)
                     break
                 if not ret or version > ret['version'] or tag_date > ret['tag_date']:
-                    # we always want to return formal release if it exists, because it has useful
-                    # data grab formal release via APi to check for pre-release mark
+                    # we always want to return formal release if it exists,
+                    # because it has useful data grab formal release via APi
+                    # to check for pre-release mark
                     formal_release = self.get_formal_release_for_tag(tag_name)
                     if formal_release:
                         ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
