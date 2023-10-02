@@ -84,8 +84,7 @@ def is_file_ext_not_compatible_with_os(file_ext):
 
 
 def is_asset_name_compatible_with_platform(asset_name):
-    """Check if an asset's name contains words that indicate it's meant for
-    another platform"""
+    """Check if an asset has words that indicate it's not for this platform."""
     for platform_name, pf_words in platform_markers.items():
         if not sys.platform.startswith(platform_name):
             for pf_word in pf_words:
@@ -98,8 +97,10 @@ def is_asset_name_compatible_with_platform(asset_name):
 
 
 def is_not_compatible_to_distro(asset_ext):
-    """Check if the file extension is not compatible with the current Linux
-    distro"""
+    """
+    Check if the file extension is not compatible with the current distro.
+    The function supports only Linux distros.
+    """
     if not sys.platform.startswith('linux'):
         return False
     # Weeding out non-matching Linux distros
@@ -112,8 +113,7 @@ def is_not_compatible_to_distro(asset_ext):
 
 
 def is_not_compatible_bitness(asset_name):
-    """Check if an asset's name contains words that indicate it's not meant
-    for 64-bit OS"""
+    """Check if an asset has words that show it's not meant for 64-bit OS"""
     if platform.machine() not in ['x86_64', 'AMD64']:
         return False
     for non_amd64_word in non_amd64_markers:

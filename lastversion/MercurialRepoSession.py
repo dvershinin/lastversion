@@ -36,8 +36,9 @@ class MercurialRepoSession(ProjectHolder):
         self.set_repo(repo)
 
     def get_latest(self, pre_ok=False, major=None):
+        """Get the latest release."""
         ret = None
-        # to leverage cachecontrol, we fetch the feed using requests as usual,
+        # To leverage cache, we fetch the feed using requests as usual,
         # then feed the feed to feedparser as a raw string
         # e.g. https://hg.nginx.org/nginx/atom-tags
         # https://pythonhosted.org/feedparser/common-atom-elements.html

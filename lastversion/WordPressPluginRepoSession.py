@@ -11,7 +11,7 @@ class WordPressPluginRepoSession(ProjectHolder):
     """A class to represent a WordPress plugin project holder."""
     DEFAULT_HOSTNAME = 'wordpress.org'
     REPO_URL_PROJECT_COMPONENTS = 1
-    # For project URLs, e.g. https://wordpress.org/plugins/opcache-reset/
+    # For project URLs, e.g., https://wordpress.org/plugins/opcache-reset/
     # a URI does not start with a repo name, skip '/plugins/'
     REPO_URL_PROJECT_OFFSET = 1
 

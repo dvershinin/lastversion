@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""WikiPedia Repo Session."""
 
 import logging
 

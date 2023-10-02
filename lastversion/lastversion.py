@@ -35,6 +35,8 @@ from .utils import download_file, extract_file, rpm_installed_version, \
 from lastversion.exceptions import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
+fails_sem_err_fmt = ('Latest version %s fails semantic %s constraint against '
+                     'current version %s')
 
 
 # noinspection GrazieInspection
@@ -308,14 +310,17 @@ def update_spec(repo, res, sem='minor'):
             current_minor = res['current_version'].release[1]
             latest_minor = res['version'].release[1]
             if sem in ['minor', 'patch']:
-                fail_fmt = 'Latest v{} fails semantic {} constraint against current v{}'
                 if latest_major != current_major:
                     log.warning(
-                        fail_fmt.format(res['version'], sem, res['current_version']))
+                        fails_sem_err_fmt,res['version'], sem,
+                        res['current_version']
+                    )
                     sys.exit(4)
                 if sem == 'patch' and latest_minor != current_minor:
                     log.warning(
-                        fail_fmt.format(res['version'], sem, res['current_version']))
+                        fails_sem_err_fmt, res['version'], sem,
+                        res['current_version']
+                    )
                     sys.exit(4)
     else:
         log.info('No newer version than already present in spec file')
@@ -326,12 +331,13 @@ def update_spec(repo, res, sem='minor'):
     with open(repo) as f:
         for ln in f.readlines():
             if ln.startswith('%global lastversion_tag '):
-                out.append('%global lastversion_tag {}'.format(res['spec_tag']))
+                out.append(f'%global lastversion_tag {res["spec_tag"]}')
             elif ln.startswith('%global lastversion_dir '):
-                out.append('%global lastversion_dir {}-{}'.format(
-                    res['spec_name'], res['spec_tag_no_prefix']))
+                out.append(
+                    f'%global lastversion_dir '
+                    f'{res["spec_name"]}-{res["spec_tag_no_prefix"]}')
             elif ln.startswith('%global upstream_version '):
-                out.append('%global upstream_version {}'.format(res['version']))
+                out.append(f'%global upstream_version {res["version"]}')
             elif ln.startswith('Version:') and ('module_of' not in res or not res['module_of']):
                 version_tag_regex = r'^Version:(\s+)(\S+)'
                 m = re.match(version_tag_regex, ln)
@@ -602,7 +608,8 @@ def main(argv=None):
                 log.warning('Please install lastversion using YUM or DNF so it can check current '
                             'program version. This is helpful to prevent unnecessary downloads')
             if installed_version and Version(installed_version) >= Version(res['version']):
-                log.warning('Newest version {} is already installed'.format(installed_version))
+                log.warning('Newest version %s is already installed',
+                            installed_version)
                 sys.exit(0)
             # pass RPM URLs directly to package management program
             try:

@@ -63,8 +63,7 @@ def test_cli_format_rc1():
 
 
 def test_cli_format_rc_with_garbage(capsys):
-    """Test that the CLI formatting returns the correct version for a rc
-    version."""
+    """Test that the CLI returns the correct version for a rc version."""
     with captured_exit_code() as get_exit_code:
         main(['format', 'v5.12-rc1-do-not-use'])
     exit_code = get_exit_code()
@@ -75,8 +74,7 @@ def test_cli_format_rc_with_garbage(capsys):
 
 
 def test_cli_format_rc_with_post(capsys):
-    """Test that the CLI formatting returns the correct version for a rc
-    version."""
+    """Test that the CLI returns the correct version for a rc version."""
     with captured_exit_code() as get_exit_code:
         main(['format', 'v2.41.0-rc2.windows.1'])
     exit_code = get_exit_code()
