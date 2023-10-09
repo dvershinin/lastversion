@@ -13,6 +13,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - name: Extract repository name which is also our primary package name
+      run: echo "REPO_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
@@ -23,7 +27,6 @@ jobs:
         pip install -e .[tests]
     - name: Lint with flake8
       run: |
-        pip install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
@@ -37,7 +40,7 @@ jobs:
 #        limit-access-to-users: dvershinin
     - name: Test with pytest
       run: |
-        pytest -v -n auto --cov=lastversion --cov-report=xml
+        pytest -v -n auto --cov=$REPO_NAME --cov-report=xml
       env:
         LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
     - name: Upload coverage to Codacy
