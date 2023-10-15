@@ -202,6 +202,8 @@ class ProjectHolder(requests.Session):
         # REPO_URL_PROJECT_OFFSET = 0
         if cls.REPO_URL_PROJECT_COMPONENTS >= 1:
             repo_components = repo_arg.split('/')
+            if len(repo_components) == cls.REPO_URL_PROJECT_COMPONENTS:
+                return repo_arg
             if len(repo_components) < cls.REPO_URL_PROJECT_COMPONENTS:
                 raise ValueError(f'Repo arg {repo_arg} does not have enough components for {cls._type()}')
             return "/".join(repo_components[cls.REPO_URL_PROJECT_OFFSET:cls.REPO_URL_PROJECT_OFFSET + cls.REPO_URL_PROJECT_COMPONENTS])
