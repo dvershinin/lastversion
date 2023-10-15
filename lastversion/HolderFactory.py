@@ -164,14 +164,7 @@ class HolderFactory:
             )
 
         if not holder and not hostname:
-            if '/' in repo:
-                # default to github for host-less repos
-                return GitHubRepoSession(repo)
-            else:
-                # locate repo on GitHub
-                repo = GitHubRepoSession.find_repo_by_name_only(repo)
-                if repo:
-                    return GitHubRepoSession(repo, hostname)
+            return GitHubRepoSession(repo)
 
         raise BadProjectError(
             'Could not find a holder for the repo %s' % repo

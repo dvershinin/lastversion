@@ -86,18 +86,33 @@ class GitHubRepoSession(ProjectHolder):
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}/{name}-{tag}.{ext}"
     SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
+    def api_search_repo(self, name):
+        """API search for a repository
+
+        Returns:
+            str: Complete repo qualitfier, e.g. "OWNER/PROJECT"
+        """
+        log.info("Making query against GitHub API to search repo %s", name)
+        r = self.get(
+            f'{self.api_base}/search/repositories',
+            params={
+                'q': f"{name} in:name",
+                'sort': 'stars',
+                'per_page': 1
+            }
+        )
+
+        if r.status_code == 200:
+            data = r.json()
+            if data['items']:
+                return data['items'][0]['full_name']
+
+        return None
+
+
     def find_repo_by_name_only(self, repo):
         """Find a repo by name only, without owner."""
-        official_repo = self.try_get_official(repo)
-        if official_repo:
-            repo = official_repo
-            log.info('Using official repo %s', repo)
-        else:
-            repo = self.find_repo_by_name_only(repo)
-            if repo:
-                log.info('Using repo %s obtained from search API', repo)
-            else:
-                return
+
         cache = self.get_name_cache()
 
         try:
@@ -111,26 +126,12 @@ class GitHubRepoSession(ProjectHolder):
         except TypeError:
             pass
 
-        log.info("Making query against GitHub API to search repo %s", repo)
-        r = self.get(
-            f'{self.api_base}/search/repositories',
-            params={
-                'q': f"{repo} in:name",
-                'sort': 'stars',
-                'per_page': 1
-            }
-        )
-        if r.status_code == 404:
-            # when not found, skip using this holder in the factory by not setting self.repo
-            return None
-        if r.status_code != 200:
-            raise BadProjectError(
-                f'Error while identifying full repository on GitHub for search query: {repo}. Status: {r.status_code}'
-            )
-        data = r.json()
-        full_name = ''
-        if data['items']:
-            full_name = data['items'][0]['full_name']
+        full_name = self.try_get_official(repo)
+        if full_name:
+            log.info('Using official repo %s', repo)
+        else:
+            full_name = self.api_search_repo(repo)
+
         cache[repo] = {
             'repo': full_name,
             'updated_at': int(time.time())
@@ -172,6 +173,10 @@ class GitHubRepoSession(ProjectHolder):
         else:
             self.api_base = f'https://api.{self.DEFAULT_HOSTNAME}'
 
+        if '/' not in repo:
+            self.set_repo(
+                self.find_repo_by_name_only(repo)
+            )
 
     def get_rate_limit_url(self):
         return f'{self.api_base}/rate_limit'
