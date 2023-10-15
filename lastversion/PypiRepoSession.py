@@ -22,8 +22,8 @@ class PypiRepoSession(ProjectHolder):
         project = None
         url = f'https://{self.hostname}/pypi/{self.repo}/json'
         log.info('Requesting %s', url)
-        r = self.get(url)
-        if r.status_code == 200:
+
+        if self.get(url).status_code == 200:
             project = r.json()
         return project
 
@@ -43,7 +43,7 @@ class PypiRepoSession(ProjectHolder):
         for f in release['files']:
             if f['packagetype'] == 'sdist':
                 return f['url']
-        return None
+        return
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest project release."""
@@ -51,9 +51,9 @@ class PypiRepoSession(ProjectHolder):
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version
         from .Version import Version
-        if self.project is None:
+        if not self.project:
             print("Project is not listed on PyPI")
-            return None
+            return
         if not major:
             latest_ver = self.project['info']['version']
             v = Version(latest_ver)
@@ -73,7 +73,7 @@ class PypiRepoSession(ProjectHolder):
             ret['files'] = self.project['releases'][ret['tag_name']]
             ret['tag_date'] = parser.parse(ret['files'][0]['upload_time'])
             return ret
-        return None
+        return
 
     @staticmethod
     def make_canonical_link(repo):
