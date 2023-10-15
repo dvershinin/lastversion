@@ -144,7 +144,7 @@ class GitHubRepoSession(ProjectHolder):
             )
         return full_name
 
-    def __init__(self, repo, hostname):
+    def __init__(self, repo, hostname=DEFAULT_HOSTNAME):
         super(GitHubRepoSession, self).__init__(repo, hostname)
         # dict holding repo/owner to feed contents of releases' atom
         self.feed_contents = {}
@@ -161,9 +161,7 @@ class GitHubRepoSession(ProjectHolder):
                 break
         if not self.api_token:
             log.info('No API token found in environment variables %s.', self.TOKEN_ENV_VARS)
-        self.hostname = hostname
-        if not self.hostname:
-            self.hostname = self.DEFAULT_HOSTNAME
+
         # Explicitly specify the API version that we want:
         self.headers.update({
             'Accept': 'application/vnd.github+json'

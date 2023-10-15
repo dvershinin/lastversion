@@ -94,7 +94,10 @@ class HolderFactory:
 
     @staticmethod
     def try_match_with_holder_class(project_hosting_name, project_hosting_class, repo, hostname):
-        log.info('Trying %s adapter', project_hosting_name)
+        # only try if there is hostname
+        if not hostname:
+            return None
+        log.info('Trying to sniff %s adapter', project_hosting_name)
 
         try:
             sc_repo = project_hosting_class.get_base_repo_from_repo_arg(repo)
