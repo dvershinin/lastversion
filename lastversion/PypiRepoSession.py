@@ -15,6 +15,7 @@ class PypiRepoSession(ProjectHolder):
     # For project URLs, e.g. https://pypi.org/project/lastversion/
     # a URI does not start with a repo name, skip '/project/'
     REPO_URL_PROJECT_OFFSET = 1
+    CAN_BE_SELF_HOSTED = True
 
     def get_project(self):
         """Get project JSON data."""
@@ -26,20 +27,16 @@ class PypiRepoSession(ProjectHolder):
             project = r.json()
         return project
 
+    def is_instance(self):
+        return self.project
+
     def __init__(self, repo, hostname=None):
-        super(PypiRepoSession, self).__init__()
+        super(PypiRepoSession, self).__init__(repo, hostname)
         if hostname:
             self.hostname = hostname
         else:
             self.hostname = PypiRepoSession.DEFAULT_HOSTNAME
-        self.set_repo(repo)
         self.project = self.get_project()
-        if hostname and not self.project:
-            raise BadProjectError(
-                'The project {} does not exist on Pypi'.format(
-                    repo
-                )
-            )
 
     def release_download_url(self, release, shorter=False):
         """Get release download URL."""

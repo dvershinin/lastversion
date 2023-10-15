@@ -16,7 +16,7 @@ class FeedRepoSession(ProjectHolder):
             'only': 'FileZilla Client'
         }
     }
-
+    CAN_BE_SELF_HOSTED = True
     # https://alex.miller.im/posts/python-3-feedfinder-rss-detection-from-url/
     def find_feed(self, site):
         from six.moves.urllib.parse import urlparse
@@ -53,15 +53,17 @@ class FeedRepoSession(ProjectHolder):
         return result
 
     def __init__(self, repo, hostname):
-        super(FeedRepoSession, self).__init__()
+        super(FeedRepoSession, self).__init__(repo, hostname)
         self.home_soup = None
         feeds = self.find_feed('https://' + hostname + '/')
         if not feeds:
             return
         self.hostname = hostname
-        self.set_repo(repo)
         log.info('Using feed URL: %s', feeds[0])
         self.feed_url = feeds[0]
+
+    def is_instance(self):
+        return self.feed_url
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""

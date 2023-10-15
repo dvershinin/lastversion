@@ -6,6 +6,7 @@ from .ProjectHolder import ProjectHolder
 
 
 class MercurialRepoSession(ProjectHolder):
+    CAN_BE_SELF_HOSTED = True
     REPO_URL_PROJECT_COMPONENTS = 1
     KNOWN_REPO_URLS = {
         'nginx.org': {
@@ -31,9 +32,8 @@ class MercurialRepoSession(ProjectHolder):
     SUBDOMAIN_INDICATOR = "hg"
 
     def __init__(self, repo, hostname):
-        super(MercurialRepoSession, self).__init__()
+        super(MercurialRepoSession, self).__init__(repo, hostname)
         self.hostname = hostname
-        self.set_repo(repo)
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""

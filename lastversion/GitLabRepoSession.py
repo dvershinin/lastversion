@@ -14,12 +14,12 @@ log = logging.getLogger(__name__)
 
 class GitLabRepoSession(ProjectHolder):
     DEFAULT_HOSTNAME = 'gitlab.com'
-
+    CAN_BE_SELF_HOSTED = True
     # Domains gitlab.example.com
     SUBDOMAIN_INDICATOR = "gitlab"
 
     def __init__(self, repo, hostname):
-        super(GitLabRepoSession, self).__init__()
+        super(GitLabRepoSession, self).__init__(repo, hostname)
         self.pa_token = os.getenv("GITLAB_PA_TOKEN")
         self.hostname = hostname
         if not self.hostname:
@@ -28,7 +28,6 @@ class GitLabRepoSession(ProjectHolder):
             log.info('Using Personal Access token.')
             self.headers.update({'Private-Token': self.pa_token})
         self.api_base = f'https://{self.hostname}/api/v4'
-        self.set_repo(repo)
         self.repo_id = self.repo.replace('/', '%2F')
         # lazy loaded dict cache of /releases response keyed by tag, only first page
         self.formal_releases_by_tag = None

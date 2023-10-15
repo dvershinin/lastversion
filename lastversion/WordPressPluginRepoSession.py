@@ -25,19 +25,17 @@ class WordPressPluginRepoSession(ProjectHolder):
             project = response.json()
         return project
 
+    def is_instance(self):
+        return self.project
+
     def __init__(self, repo, hostname=None):
-        super(WordPressPluginRepoSession, self).__init__()
+        super(WordPressPluginRepoSession, self).__init__(repo, hostname)
         if hostname:
             self.hostname = hostname
         else:
             self.hostname = WordPressPluginRepoSession.DEFAULT_HOSTNAME
-        self.set_repo(repo)
         self.project = self.get_project()
-        if hostname and not self.project:
-            raise BadProjectError(
-                f'The project {repo} does not exist in WordPress plugin '
-                f'directory'
-            )
+
 
     def release_download_url(self, release, shorter=False):
         """Get release download URL."""

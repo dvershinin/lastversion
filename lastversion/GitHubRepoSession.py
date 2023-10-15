@@ -42,7 +42,7 @@ class GitHubRepoSession(ProjectHolder):
     """A class to represent a GitHub project holder."""
 
     DEFAULT_HOSTNAME = 'github.com'
-
+    CAN_BE_SELF_HOSTED = True
     TOKEN_ENV_VARS = [
         "LASTVERSION_GITHUB_API_TOKEN",
         "GITHUB_API_TOKEN",
@@ -87,9 +87,17 @@ class GitHubRepoSession(ProjectHolder):
     SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
     def find_repo_by_name_only(self, repo):
-        # noinspection HttpUrlsUsage
-        if repo.startswith(('https://', 'http://')):
-            return None
+        """Find a repo by name only, without owner."""
+        official_repo = self.try_get_official(repo)
+        if official_repo:
+            repo = official_repo
+            log.info('Using official repo %s', repo)
+        else:
+            repo = self.find_repo_by_name_only(repo)
+            if repo:
+                log.info('Using repo %s obtained from search API', repo)
+            else:
+                return
         cache = self.get_name_cache()
 
         try:
@@ -137,7 +145,7 @@ class GitHubRepoSession(ProjectHolder):
         return full_name
 
     def __init__(self, repo, hostname):
-        super(GitHubRepoSession, self).__init__()
+        super(GitHubRepoSession, self).__init__(repo, hostname)
         # dict holding repo/owner to feed contents of releases' atom
         self.feed_contents = {}
         # lazy loaded dict cache of /releases response keyed by tag, only first page
@@ -165,18 +173,7 @@ class GitHubRepoSession(ProjectHolder):
             self.api_base = f'https://{self.hostname}/api/v3'
         else:
             self.api_base = f'https://api.{self.DEFAULT_HOSTNAME}'
-        if '/' not in repo:
-            official_repo = self.try_get_official(repo)
-            if official_repo:
-                repo = official_repo
-                log.info('Using official repo %s', repo)
-            else:
-                repo = self.find_repo_by_name_only(repo)
-                if repo:
-                    log.info('Using repo %s obtained from search API', repo)
-                else:
-                    return
-        self.set_repo(repo)
+
 
     def get_rate_limit_url(self):
         return f'{self.api_base}/rate_limit'

@@ -5,6 +5,8 @@ import os
 import re
 import time
 
+import requests
+from bs4 import BeautifulSoup
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
@@ -39,7 +41,7 @@ class GiteaRepoSession(ProjectHolder):
     """A class to represent a GitHub project holder."""
 
     DEFAULT_HOSTNAME = 'gitea.com'
-
+    CAN_BE_SELF_HOSTED = True
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
     2) likely has been accessed by someone in CDN and thus faster
@@ -106,8 +108,26 @@ class GiteaRepoSession(ProjectHolder):
             )
         return full_name
 
+    def is_instance(self):
+        """
+        Check if this is a Gitea repo page.
+        Navigate to the homepage of project by URL
+        Gitea project page will have
+        """
+        project_page = f"https://{self.hostname}/{self.repo}"
+        # log the URL we are about to check
+        log.info('Checking as Gitea project at %s', project_page)
+        response = self.get(project_page, timeout=10)
+        if response.status_code == 200:
+            # create beautiful soup :)
+            soup = BeautifulSoup(response.text, "html.parser")
+            # If there's <link rel="alternate" type="application/atom+xml" title="" href="/{repo}.atom">, it's a Gitea repo
+            if soup.find("link", {"href": f"/{self.repo}.atom"}):
+                return True
+        return False
+
     def __init__(self, repo, hostname):
-        super(GiteaRepoSession, self).__init__()
+        super(GiteaRepoSession, self).__init__(repo, hostname)
         # dict holding repo/owner to feed contents of releases' atom
         self.feed_contents = {}
         self.rate_limited_count = 0
@@ -140,7 +160,6 @@ class GiteaRepoSession(ProjectHolder):
                     )
                 else:
                     return
-        self.set_repo(repo)
 
     def get_rate_limit_url(self):
         return f'{self.api_base}/rate_limit'

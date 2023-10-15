@@ -284,8 +284,9 @@ def check_version(value):
 
 def parse_version(tag):
     """Parse version to Version object."""
-    h = ProjectHolder()
-    return h.sanitize_version(tag, pre_ok=True)
+    h = ProjectHolder(name="dummy/project")
+    v = h.sanitize_version(tag, pre_ok=True)
+    return v
 
 
 def get_rpm_packager():
@@ -370,14 +371,87 @@ def install_app_image(url, install_name):
         url (str): URL where AppImage file is hosted
         install_name (str): Short name that the AppImage will be renamed to
     """
+    if not install_name.endswith('.AppImage'):
+        install_name += '.AppImage'
+    app_file_name = install_standalone_binary(url, install_name)
+    extract_appimage_desktop_file(app_file_name)
+
+
+def install_rpms(res, rpms, args):
+    """Install RPMs using package manager"""
+    # prevents downloading large packages if we already have newest installed
+    # consult RPM database  for current version
+    installed_version = rpm_installed_version(args.repo)
+    if installed_version is False:
+        log.warning(
+            'Please install lastversion using YUM or DNF so it can check current '
+            'program version. This is helpful to prevent unnecessary downloads')
+    if installed_version and Version(installed_version) >= Version(
+            res['version']):
+        log.warning('Newest version %s is already installed',
+                    installed_version)
+        sys.exit(0)
+    # pass RPM URLs directly to package management program
+    try:
+        import subprocess
+
+        params = ['yum', 'install']
+        params.extend(rpms)
+        if args.assumeyes:
+            params.append('-y')
+        subprocess.call(params)
+    except OSError:
+        log.critical(
+            'Failed to launch package manager. Only YUM/DNF is supported!')
+        sys.exit(1)
+    # if the system has yum, then lastversion has to be installed from yum and
+    # has access to system packages like yum python or dnf python API
+    # if install_with_dnf(rpms) is False or install_with_yum(rpms) is False:
+    #     log.error('Failed talking to either DNF or YUM for package install')
+    #     sys.exit(1)
+
+
+def install_standalone_binary(url, install_name):
+    """Install a standalone binary from a URL to `~/Applications/<install_name>`
+
+    Args:
+        url (str): URL where the binary file is hosted
+        install_name (str): Filename that the binary will be renamed to
+    """
     home_dir = os.path.expanduser('~')
     apps_dir = os.path.join(home_dir, 'Applications')
-    app_file_name = os.path.join(apps_dir, f"{install_name}.AppImage")
+    app_file_name = os.path.join(apps_dir, install_name)
 
     Path(apps_dir).mkdir(exist_ok=True, parents=True)
     download_file(url, app_file_name)
     os.chmod(app_file_name, 0o755)  # skipcq: BAN-B103
-    extract_appimage_desktop_file(app_file_name)
+    return app_file_name
+
+
+def install_release(res, args):
+    """Install latest release"""
+    app_images = [asset for asset in res['assets'] if asset.endswith('.AppImage')]
+    if app_images:
+        return install_app_image(
+            app_images[0], install_name=res.get('install_name', args.repo)
+        )
+
+    rpms = [asset for asset in res['assets'] if asset.endswith('.rpm')]
+    if rpms:
+        return install_rpms(rpms, args)
+
+    # static files are those without an extension
+    static_binaries = [
+        asset for asset in res['assets']
+        if '.' not in asset.rsplit('/', 1)[-1]
+    ]
+    if static_binaries:
+        return install_standalone_binary(
+            static_binaries[0], install_name=res.get('install_name', args.repo)
+        )
+
+    log.error('No installable assets found to install')
+    sys.exit(1)
 
 
 def main(argv=None):
@@ -592,42 +666,7 @@ def main(argv=None):
             sys.exit(0)
 
         if args.action == 'install':
-            app_images = [asset for asset in res['assets'] if asset.endswith('.AppImage')]
-            if app_images:
-                return install_app_image(
-                    app_images[0], install_name=res.get('install_name', args.repo)
-                )
-            rpms = [asset for asset in res['assets'] if asset.endswith('.rpm')]
-            if not rpms:
-                log.error('No assets found to install')
-                sys.exit(1)
-            # prevents downloading large packages if we already have newest installed
-            # consult RPM database  for current version
-            installed_version = rpm_installed_version(args.repo)
-            if installed_version is False:
-                log.warning('Please install lastversion using YUM or DNF so it can check current '
-                            'program version. This is helpful to prevent unnecessary downloads')
-            if installed_version and Version(installed_version) >= Version(res['version']):
-                log.warning('Newest version %s is already installed',
-                            installed_version)
-                sys.exit(0)
-            # pass RPM URLs directly to package management program
-            try:
-                import subprocess
-                params = ['yum', 'install']
-                params.extend(rpms)
-                if args.assumeyes:
-                    params.append('-y')
-                subprocess.call(params)
-            except OSError:
-                log.critical('Failed to launch package manager. Only YUM/DNF is supported!')
-                sys.exit(1)
-            # if the system has yum, then lastversion has to be installed from yum and
-            # has access to system packages like yum python or dnf python API
-            # if install_with_dnf(rpms) is False or install_with_yum(rpms) is False:
-            #     log.error('Failed talking to either DNF or YUM for package install')
-            #     sys.exit(1)
-            sys.exit(0)
+            return install_release(res, args)
 
         # display version in various formats:
         if args.format == 'assets':

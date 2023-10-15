@@ -48,7 +48,13 @@ def matches_filter(filter_s, positive, version_s):
 
 
 class ProjectHolder(requests.Session):
-    """Generic project holder class abstracts a web-accessible project storage."""
+    """
+    Generic project holder class abstracts a web-accessible project storage.
+    E.g. project on GitHub, project on Gitlab, etc.
+    A project may not have a name and be identified by a hostname only.
+    In that case the repo property is None.
+    Either hostname and/or property have to be present
+    """
 
     # List of odd repos where last char is part of version not beta level
     LAST_CHAR_FIX_REQUIRED_ON = []
@@ -57,12 +63,15 @@ class ProjectHolder(requests.Session):
     # in case of GitHub, that is GitHub.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
     SUBDOMAIN_INDICATOR = None
+    # E.g. WordPress plugin directory is only one, but Gitea and GitHub can be hosted on arbitrary domains
+    CAN_BE_SELF_HOSTED = False
     KNOWN_REPO_URLS = {}
     KNOWN_REPOS_BY_NAME = {}
     # e.g. owner/project, but mercurial just /project together with hostname
     # adapter array should list how many elements make up "repo", e.g. for hg.nginx.com/repo it
     # is only one instead of 2
     # or a "format" specifier for matching
+    # 0 means no project name in URI (identified by hostname), 1 means project name is first component, etc.
     REPO_URL_PROJECT_COMPONENTS = 2
     # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
     REPO_URL_PROJECT_OFFSET = 0
@@ -74,8 +83,11 @@ class ProjectHolder(requests.Session):
         self.repo = repo
         self.name = repo.split('/')[-1]
 
-    def __init__(self):
+    def __init__(self, name=None, hostname=None):
         super(ProjectHolder, self).__init__()
+
+        if not name and not hostname:
+            raise ValueError('Either name or hostname has to be provided')
 
         app_name = __name__.split('.')[0]
 
@@ -97,7 +109,8 @@ class ProjectHolder(requests.Session):
         self.having_asset = None
         self.hostname = None
         # identifies project on a given hostname
-        self.repo = None
+        # normalize repo to number of meaningful parameters
+        self.repo = self.get_base_repo_from_repo_arg(name)
         # short name for "repo", useful in URLs
         self.name = None
         # in some case we do not specify repo, but feed is discovered, no repo is given then
@@ -125,9 +138,9 @@ class ProjectHolder(requests.Session):
         except (IOError, ValueError) as e:
             log.warning("Error writing to cache file: %s", e)
 
-    def is_valid(self):
+    def is_instance(self):
         """Check if project holder is valid instance."""
-        return self.feed_url or self.name
+        return False
 
     def set_branches(self, branches):
         """Sets project holder's branches."""
@@ -181,33 +194,43 @@ class ProjectHolder(requests.Session):
         return hostname, repo
 
     @classmethod
-    def is_official_for_repo(cls, repo):
+    def get_base_repo_from_repo_arg(cls, repo_arg):
+        """Return meaningful URI components from a repo."""
+        # repo has to have enough meaningful components provided in URI
+        # REPO_URL_PROJECT_COMPONENTS = 2
+        # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
+        # REPO_URL_PROJECT_OFFSET = 0
+        if cls.REPO_URL_PROJECT_COMPONENTS >= 1:
+            repo_components = repo_arg.split('/')
+            if len(repo_components) < cls.REPO_URL_PROJECT_COMPONENTS:
+                raise ValueError(f'Repo arg {repo_arg} does not have enough components for {cls._type()}')
+            return "/".join(repo_components[cls.REPO_URL_PROJECT_OFFSET:cls.REPO_URL_PROJECT_OFFSET + cls.REPO_URL_PROJECT_COMPONENTS])
+        return None
+
+    @classmethod
+    def is_official_for_repo(cls, repo, hostname):
         """Check if repo is a known repo for this type of project holder."""
-        if cls.is_link(repo):
-            for url in cls.KNOWN_REPO_URLS:
-                if repo.startswith((url, f"https://{url}", f"http://{url}")):
-                    log.info('%s Starts with %s', repo, url)
-                    return cls.KNOWN_REPO_URLS[url]
-        else:
-            if repo.lower() in cls.KNOWN_REPOS_BY_NAME:
-                log.info('Selecting known repo %s', repo)
-                return cls.KNOWN_REPOS_BY_NAME[repo.lower()]
+        if hostname and hostname in cls.KNOWN_REPO_URLS:
+            log.info('Selecting known repo %s', hostname)
+            return cls.KNOWN_REPO_URLS[hostname]
+        if repo and repo.lower() in cls.KNOWN_REPOS_BY_NAME:
+            log.info('Selecting known repo %s', repo)
+            return cls.KNOWN_REPOS_BY_NAME[repo.lower()]
         return False
 
     @classmethod
-    def get_matching_hostname(cls, repo):
-        """Find matching hostname between repo and holder's default domain."""
-        if not cls.is_link(repo):
+    def is_matching_hostname(cls, hostname):
+        """Check if given hostname matches to the project hosting's domains."""
+        if not hostname:
             return None
+        # Hosting does not have domains defined
         if not cls.DEFAULT_HOSTNAME and not cls.SUBDOMAIN_INDICATOR:
-            return None
-        url_parts = repo.split('/')
-        domain = url_parts[2]
-        if cls.DEFAULT_HOSTNAME == domain:
-            return domain
-        if cls.SUBDOMAIN_INDICATOR and domain.startswith(cls.SUBDOMAIN_INDICATOR + "."):
-            return domain
-        return None
+            return False
+        if cls.DEFAULT_HOSTNAME == hostname:
+            return True
+        if cls.SUBDOMAIN_INDICATOR and hostname.startswith(cls.SUBDOMAIN_INDICATOR + "."):
+            return True
+        return False
 
     def matches_major_filter(self, version, major):
         if self.branches and major in self.branches and \

@@ -16,9 +16,9 @@ class SourceForgeRepoSession(ProjectHolder):
     REPO_URL_PROJECT_OFFSET = 1
 
     def __init__(self, repo, hostname):
-        super(SourceForgeRepoSession, self).__init__()
+        super(SourceForgeRepoSession, self).__init__(repo, hostname)
         self.hostname = hostname
-        self.set_repo(repo)
+
 
     @staticmethod
     def get_normalized_url(download_url):

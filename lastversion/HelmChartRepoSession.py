@@ -12,7 +12,7 @@ class HelmChartRepoSession(ProjectHolder):
 
     # noinspection PyUnusedLocal
     def __init__(self, repo, hostname=None):
-        super(HelmChartRepoSession, self).__init__()
+        super(HelmChartRepoSession, self).__init__(repo, hostname)
         if not repo.endswith('Chart.yaml'):
             repo = repo.rstrip('/') + '/Chart.yaml'
         log.info('Helm Chart.yml: %s', repo)
