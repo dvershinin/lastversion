@@ -72,9 +72,13 @@ class ProjectHolder(requests.Session):
     # is only one instead of 2
     # or a "format" specifier for matching
     # 0 means no project name in URI (identified by hostname), 1 means project name is first component, etc.
+    # True means as many as given in URI
     REPO_URL_PROJECT_COMPONENTS = 2
     # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
+
     REPO_URL_PROJECT_OFFSET = 0
+    # When project is identified by whichever URI there is (varying number of components)
+    REPO_IS_URI = False
     RELEASE_URL_FORMAT = None
     SHORT_RELEASE_URL_FORMAT = None
 
@@ -200,12 +204,14 @@ class ProjectHolder(requests.Session):
         # REPO_URL_PROJECT_COMPONENTS = 2
         # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
         # REPO_URL_PROJECT_OFFSET = 0
+        if cls.REPO_IS_URI:
+            return repo_arg
         if cls.REPO_URL_PROJECT_COMPONENTS >= 1:
             repo_components = repo_arg.split('/')
-            if len(repo_components) == cls.REPO_URL_PROJECT_COMPONENTS:
+            if repo_arg and len(repo_components) == cls.REPO_URL_PROJECT_COMPONENTS:
                 return repo_arg
             if len(repo_components) < cls.REPO_URL_PROJECT_COMPONENTS:
-                raise ValueError(f'Repo arg {repo_arg} does not have enough components for {cls._type()}')
+                raise ValueError(f'Repo arg {repo_arg} does not have enough components for {cls.__name__}')
             return "/".join(repo_components[cls.REPO_URL_PROJECT_OFFSET:cls.REPO_URL_PROJECT_OFFSET + cls.REPO_URL_PROJECT_COMPONENTS])
         return None
 

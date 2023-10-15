@@ -17,6 +17,8 @@ class FeedRepoSession(ProjectHolder):
         }
     }
     CAN_BE_SELF_HOSTED = True
+    # Unlimited number of components (URI as is)
+    REPO_IS_URI = True
     # https://alex.miller.im/posts/python-3-feedfinder-rss-detection-from-url/
     def find_feed(self, site):
         from six.moves.urllib.parse import urlparse

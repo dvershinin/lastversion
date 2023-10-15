@@ -71,6 +71,11 @@ class HolderFactory:
             hostname, repo = GitHubRepoSession.get_host_repo_for_link(
                 github_link['href']
             )
+            # log that we found GitHub link on the website
+            log.info(
+                'Found GitHub link on the website %s: %s',
+                hostname, repo
+            )
             return GitHubRepoSession(repo, hostname)
 
         return None
@@ -96,6 +101,9 @@ class HolderFactory:
     def try_match_with_holder_class(project_hosting_name, project_hosting_class, repo, hostname):
         # only try if there is hostname
         if not hostname:
+            return None
+        if not project_hosting_class.CAN_BE_SELF_HOSTED:
+            # nothing to sniff
             return None
         log.info('Trying to sniff %s adapter', project_hosting_name)
 
@@ -147,6 +155,8 @@ class HolderFactory:
         # It no holder is found, we try to guess from the homepage
         if hostname:
             holder = HolderFactory.guess_from_homepage(repo, hostname)
+            if holder:
+                return holder
 
         if not holder and hostname:
             raise BadProjectError(
