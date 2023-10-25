@@ -40,6 +40,91 @@ fails_sem_err_fmt = ('Latest version %s fails semantic %s constraint against '
 
 
 # noinspection GrazieInspection
+def get_repo_data_from_spec(repo):
+    # The repo is specified inside the .spec file
+    # GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
+    # no upstream_github global means that the spec was not prepared for lastversion
+    # optional: use of spec_tag macros if the source is from GitHub. In edge cases we check
+    # new version via GitHub, but prepared sources are elsewhere
+    repo_data = {}
+    with open(repo) as f:
+        name = None
+        upstream_github = None
+        upstream_name = None
+        current_version = None
+        spec_repo = None
+        spec_url = None
+        for line in f.readlines():
+            if line.startswith('%global lastversion_repo'):
+                spec_repo = line.split(' ')[2].strip()
+            elif line.startswith('%global upstream_github'):
+                upstream_github = line.split(' ')[2].strip()
+            elif line.startswith('%global upstream_name'):
+                upstream_name = line.split(' ')[2].strip()
+            elif line.startswith('Name:'):
+                name = line.split('Name:')[1].strip()
+            elif line.startswith('URL:'):
+                spec_url = line.split('URL:')[1].strip()
+            elif line.startswith('%global upstream_version '):
+                current_version = line.split(' ')[2].strip()
+                # influences %spec_tag to use %upstream_version instead of %version
+                repo_data['module_of'] = True
+            elif line.startswith('Version:') and not current_version:
+                current_version = line.split('Version:')[1].strip()
+            elif line.startswith('%global lastversion_only'):
+                repo_data['only'] = line.split(' ')[2].strip()
+        if spec_url:
+            spec_host = urlparse(spec_url).hostname
+            if spec_host in [
+                'github.com'] and not upstream_github and not spec_repo:
+                log.warning(
+                    'Neither %upstream_github nor %lastversion_repo macros were found. '
+                    'Please prepare your spec file using instructions: '
+                    'https://lastversion.getpagespeed.com/spec-preparing.html')
+        if not current_version:
+            log.critical(
+                'Did not find neither Version: nor %upstream_version in the spec file')
+            sys.exit(1)
+        try:
+            if current_version != 'x':
+                repo_data['current_version'] = Version(current_version)
+        except InvalidVersion:
+            log.critical('Failed to parse current version in %s. Tried %s',
+                         repo, current_version)
+            sys.exit(1)
+        if upstream_name:
+            repo_data['name'] = upstream_name
+            repo_data['spec_name'] = '%{upstream_name}'
+        else:
+            repo_data['name'] = name
+            repo_data['spec_name'] = '%{name}'
+        if upstream_github:
+            repo = "{}/{}".format(upstream_github, repo_data['name'])
+            log.info('Discovered GitHub repo %s from .spec file', repo)
+        elif spec_repo:
+            repo = spec_repo
+            log.info('Discovered explicit repo %s from .spec file', repo)
+        elif spec_url:
+            repo = spec_url
+        repo_data['repo'] = repo
+        return repo_data
+
+
+def get_repo_data_from_yml(repo):
+    repo_data = {}
+    with open(repo) as fpi:
+        repo_data = yaml.safe_load(fpi)
+        if 'repo' in repo_data:
+            if 'nginx-extras' in repo:
+                repo_data['module_of'] = 'nginx'
+            name = os.path.splitext(os.path.basename(repo))[0]
+            if 'module_of' in repo_data:
+                name = '{}-module-{}'.format(repo_data['module_of'], name)
+            repo = repo_data['repo']
+            repo_data['name'] = name
+    return repo_data
+
+
 def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
            short_urls=False, major=None, only=None, at=None,
            having_asset=None, exclude=None, even=False):
@@ -88,83 +173,17 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
 
     # noinspection HttpUrlsUsage
     if repo.endswith('.yml') and not repo.startswith(('http://', 'https://')):
-        with open(repo) as fpi:
-            repo_data = yaml.safe_load(fpi)
-            if 'repo' in repo_data:
-                if 'nginx-extras' in repo:
-                    repo_data['module_of'] = 'nginx'
-                name = os.path.splitext(os.path.basename(repo))[0]
-                if 'module_of' in repo_data:
-                    name = '{}-module-{}'.format(repo_data['module_of'], name)
-                repo = repo_data['repo']
-                repo_data['name'] = name
+        repo_data = get_repo_data_from_yml(repo)
 
     # noinspection HttpUrlsUsage
     if repo.startswith(('http://', 'https://')) and repo.endswith('Chart.yaml'):
         at = 'helm_chart'
 
     if repo.endswith('.spec'):
-        # The repo is specified inside the .spec file
-        # GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
-        # no upstream_github global means that the spec was not prepared for lastversion
-        # optional: use of spec_tag macros if the source is from GitHub. In edge cases we check
-        # new version via GitHub, but prepared sources are elsewhere
-        with open(repo) as f:
-            name = None
-            upstream_github = None
-            upstream_name = None
-            current_version = None
-            spec_repo = None
-            spec_url = None
-            for line in f.readlines():
-                if line.startswith('%global lastversion_repo'):
-                    spec_repo = line.split(' ')[2].strip()
-                elif line.startswith('%global upstream_github'):
-                    upstream_github = line.split(' ')[2].strip()
-                elif line.startswith('%global upstream_name'):
-                    upstream_name = line.split(' ')[2].strip()
-                elif line.startswith('Name:'):
-                    name = line.split('Name:')[1].strip()
-                elif line.startswith('URL:'):
-                    spec_url = line.split('URL:')[1].strip()
-                elif line.startswith('%global upstream_version '):
-                    current_version = line.split(' ')[2].strip()
-                    # influences %spec_tag to use %upstream_version instead of %version
-                    repo_data['module_of'] = True
-                elif line.startswith('Version:') and not current_version:
-                    current_version = line.split('Version:')[1].strip()
-            if spec_url:
-                spec_host = urlparse(spec_url).hostname
-                if spec_host in ['github.com'] and not upstream_github and not spec_repo:
-                    log.warning('Neither %upstream_github nor %lastversion_repo macros were found. '
-                                'Please prepare your spec file using instructions: '
-                                'https://lastversion.getpagespeed.com/spec-preparing.html')
-            if not current_version:
-                log.critical('Did not find neither Version: nor %upstream_version in the spec file')
-                sys.exit(1)
-            try:
-                if current_version != 'x':
-                    repo_data['current_version'] = Version(current_version)
-            except InvalidVersion:
-                log.critical('Failed to parse current version in %s. Tried %s', repo, current_version)
-                sys.exit(1)
-            if upstream_name:
-                repo_data['name'] = upstream_name
-                repo_data['spec_name'] = '%{upstream_name}'
-            else:
-                repo_data['name'] = name
-                repo_data['spec_name'] = '%{name}'
-            if upstream_github:
-                repo = "{}/{}".format(upstream_github, repo_data['name'])
-                log.info('Discovered GitHub repo %s from .spec file', repo)
-            elif spec_repo:
-                repo = spec_repo
-                log.info('Discovered explicit repo %s from .spec file', repo)
-            elif spec_url:
-                repo = spec_url
+        repo_data = get_repo_data_from_spec(repo)
 
-    with HolderFactory.get_instance_for_repo(repo, at=at) as project:
-        project.set_only(only)
+    with HolderFactory.get_instance_for_repo(repo_data.get('repo', repo), at=at) as project:
+        project.set_only(repo_data.get('only', only))
         project.set_exclude(exclude)
         project.set_having_asset(having_asset)
         project.set_even(even)

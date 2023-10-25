@@ -90,9 +90,6 @@ class ProjectHolder(requests.Session):
     def __init__(self, name=None, hostname=None):
         super(ProjectHolder, self).__init__()
 
-        if not name and not hostname:
-            raise ValueError('Either name or hostname has to be provided')
-
         app_name = __name__.split('.')[0]
 
         self.cache_dir = user_cache_dir(app_name)
@@ -204,6 +201,12 @@ class ProjectHolder(requests.Session):
         # REPO_URL_PROJECT_COMPONENTS = 2
         # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
         # REPO_URL_PROJECT_OFFSET = 0
+        # if is an empty string but we want some, raise value error
+        # holder defined artbitrary number of URI components, zero or unlimited
+        if cls.REPO_URL_PROJECT_COMPONENTS is True:
+            return repo_arg
+        if not repo_arg and cls.REPO_URL_PROJECT_COMPONENTS > 0:
+            raise ValueError(f'Repo arg {repo_arg} is not enough for {cls.__name__}')
         if cls.REPO_IS_URI:
             return repo_arg
         if cls.REPO_URL_PROJECT_COMPONENTS >= 1:

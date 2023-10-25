@@ -128,6 +128,8 @@ class HolderFactory:
             parsed = urlparse(repo)
             hostname = parsed.hostname
             repo = parsed.path.lstrip('/')
+            if not repo:
+                repo = None
         # when we were explicit about the hosting, we don't try to guess
         if at:
             return HolderFactory.HOLDERS[at](repo, hostname=hostname)

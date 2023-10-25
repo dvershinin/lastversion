@@ -87,7 +87,7 @@ def test_libvmod_xcounter():
     assert output >= version.parse("62.3")
 
 
-def test_datadog_agent():
+def test_only_flag_datadog_agent():
     """Test datadog-agent at GitHub."""
     repo = "DataDog/datadog-agent"
 
@@ -95,6 +95,16 @@ def test_datadog_agent():
     output = latest(repo, only="dca")
 
     assert output >= version.parse("1.4.0")
+
+
+def test_only_flag_quictls():
+    """Test only filtering at GitHub."""
+    repo = "https://github.com/lastversion-test-repos/openssl"
+
+    # Example of a multiple project repo, look for Data Cluster Agent only
+    output = latest(repo, only="quic1")
+
+    assert output == version.parse("3.1.2")
 
 
 def test_grafana():
