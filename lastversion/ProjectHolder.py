@@ -82,6 +82,9 @@ class ProjectHolder(requests.Session):
     RELEASE_URL_FORMAT = None
     SHORT_RELEASE_URL_FORMAT = None
 
+    # Instance of project holder itself uniquely identifies a project (noname)
+    REPO_IS_HOLDER = False
+
     def set_repo(self, repo):
         """Set repo ID property of project holder instance."""
         self.repo = repo
@@ -197,18 +200,18 @@ class ProjectHolder(requests.Session):
     @classmethod
     def get_base_repo_from_repo_arg(cls, repo_arg):
         """Return meaningful URI components from a repo."""
+        if cls.REPO_IS_HOLDER:
+            return None
         # repo has to have enough meaningful components provided in URI
         # REPO_URL_PROJECT_COMPONENTS = 2
         # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
         # REPO_URL_PROJECT_OFFSET = 0
         # if is an empty string but we want some, raise value error
-        # holder defined artbitrary number of URI components, zero or unlimited
-        if cls.REPO_URL_PROJECT_COMPONENTS is True:
-            return repo_arg
-        if not repo_arg and cls.REPO_URL_PROJECT_COMPONENTS > 0:
-            raise ValueError(f'Repo arg {repo_arg} is not enough for {cls.__name__}')
+        # holder defined arbitrary number of URI components, zero or unlimited
         if cls.REPO_IS_URI:
             return repo_arg
+        if not repo_arg and cls.REPO_URL_PROJECT_COMPONENTS > 0:
+            raise ValueError(f'Repo arg {repo_arg} does not have enouh URI components ({cls.REPO_URL_PROJECT_COMPONENTS}) for {cls.__name__}')
         if cls.REPO_URL_PROJECT_COMPONENTS >= 1:
             repo_components = repo_arg.split('/')
             if repo_arg and len(repo_components) == cls.REPO_URL_PROJECT_COMPONENTS:

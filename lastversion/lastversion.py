@@ -23,6 +23,7 @@ import yaml
 from packaging.version import InvalidVersion
 from six.moves.urllib.parse import urlparse
 
+from lastversion.TestProjectHolder import TestProjectHolder
 from .GitHubRepoSession import TOKEN_PRO_TIP
 from .HolderFactory import HolderFactory
 from .ProjectHolder import ProjectHolder
@@ -303,7 +304,7 @@ def check_version(value):
 
 def parse_version(tag):
     """Parse version to Version object."""
-    h = ProjectHolder(name="dummy/project")
+    h = TestProjectHolder()
     v = h.sanitize_version(tag, pre_ok=True)
     return v
 

@@ -6,6 +6,7 @@ import pytest
 from packaging import version
 
 from lastversion.ProjectHolder import ProjectHolder
+from lastversion.TestProjectHolder import TestProjectHolder
 from lastversion.Version import Version
 from lastversion.lastversion import latest
 
@@ -168,7 +169,7 @@ def test_version_parse_with_dot_x():
     """Test version parsing to fail on wildcard type of version string."""
     v = '1.19.x'
 
-    h = ProjectHolder()
+    h = TestProjectHolder()
 
     assert h.sanitize_version(v) is None
 
@@ -177,7 +178,7 @@ def test_version_parse_dev():
     """Test version parsing to detect rc1 type suffix as a pre-release."""
     v = '1.19rc1'
 
-    h = ProjectHolder()
+    h = TestProjectHolder()
 
     v = h.sanitize_version(v, pre_ok=True)
 
@@ -188,7 +189,7 @@ def test_version_parse_dev2():
     """Test version parsing to detect -rc.2 type suffix as a pre-release."""
     v = '7.18.1-rc.2'
 
-    h = ProjectHolder()
+    h = TestProjectHolder()
 
     v = h.sanitize_version(v, pre_ok=True)
 
@@ -199,7 +200,7 @@ def test_version_parse_dev3():
     """Test parsing stable version leaves pre-release flag false."""
     v = '7.18.1'
 
-    h = ProjectHolder()
+    h = TestProjectHolder()
 
     v = h.sanitize_version(v, pre_ok=True)
 
