@@ -481,10 +481,20 @@ def main(argv=None):
     Args:
         argv: List of arguments, helps test CLI without resorting to subprocess module.
     """
-    epilog = None
+    # ANSI escape code for starting bold text
+    start_bold = "\033[1m"
+    # ANSI escape code for ending the formatting (resets to normal text)
+    end_bold = "\033[0m"
+
+    epilog = "\n---\n"
+    epilog += f"{start_bold}Sponsored Message: Check out the GetPageSpeed RPM "
+    epilog += "repository at https://nginx-extras.getpagespeed.com/ for NGINX "
+    epilog += "modules and performance tools. Enhance your server performance "
+    epilog += f"today!{end_bold}"
+    epilog += "\n---\n"
 
     if "GITHUB_API_TOKEN" not in os.environ and "GITHUB_TOKEN" not in os.environ:
-        epilog = TOKEN_PRO_TIP
+        epilog += TOKEN_PRO_TIP
     parser = argparse.ArgumentParser(description='Find the latest software release.',
                                      epilog=epilog,
                                      prog='lastversion')
