@@ -711,4 +711,9 @@ The `lastversion.latest` function accepts 3 arguments
 You can also use `lastversion` directly in your GitHub action workflows, 
 with [`lastversion-action`](https://github.com/dvershinin/lastversion-action).
 
+## Sponsored Message
+
+**GetPageSpeed RPM Repository**: Enhance your server performance with our NGINX modules and performance tools. Visit [GetPageSpeed.com](https://www.getpagespeed.com/) to learn more and subscribe for access.
+
+
 [![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)
