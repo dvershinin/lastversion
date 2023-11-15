@@ -30,7 +30,7 @@ class VersionAction(Action):
         if __version__ == str(last_version):
             version += ', up to date'
         else:
-            version += ', newer version {} available'.format(last_version)
+            version += f', newer version {last_version} available'
         formatter = parser.formatter_class(prog=parser.prog)
         formatter.add_text(version)
         _sys.stdout.write(formatter.format_help())

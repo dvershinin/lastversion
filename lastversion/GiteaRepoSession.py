@@ -5,7 +5,6 @@ import os
 import re
 import time
 
-import requests
 from bs4 import BeautifulSoup
 from dateutil import parser
 
@@ -55,11 +54,12 @@ class GiteaRepoSession(ProjectHolder):
     SHORT_RELEASE_URL_FORMAT = RELEASE_URL_FORMAT
 
     def find_repo_by_name_only(self, repo):
+        """Find repo by name only using Gitea API."""
         if self.is_link(repo):
             return None
         cache_repo_names_file = f"{self.cache_dir}/repos.json"
         try:
-            with open(cache_repo_names_file, 'r') as reader:
+            with open(cache_repo_names_file, 'r', encoding='utf-8') as reader:
                 cache = json.load(reader)
         except (IOError, ValueError):
             cache = {}
@@ -98,7 +98,7 @@ class GiteaRepoSession(ProjectHolder):
             'updated_at': int(time.time())
         }
         try:
-            with open(cache_repo_names_file, 'w') as writer:
+            with open(cache_repo_names_file, 'w', encoding='utf-8') as writer:
                 json.dump(cache, writer)
         except (IOError, ValueError):
             pass
@@ -196,7 +196,7 @@ class GiteaRepoSession(ProjectHolder):
                             'be reinstated'
                         )
                     else:
-                        w = 'Waiting {} seconds for API quota reinstatement.'.format(wait_for)
+                        w = f'Waiting {wait_for} seconds for API quota reinstatement.'
                         if "GITHUB_API_TOKEN" not in os.environ \
                                 and 'GITHUB_TOKEN' not in os.environ:
                             w = f"{w} {TOKEN_PRO_TIP}"
@@ -214,14 +214,17 @@ class GiteaRepoSession(ProjectHolder):
         return r
 
     def rate_limit(self):
+        """Get rate limit info."""
         url = f'{self.api_base}/rate_limit'
         return self.get(url)
 
     def repo_query(self, uri):
+        """Query the repo API."""
         url = f'{self.api_base}/repos/{self.repo}{uri}'
         return self.get(url)
 
     def repo_license(self, tag):
+        """Get the license file for a tag."""
         r = self.repo_query(f'/license?ref={tag}')
         if r.status_code == 200:
             # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag
@@ -234,12 +237,14 @@ class GiteaRepoSession(ProjectHolder):
         return None
 
     def repo_readme(self, tag):
+        """Get the readme file for a tag."""
         r = self.repo_query(f'/readme?ref={tag}')
         if r.status_code == 200:
             return r.json()
         return None
 
     def get_formal_release_for_tag(self, tag):
+        """Get the formal release for a tag, if it exists."""
         r = self.repo_query(f'/releases/tags/{tag}')
         if r.status_code == 200:
             # noinspection SpellCheckingInspection
@@ -315,7 +320,7 @@ class GiteaRepoSession(ProjectHolder):
                 regex_matching = False
                 search = self.having_asset
                 if search.startswith('~'):
-                    search = r'{}'.format(search.lstrip('~'))
+                    search = fr'{search.lstrip("~")}'
                     regex_matching = True
                 found_asset = False
                 for asset in formal_release['assets']:

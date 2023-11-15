@@ -1,3 +1,4 @@
+"""BitBucket repository session."""
 from dateutil import parser
 
 from .ProjectHolder import ProjectHolder

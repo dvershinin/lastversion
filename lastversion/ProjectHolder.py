@@ -112,6 +112,8 @@ class ProjectHolder(requests.Session):
         self.exclude = None
         self.having_asset = None
         self.hostname = hostname
+        if not self.hostname and self.DEFAULT_HOSTNAME:
+            self.hostname = self.DEFAULT_HOSTNAME
         # identifies project on a given hostname
         # normalize repo to number of meaningful parameters
         self.repo = self.get_base_repo_from_repo_arg(name)

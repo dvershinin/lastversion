@@ -1,5 +1,6 @@
 import datetime
 import logging
+from urllib.parse import urlparse
 
 import feedparser
 
@@ -22,7 +23,7 @@ class FeedRepoSession(ProjectHolder):
 
     # https://alex.miller.im/posts/python-3-feedfinder-rss-detection-from-url/
     def find_feed(self, site):
-        from six.moves.urllib.parse import urlparse
+        """Find the feed for a given site"""
         # noinspection PyPep8Naming
         from bs4 import BeautifulSoup as bs4
         raw = self.get(site).text

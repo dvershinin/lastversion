@@ -18,15 +18,14 @@ import re
 import sys
 from os.path import expanduser
 from pathlib import Path
+from urllib.parse import urlparse
 
 import yaml
 from packaging.version import InvalidVersion
-from six.moves.urllib.parse import urlparse
 
-from lastversion.TestProjectHolder import TestProjectHolder
+from .TestProjectHolder import TestProjectHolder
 from .GitHubRepoSession import TOKEN_PRO_TIP
 from .HolderFactory import HolderFactory
-from .ProjectHolder import ProjectHolder
 from .Version import Version
 from .__about__ import __self__
 from .argparse_version import VersionAction
@@ -100,7 +99,7 @@ def get_repo_data_from_spec(repo):
             repo_data['name'] = name
             repo_data['spec_name'] = '%{name}'
         if upstream_github:
-            repo = "{}/{}".format(upstream_github, repo_data['name'])
+            repo = f"{upstream_github}/{repo_data['name']}"
             log.info('Discovered GitHub repo %s from .spec file', repo)
         elif spec_repo:
             repo = spec_repo
@@ -120,7 +119,7 @@ def get_repo_data_from_yml(repo):
                 repo_data['module_of'] = 'nginx'
             name = os.path.splitext(os.path.basename(repo))[0]
             if 'module_of' in repo_data:
-                name = '{}-module-{}'.format(repo_data['module_of'], name)
+                name = f'{repo_data["module_of"]}-module-{name}'
             repo = repo_data['repo']
             repo_data['name'] = name
     return repo_data

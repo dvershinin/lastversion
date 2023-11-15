@@ -30,7 +30,6 @@ install_requires = [
     'python-dateutil',
     'PyYAML',
     'tqdm',
-    'six',
     'beautifulsoup4',
     'distro',
     # pin due to https://github.com/ionrock/cachecontrol/issues/292

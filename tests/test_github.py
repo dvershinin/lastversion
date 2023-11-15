@@ -1,7 +1,9 @@
 """Test GitHub projects."""
 import os
+from operator import eq, ge
 from tempfile import TemporaryDirectory
 
+import pytest
 from packaging import version
 
 from lastversion import main
@@ -76,3 +78,10 @@ def test_github_extract_wordpress():
             main(["extract", repo])
             assert os.path.exists("index.php")
             assert os.path.exists("wp-config-sample.php")
+
+
+def test_github_search_python():
+    """Test searching a GitHub project."""
+    repo = "python"
+    output = latest(repo)
+    assert output > version.parse("3.11")

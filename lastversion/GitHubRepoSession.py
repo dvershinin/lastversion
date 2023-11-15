@@ -1,4 +1,6 @@
 import logging
+from urllib.parse import unquote
+
 import math
 import os
 import re
@@ -8,7 +10,6 @@ from datetime import timedelta
 
 import feedparser
 from dateutil import parser
-from six.moves.urllib.parse import unquote
 
 from .ProjectHolder import ProjectHolder
 from .exceptions import ApiCredentialsError, BadProjectError
@@ -645,7 +646,7 @@ class GitHubRepoSession(ProjectHolder):
                 regex_matching = False
                 search = self.having_asset
                 if search.startswith('~'):
-                    search = r'{}'.format(search.lstrip('~'))
+                    search = fr'{search.lstrip("~")}'
                     regex_matching = True
                 found_asset = False
                 for asset in formal_release['assets']:

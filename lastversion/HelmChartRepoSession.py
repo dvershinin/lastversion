@@ -1,7 +1,6 @@
 import logging
 
 import yaml
-from six.moves.urllib.parse import urlparse
 
 from .ProjectHolder import ProjectHolder
 

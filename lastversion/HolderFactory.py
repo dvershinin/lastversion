@@ -82,6 +82,7 @@ class HolderFactory:
 
     @staticmethod
     def create_holder_from_known_repo(known_repo, project_hosting_class):
+        """Create a holder from a known repo."""
         repo = known_repo['repo']
         # Known repo tells us hosted domain of e.g., mercurial web
         hostname = known_repo.get('hostname')
@@ -169,5 +170,5 @@ class HolderFactory:
             return GitHubRepoSession(repo)
 
         raise BadProjectError(
-            'Could not find a holder for the repo %s' % repo
+            f'Could not find a holder for the repo {repo}'
         )
