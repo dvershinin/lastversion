@@ -36,7 +36,6 @@ class WordPressPluginRepoSession(ProjectHolder):
             self.hostname = WordPressPluginRepoSession.DEFAULT_HOSTNAME
         self.project = self.get_project()
 
-
     def release_download_url(self, release, shorter=False):
         """Get release download URL."""
         return f'https://downloads.wordpress.org/plugin/{self.repo}.{release["version"]}.zip'

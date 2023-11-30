@@ -1,9 +1,7 @@
 """Test GitHub projects."""
 import os
-from operator import eq, ge
 from tempfile import TemporaryDirectory
 
-import pytest
 from packaging import version
 
 from lastversion import main

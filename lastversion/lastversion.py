@@ -40,14 +40,14 @@ fails_sem_err_fmt = ('Latest version %s fails semantic %s constraint against '
 
 
 # noinspection GrazieInspection
-def get_repo_data_from_spec(repo):
+def get_repo_data_from_spec(rpmspec_filename):
     # The repo is specified inside the .spec file
     # GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
     # no upstream_github global means that the spec was not prepared for lastversion
     # optional: use of spec_tag macros if the source is from GitHub. In edge cases we check
     # new version via GitHub, but prepared sources are elsewhere
     repo_data = {}
-    with open(repo) as f:
+    with open(rpmspec_filename) as f:
         name = None
         upstream_github = None
         upstream_name = None
@@ -90,7 +90,7 @@ def get_repo_data_from_spec(repo):
                 repo_data['current_version'] = Version(current_version)
         except InvalidVersion:
             log.critical('Failed to parse current version in %s. Tried %s',
-                         repo, current_version)
+                         rpmspec_filename, current_version)
             sys.exit(1)
         if upstream_name:
             repo_data['name'] = upstream_name
@@ -98,14 +98,22 @@ def get_repo_data_from_spec(repo):
         else:
             repo_data['name'] = name
             repo_data['spec_name'] = '%{name}'
+
+        repo = spec_url
         if upstream_github:
             repo = f"{upstream_github}/{repo_data['name']}"
             log.info('Discovered GitHub repo %s from .spec file', repo)
         elif spec_repo:
             repo = spec_repo
             log.info('Discovered explicit repo %s from .spec file', repo)
-        elif spec_url:
-            repo = spec_url
+
+        if not repo:
+            log.critical(
+                'Failed to determine repo from %s. Please prepare your spec file using instructions: '
+                'https://lastversion.getpagespeed.com/spec-preparing.html',
+                rpmspec_filename)
+            sys.exit(1)
+
         repo_data['repo'] = repo
         return repo_data
 
@@ -180,7 +188,7 @@ def latest(repo, output_format='version', pre_ok=False, assets_filter=None,
         at = 'helm_chart'
 
     if repo.endswith('.spec'):
-        repo_data = get_repo_data_from_spec(repo)
+        repo_data = get_repo_data_from_spec(rpmspec_filename=repo)
 
     with HolderFactory.get_instance_for_repo(repo_data.get('repo', repo), at=at) as project:
         project.set_only(repo_data.get('only', only))
