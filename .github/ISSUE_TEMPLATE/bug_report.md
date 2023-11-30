@@ -25,4 +25,4 @@ What output does `lastversion` give when being run?
 
 ### Support This Project
 
-:heart: Love this project? Consider supporting us by becoming a GitHub Sponsor. GitHub Sponsors get priority attention to their issues and requests. [Click here to sponsor](https://github.com/sponsors/GetPageSpeed).
+:heart: Love this project? Consider supporting us by becoming a GitHub Sponsor. GitHub Sponsors get priority attention to their issues and requests. [Click here to sponsor](https://github.com/sponsors/dvershinin).
