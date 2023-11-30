@@ -44,30 +44,43 @@ content_disposition_regex = re.compile(
 # matches os.name to known extensions that are meant *mostly* to run on it,
 # and not other os.name-s
 os_extensions = {
-    'nt': ('.exe', '.msi', '.msi.asc', '.msi.sha256'),
-    'posix': ('.tgz', '.tar.gz')
+    "nt": (".exe", ".msi", ".msi.asc", ".msi.sha256"),
+    "posix": (".tgz", ".tar.gz"),
 }
 
 extension_distros = {
-    'deb': ['ubuntu', 'debian'],
-    'rpm': ['rhel', 'centos', 'fedora', 'amazon', 'cloudlinux'],
-    'apk': ['alpine'],
-    'dmg': ['darwin']
+    "deb": ["ubuntu", "debian"],
+    "rpm": ["rhel", "centos", "fedora", "amazon", "cloudlinux"],
+    "apk": ["alpine"],
+    "dmg": ["darwin"],
 }
 
 # matches *start* of sys.platform value to words in asset name
 platform_markers = {
-    'win': ['windows', 'win'],
-    'linux': ['linux'],
-    'darwin': ['osx', 'darwin'],
-    'freebsd': ['freebsd', 'netbsd', 'openbsd']
+    "win": ["windows", "win"],
+    "linux": ["linux"],
+    "darwin": ["osx", "darwin"],
+    "freebsd": ["freebsd", "netbsd", "openbsd"],
 }
 
 # this is all too simple for now
 # noinspection SpellCheckingInspection
 non_amd64_markers = [
-    'i386', 'i686', 'arm', 'arm64', '386', 'ppc64', 'armv7', 'armv7l',
-    'mips64', 'ppc64', 'mips64le', 'ppc64le', 'aarch64', 'armhf', 'armv7hl'
+    "i386",
+    "i686",
+    "arm",
+    "arm64",
+    "386",
+    "ppc64",
+    "armv7",
+    "armv7l",
+    "mips64",
+    "ppc64",
+    "mips64le",
+    "ppc64le",
+    "aarch64",
+    "armhf",
+    "armv7hl",
 ]
 
 
@@ -78,8 +91,7 @@ def is_file_ext_not_compatible_with_os(file_ext):
 
     """
     return any(
-        os.name != os_name and file_ext == ext
-        for os_name, ext in os_extensions.items()
+        os.name != os_name and file_ext == ext for os_name, ext in os_extensions.items()
     )
 
 
@@ -88,8 +100,7 @@ def is_asset_name_compatible_with_platform(asset_name):
     for platform_name, pf_words in platform_markers.items():
         if not sys.platform.startswith(platform_name):
             for pf_word in pf_words:
-                regex = re.compile(
-                    fr'\b{pf_word}(\d+)?\b', flags=re.IGNORECASE)
+                regex = re.compile(rf"\b{pf_word}(\d+)?\b", flags=re.IGNORECASE)
                 matches = regex.search(asset_name)
                 if matches:
                     return True
@@ -101,10 +112,10 @@ def is_not_compatible_to_distro(asset_ext):
     Check if the file extension is not compatible with the current distro.
     The function supports only Linux distros.
     """
-    if not sys.platform.startswith('linux'):
+    if not sys.platform.startswith("linux"):
         return False
     # Weeding out non-matching Linux distros
-    if asset_ext != 'AppImage':
+    if asset_ext != "AppImage":
         for ext, ext_distros in extension_distros.items():
             if asset_ext == ext and distro.id() not in ext_distros:
                 return True
@@ -114,13 +125,13 @@ def is_not_compatible_to_distro(asset_ext):
 
 def is_not_compatible_bitness(asset_name):
     """Check if an asset has words that show it's not meant for 64-bit OS"""
-    if platform.machine() not in ['x86_64', 'AMD64']:
+    if platform.machine() not in ["x86_64", "AMD64"]:
         return False
     for non_amd64_word in non_amd64_markers:
-        regex = re.compile(fr'\b{non_amd64_word}\b', flags=re.IGNORECASE)
+        regex = re.compile(rf"\b{non_amd64_word}\b", flags=re.IGNORECASE)
         if regex.search(asset_name):
             return True
-        regex = re.compile(r'\barm\d+\b', flags=re.IGNORECASE)
+        regex = re.compile(r"\barm\d+\b", flags=re.IGNORECASE)
         if regex.search(asset_name):
             return True
     return False
@@ -139,8 +150,8 @@ def asset_does_not_belong_to_machine(asset_name):
     """
     # replace underscore with dash so that our shiny word boundary regexes
     # won't break
-    asset_name = asset_name.replace('_', '-')
-    asset_ext = os.path.splitext(asset_name)[1].lstrip('.')
+    asset_name = asset_name.replace("_", "-")
+    asset_ext = os.path.splitext(asset_name)[1].lstrip(".")
 
     if not asset_ext:
         # We don't know. Maybe compatible, maybe not. Let's not filter it out.
@@ -186,7 +197,7 @@ def requests_response_patched_exit(self, *args):
     self.close()
 
 
-if not hasattr(requests.Response, '__exit__'):
+if not hasattr(requests.Response, "__exit__"):
     requests.Response.__enter__ = requests_response_patched_enter
     requests.Response.__exit__ = requests_response_patched_exit
 
@@ -225,8 +236,7 @@ def extract_appimage_desktop_file(appimage_path):
             subprocess.call([xdg_desktop_menu_path, "install", desktop_file])
         else:
             log.warning(
-                "xdg-desktop-menu is not available, can't install the "
-                ".desktop file"
+                "xdg-desktop-menu is not available, can't install the " ".desktop file"
             )
 
     # Remove the temporary directory
@@ -242,16 +252,16 @@ def get_content_disposition_filename(response):
 
     """
     filename = None
-    content_disp = response.headers.get('content-disposition')
-    if not content_disp or not content_disp.startswith('attachment;'):
+    content_disp = response.headers.get("content-disposition")
+    if not content_disp or not content_disp.startswith("attachment;"):
         return None
     for match in re.finditer(content_disposition_regex, content_disp):
-        filename = match.group('filename')
-        encoding = match.group('encoding')
+        filename = match.group("filename")
+        encoding = match.group("encoding")
         if encoding:
             filename = unquote(filename)
-            filename = filename.encode(encoding).decode('utf-8')
-        if match.group('priority'):
+            filename = filename.encode(encoding).decode("utf-8")
+        if match.group("priority"):
             break
     return filename
 
@@ -268,18 +278,17 @@ def download_file(url, local_filename=None):
 
     """
     if local_filename is None:
-        local_filename = url.split('/')[-1]
+        local_filename = url.split("/")[-1]
     try:
         # Note that the stream=True parameter below
         with requests.get(url, stream=True, timeout=5) as response:
             response.raise_for_status()
-            if '.' not in local_filename and \
-                    'Content-Disposition' in response.headers:
+            if "." not in local_filename and "Content-Disposition" in response.headers:
                 disp_filename = get_content_disposition_filename(response)
                 if disp_filename:
                     local_filename = disp_filename
             # content-length may be empty, default to 0
-            file_size = int(response.headers.get('Content-Length', 0))
+            file_size = int(response.headers.get("Content-Length", 0))
             bar_size = 1024
             # fetch 8 KB at a time
             chunk_size = 8192
@@ -292,11 +301,11 @@ def download_file(url, local_filename=None):
             pbar = tqdm.tqdm(
                 disable=None,  # disable on non-TTY
                 total=num_bars,
-                unit='KB',
-                desc=f'Downloading {local_filename}',
-                leave=True  # progressbar stays
+                unit="KB",
+                desc=f"Downloading {local_filename}",
+                leave=True,  # progressbar stays
             )
-            with open(local_filename, 'wb') as file:
+            with open(local_filename, "wb") as file:
                 for chunk in response.iter_content(chunk_size=chunk_size):
                     if chunk:  # filter out keep-alive new chunks
                         file.write(chunk)
@@ -307,7 +316,7 @@ def download_file(url, local_filename=None):
     except KeyboardInterrupt:
         pbar.close()
         os.remove(local_filename)
-        log.warning('Cancelled')
+        log.warning("Cancelled")
         sys.exit(1)
     return local_filename
 
@@ -333,9 +342,7 @@ def safe_extract(tar, path=".", members=None):
     for member in tar.getmembers():
         member_path = os.path.join(path, member.name)
         if not is_within_directory(path, member_path):
-            raise TarPathTraversalException(
-                "Attempted Path Traversal in Tar File"
-            )
+            raise TarPathTraversalException("Attempted Path Traversal in Tar File")
 
     tar.extractall(path, members)
 
@@ -351,7 +358,7 @@ def extract_tar(buffer, mode):
     with tarfile.open(fileobj=buffer, mode=mode) as tar_file:
         all_members = tar_file.getmembers()
         if not all_members:
-            log.critical('No or not an archive')
+            log.critical("No or not an archive")
         root_dir = all_members[0].path
         root_dir_with_slash_len = len(root_dir) + 1
         for member in tar_file.getmembers():
@@ -363,17 +370,15 @@ def extract_tar(buffer, mode):
 
 def extract_file(url):
     """Extract an archive while stripping the top level dir."""
-    if url.endswith('.7z') and not PY7ZR_AVAILABLE:
-        log.critical(
-            'pip install py7zr to support .7z archives'
-        )
+    if url.endswith(".7z") and not PY7ZR_AVAILABLE:
+        log.critical("pip install py7zr to support .7z archives")
         return
     try:
         with requests.get(url, stream=True, timeout=5) as response:
             response.raise_for_status()
             # Download the file in chunks and save it to a memory buffer
             # content-length may be empty, default to 0
-            file_size = int(response.headers.get('Content-Length', 0))
+            file_size = int(response.headers.get("Content-Length", 0))
             bar_size = 1024
             # fetch 8 KB at a time
             chunk_size = 8192
@@ -385,10 +390,10 @@ def extract_file(url):
             buffer = io.BytesIO()
             # noinspection PyTypeChecker
             with tqdm.tqdm(
-                    disable=None,  # disable on non-TTY
-                    total=num_bars,
-                    unit='KB',
-                    desc=url.split('/')[-1]
+                disable=None,  # disable on non-TTY
+                total=num_bars,
+                unit="KB",
+                desc=url.split("/")[-1],
             ) as pbar:
                 for chunk in response.iter_content(chunk_size=chunk_size):
                     if chunk:
@@ -399,10 +404,10 @@ def extract_file(url):
             buffer.seek(0)
             # Process the buffer (e.g., extract its contents)
 
-            mode = 'r:gz'
-            if url.endswith('.tar.xz'):
-                mode = 'r:xz'
-            elif url.endswith('.7z'):
+            mode = "r:gz"
+            if url.endswith(".tar.xz"):
+                mode = "r:xz"
+            elif url.endswith(".7z"):
                 if PY7ZR_AVAILABLE:
                     with py7zr.SevenZipFile(buffer) as archive:
                         archive.extractall()
@@ -410,7 +415,7 @@ def extract_file(url):
             extract_tar(buffer, mode)
     except KeyboardInterrupt:
         pbar.close()
-        log.warning('Cancelled')
+        log.warning("Cancelled")
         sys.exit(1)
 
 
@@ -426,10 +431,10 @@ def rpm_installed_version(name):
     if not RPM_AVAILABLE:
         return False
     transaction_set = rpm.TransactionSet()
-    match_iterator = transaction_set.dbMatch('name', name)
+    match_iterator = transaction_set.dbMatch("name", name)
     if match_iterator:
         for header in match_iterator:
-            return header['version']
+            return header["version"]
     return None
 
 

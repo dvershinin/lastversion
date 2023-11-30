@@ -23,33 +23,33 @@ class Version(PackagingVersion):
     """
 
     # Precompile the regular expressions
-    rc_pattern = re.compile(r'^rc(\d+)\.')
-    post_pattern = re.compile(r'^p(\d+)$')
+    rc_pattern = re.compile(r"^rc(\d+)\.")
+    post_pattern = re.compile(r"^p(\d+)$")
 
     regex_dashed_substitutions = [
-        (re.compile(r'-devel$'), '-dev0'),
-        (re.compile(r'-p(\d+)$'), '-post\\1'),
-        (re.compile(r'-preview-(\d+)'), '-pre\\1'),
-        (re.compile(r'-early-access-(\d+)'), '-alpha\\1'),
-        (re.compile(r'-pre-(\d+)'), '-pre\\1'),
-        (re.compile(r'-beta[-.]rc(\d+)'), '-beta\\1')
+        (re.compile(r"-devel$"), "-dev0"),
+        (re.compile(r"-p(\d+)$"), "-post\\1"),
+        (re.compile(r"-preview-(\d+)"), "-pre\\1"),
+        (re.compile(r"-early-access-(\d+)"), "-alpha\\1"),
+        (re.compile(r"-pre-(\d+)"), "-pre\\1"),
+        (re.compile(r"-beta[-.]rc(\d+)"), "-beta\\1"),
     ]
 
     part_to_pypi_dict = {
-        'devel': 'dev0',
-        'test': 'dev0',
-        'dev': 'dev0',
-        'alpha': 'a0',
-        'beta': 'b0'
+        "devel": "dev0",
+        "test": "dev0",
+        "dev": "dev0",
+        "alpha": "a0",
+        "beta": "b0",
     }
 
     def fix_letter_post_release(self, match):
         self.fixed_letter_post_release = True
-        return match.group(1) + '.post' + str(ord(match.group(2)))
+        return match.group(1) + ".post" + str(ord(match.group(2)))
 
     def is_semver(self):
         """Check if this a (shorthand) semantic version"""
-        return self.base_version.count('.') >= 1
+        return self.base_version.count(".") >= 1
 
     @staticmethod
     def part_to_pypi(part):
@@ -67,7 +67,7 @@ class Version(PackagingVersion):
         rc_match = Version.rc_pattern.search(part)
         if rc_match:
             # rc2.windows.1 => rc2.post1
-            sub_parts = part.split('.')
+            sub_parts = part.split(".")
             part = sub_parts[0]
             for sub in sub_parts[1:]:
                 if sub.isdigit():
@@ -75,7 +75,7 @@ class Version(PackagingVersion):
             return part
 
         # Check for the post-patterns
-        post_match = Version.post_pattern.sub(r'post\1', part)
+        post_match = Version.post_pattern.sub(r"post\1", part)
         if post_match != part:
             return post_match
 
@@ -108,7 +108,7 @@ class Version(PackagingVersion):
         Filter out irrelevant parts from version string.
         Parse out version components separated by dash.
         """
-        parts = version.split('-')
+        parts = version.split("-")
 
         # go through parts which were separated by dash, normalize and
         # exclude irrelevant
@@ -124,7 +124,7 @@ class Version(PackagingVersion):
         # put a delimiter... such string at the beginning typically do not
         # convey stability level, so we are fine to remove them (unlike the
         # ones in the tail)
-        parts_n[0] = re.sub('^[^0-9]+', '', parts_n[0], 1)
+        parts_n[0] = re.sub("^[^0-9]+", "", parts_n[0], 1)
 
         # go back to full string parse out
         version = ".".join(parts_n)
@@ -144,20 +144,20 @@ class Version(PackagingVersion):
         version = self.filter_relevant_parts(version)
 
         if char_fix_required:
-            version = re.sub('(\\d)([a-z])$', self.fix_letter_post_release, version, 1)
+            version = re.sub("(\\d)([a-z])$", self.fix_letter_post_release, version, 1)
         # release-3_0_2 is often seen on Mercurial holders note that the
         # above code removes "release-" already, so we are left with "3_0_2"
-        if re.search(r'^(?:\d+_)+(?:\d+)', version):
-            version = version.replace('_', '.')
+        if re.search(r"^(?:\d+_)+(?:\d+)", version):
+            version = version.replace("_", ".")
         # finally, split by dot "delimiter", see if there are common words
         # which are definitely removable
-        parts = version.split('.')
+        parts = version.split(".")
         version = []
         for p in parts:
-            if p.lower() in ['release']:
+            if p.lower() in ["release"]:
                 continue
             version.append(p)
-        version = '.'.join(version)
+        version = ".".join(version)
         super(Version, self).__init__(version)
 
     @property
@@ -220,7 +220,7 @@ class Version(PackagingVersion):
         num_str = str(num)
         try:
             # Attempt to parse the number as a date
-            datetime.strptime(num_str, '%Y%m%d')
+            datetime.strptime(num_str, "%Y%m%d")
             return False
         except ValueError:
             # If parsing fails, the number is not a date
@@ -236,7 +236,12 @@ class Version(PackagingVersion):
         Returns:
             bool:
         """
-        if self.major and self.minor and self.micro >= 90 and self.is_not_date(self.micro):
+        if (
+            self.major
+            and self.minor
+            and self.micro >= 90
+            and self.is_not_date(self.micro)
+        ):
             return True
         return self.dev is not None or self.pre is not None
 
@@ -250,12 +255,12 @@ class Version(PackagingVersion):
         Return Version with desired semantic version level base
         E.g., for 5.9.3 it will return 5.9 (patch is None)
         """
-        if level == 'major':
+        if level == "major":
             # get major
             return Version(str(self.major))
-        if level == 'minor':
+        if level == "minor":
             return Version(f"{self.major}.{self.minor}")
-        if level == 'patch':
+        if level == "patch":
             return Version(f"{self.major}.{self.minor}.{self.micro}")
         return self
 

@@ -10,13 +10,13 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 def test_wiki_known_ios():
     """Test iOS version."""
-    repo = 'ios'
+    repo = "ios"
     v = latest(repo)
-    assert v >= version.parse('14.6')
+    assert v >= version.parse("14.6")
 
 
 def test_wiki_direct_url_meego():
     """Test Meego version."""
-    repo = 'https://en.wikipedia.org/wiki/MeeGo'
+    repo = "https://en.wikipedia.org/wiki/MeeGo"
     v = latest(repo)
-    assert v == version.parse('1.2.0.10')
+    assert v == version.parse("1.2.0.10")

@@ -13,6 +13,7 @@ from packaging.version import InvalidVersion
 
 from .Version import Version
 from .__about__ import __version__
+
 # this class basically corresponds to something (often a website) which holds
 # projects (usually a bunch). often this is a github-like website, so we subclass session
 # but this also maybe something special, which either way can be used as a source of version
@@ -38,11 +39,11 @@ def matches_filter(filter_s, positive, version_s):
     if not filter_s:
         return True
 
-    if filter_s.startswith('!'):
+    if filter_s.startswith("!"):
         positive = not positive
         filter_s = filter_s[1:]
-    if filter_s.startswith('~'):
-        filter_s = re.compile(r'{}'.format(filter_s.lstrip('~')))
+    if filter_s.startswith("~"):
+        filter_s = re.compile(r"{}".format(filter_s.lstrip("~")))
         return positive == bool(re.search(filter_s, version_s))
     return positive == bool(filter_s in version_s)
 
@@ -88,12 +89,12 @@ class ProjectHolder(requests.Session):
     def set_repo(self, repo):
         """Set repo ID property of project holder instance."""
         self.repo = repo
-        self.name = repo.split('/')[-1]
+        self.name = repo.split("/")[-1]
 
     def __init__(self, name=None, hostname=None):
         super(ProjectHolder, self).__init__()
 
-        app_name = __name__.split('.')[0]
+        app_name = __name__.split(".")[0]
 
         self.cache_dir = user_cache_dir(app_name)
         log.info("Using cache directory: %s.", self.cache_dir)
@@ -105,8 +106,8 @@ class ProjectHolder(requests.Session):
 
         self.names_cache_filename = "{}/repos.json".format(self.cache_dir)
 
-        self.headers.update({'User-Agent': f'{app_name}/{__version__}'})
-        log.info('Created instance of %s', type(self).__name__)
+        self.headers.update({"User-Agent": f"{app_name}/{__version__}"})
+        log.info("Created instance of %s", type(self).__name__)
         self.branches = None
         self.only = None
         self.exclude = None
@@ -128,7 +129,7 @@ class ProjectHolder(requests.Session):
         if not os.path.exists(self.names_cache_filename):
             return {}
         try:
-            with open(self.names_cache_filename, 'r') as reader:
+            with open(self.names_cache_filename, "r") as reader:
                 cache = json.load(reader)
             return cache
         except (IOError, ValueError) as e:
@@ -139,7 +140,7 @@ class ProjectHolder(requests.Session):
         """Update name cache file with new data."""
         try:
             ensure_directory_exists(self.cache_dir)
-            with open(self.names_cache_filename, 'w') as writer:
+            with open(self.names_cache_filename, "w") as writer:
                 json.dump(cache_data, writer)
         except (IOError, ValueError) as e:
             log.warning("Error writing to cache file: %s", e)
@@ -170,7 +171,7 @@ class ProjectHolder(requests.Session):
         """Set to return only releases with even numbering like 1.2.3."""
         self.even = even
         if even:
-            log.info('Only considering releases with even numbering')
+            log.info("Only considering releases with even numbering")
         return self
 
     def set_having_asset(self, having_asset):
@@ -184,7 +185,7 @@ class ProjectHolder(requests.Session):
     def is_link(repo):
         """Check if repo is a link."""
         # noinspection HttpUrlsUsage
-        return repo.startswith(('https://', 'http://'))
+        return repo.startswith(("https://", "http://"))
 
     @classmethod
     def get_host_repo_for_link(cls, repo):
@@ -193,10 +194,12 @@ class ProjectHolder(requests.Session):
         # return repo modified to result of extraction
         if cls.is_link(repo):
             # parse hostname for passing to whatever holder selected
-            url_parts = repo.split('/')
+            url_parts = repo.split("/")
             hostname = url_parts[2]
             offset = 3 + cls.REPO_URL_PROJECT_OFFSET
-            repo = "/".join(url_parts[offset:offset + cls.REPO_URL_PROJECT_COMPONENTS])
+            repo = "/".join(
+                url_parts[offset : offset + cls.REPO_URL_PROJECT_COMPONENTS]
+            )
         return hostname, repo
 
     @classmethod
@@ -213,27 +216,36 @@ class ProjectHolder(requests.Session):
         if cls.REPO_IS_URI:
             return repo_arg
         if not repo_arg and cls.REPO_URL_PROJECT_COMPONENTS > 0:
-            raise ValueError(f'Repo arg {repo_arg} does not have enouh URI components ({cls.REPO_URL_PROJECT_COMPONENTS}) for {cls.__name__}')
+            raise ValueError(
+                f"Repo arg {repo_arg} does not have enouh URI components ({cls.REPO_URL_PROJECT_COMPONENTS}) for {cls.__name__}"
+            )
         if cls.REPO_URL_PROJECT_COMPONENTS >= 1:
-            repo_components = repo_arg.split('/')
+            repo_components = repo_arg.split("/")
             if repo_arg and len(repo_components) == cls.REPO_URL_PROJECT_COMPONENTS:
                 return repo_arg
             # if class has "find_repo_by_name_only" method, OK to have only one
-            if len(repo_components) == 1 and hasattr(cls, 'find_repo_by_name_only'):
+            if len(repo_components) == 1 and hasattr(cls, "find_repo_by_name_only"):
                 return repo_arg
             if len(repo_components) < cls.REPO_URL_PROJECT_COMPONENTS:
-                raise ValueError(f'Repo arg {repo_arg} does not have enough components for {cls.__name__}')
-            return "/".join(repo_components[cls.REPO_URL_PROJECT_OFFSET:cls.REPO_URL_PROJECT_OFFSET + cls.REPO_URL_PROJECT_COMPONENTS])
+                raise ValueError(
+                    f"Repo arg {repo_arg} does not have enough components for {cls.__name__}"
+                )
+            return "/".join(
+                repo_components[
+                    cls.REPO_URL_PROJECT_OFFSET : cls.REPO_URL_PROJECT_OFFSET
+                    + cls.REPO_URL_PROJECT_COMPONENTS
+                ]
+            )
         return None
 
     @classmethod
     def is_official_for_repo(cls, repo, hostname):
         """Check if repo is a known repo for this type of project holder."""
         if hostname and hostname in cls.KNOWN_REPO_URLS:
-            log.info('Selecting known repo %s', hostname)
+            log.info("Selecting known repo %s", hostname)
             return cls.KNOWN_REPO_URLS[hostname]
         if repo and repo.lower() in cls.KNOWN_REPOS_BY_NAME:
-            log.info('Selecting known repo %s', repo)
+            log.info("Selecting known repo %s", repo)
             return cls.KNOWN_REPOS_BY_NAME[repo.lower()]
         return False
 
@@ -247,17 +259,22 @@ class ProjectHolder(requests.Session):
             return False
         if cls.DEFAULT_HOSTNAME == hostname:
             return True
-        if cls.SUBDOMAIN_INDICATOR and hostname.startswith(cls.SUBDOMAIN_INDICATOR + "."):
+        if cls.SUBDOMAIN_INDICATOR and hostname.startswith(
+            cls.SUBDOMAIN_INDICATOR + "."
+        ):
             return True
         return False
 
     def matches_major_filter(self, version, major):
-        if self.branches and major in self.branches and \
-                re.search(fr"{self.branches[major]}", str(version)):
-            log.info('%s matches major %s', version, self.branches[major])
+        if (
+            self.branches
+            and major in self.branches
+            and re.search(rf"{self.branches[major]}", str(version))
+        ):
+            log.info("%s matches major %s", version, self.branches[major])
             return True
-        if str(version).startswith(f'{major}.'):
-            log.info('%s is under the desired major %s', version, major)
+        if str(version).startswith(f"{major}."):
+            log.info("%s is under the desired major %s", version, major)
             return True
         if str(version) == major:
             return True
@@ -275,17 +292,25 @@ class ProjectHolder(requests.Session):
         # for libssh2-x.x.x should remove project name prefix to prevent `2` going into the version
         prefix = "{}-".format(self.name)
         if version_s.startswith(prefix):
-            version_s = version_s[len(prefix):]
-            log.info("Removed project name prefix, working now on string '%s'", version_s)
+            version_s = version_s[len(prefix) :]
+            log.info(
+                "Removed project name prefix, working now on string '%s'", version_s
+            )
 
         res = None
 
         if not matches_filter(self.only, True, version_s):
-            log.info('"%s" does not match the "only" constraint "%s"', version_s, self.only)
+            log.info(
+                '"%s" does not match the "only" constraint "%s"', version_s, self.only
+            )
             return None
 
         if not matches_filter(self.exclude, False, version_s):
-            log.info('"%s" does not match the "exclude" constraint "%s"', version_s, self.exclude)
+            log.info(
+                '"%s" does not match the "exclude" constraint "%s"',
+                version_s,
+                self.exclude,
+            )
             return None
 
         try:
@@ -300,7 +325,7 @@ class ProjectHolder(requests.Session):
             log.info("Failed to parse %s as Version.", version_s)
             # attempt to remove extraneous chars and revalidate
             # we use findall for cases where "tag" may be 'foo/2.x/2.45'
-            matches = re.findall(r'([0-9]+([.][0-9x]+)+(rc[0-9]?)?)', version_s)
+            matches = re.findall(r"([0-9]+([.][0-9x]+)+(rc[0-9]?)?)", version_s)
             for s in matches:
                 version_s = s[0]
                 log.info("Sanitized tag name value to %s.", version_s)
@@ -317,10 +342,10 @@ class ProjectHolder(requests.Session):
                 log.info("Did not find anything that looks like a version in the tag")
                 # As the last resort, let's try to convert underscores to dots, while stripping out
                 # any "alphanumeric_". many hg repos do this, e.g. PROJECT_1_2_3
-                parts = version_s.split('_')
+                parts = version_s.split("_")
                 if len(parts) >= 2 and parts[0].isalpha():
                     # gets list except first item, joins by dot
-                    version_s = '.'.join(parts[1:])
+                    version_s = ".".join(parts[1:])
                     try:
                         v = Version(version_s)
                         if not v.is_prerelease or pre_ok:
@@ -330,10 +355,12 @@ class ProjectHolder(requests.Session):
                         else:
                             log.info("Parsed as unwanted pre-release version: %s.", v)
                     except InvalidVersion:
-                        log.info('Still not a valid version after applying underscores fix')
+                        log.info(
+                            "Still not a valid version after applying underscores fix"
+                        )
         # apply --major filter
         if res and major and not self.matches_major_filter(res, major):
-            log.info('%s is not under the desired major %s', version_s, major)
+            log.info("%s is not under the desired major %s", version_s, major)
             return None
 
         if res and self.even and not res.even:
@@ -349,42 +376,49 @@ class ProjectHolder(requests.Session):
         """Get release download URL."""
         if not self.RELEASE_URL_FORMAT:
             raise NotImplementedError(
-                f'Getting release URL for {self._type()} is not implemented')
-        ext = 'zip' if os.name == 'nt' else 'tar.gz'
+                f"Getting release URL for {self._type()} is not implemented"
+            )
+        ext = "zip" if os.name == "nt" else "tar.gz"
 
-        fmt = self.SHORT_RELEASE_URL_FORMAT if shorter and self.SHORT_RELEASE_URL_FORMAT else \
-            self.RELEASE_URL_FORMAT
+        fmt = (
+            self.SHORT_RELEASE_URL_FORMAT
+            if shorter and self.SHORT_RELEASE_URL_FORMAT
+            else self.RELEASE_URL_FORMAT
+        )
 
         return fmt.format(
             hostname=self.hostname,
             repo=self.repo,
             name=self.name,
-            tag=release['tag_name'],
+            tag=release["tag_name"],
             ext=ext,
-            version=release['version']
+            version=release["version"],
         )
 
     def get_assets(self, release, short_urls, assets_filter=None):
         urls = []
-        assets = release.get('assets', [])
+        assets = release.get("assets", [])
         arch_matched_assets = []
-        if not assets_filter and platform.machine() in ['x86_64', 'AMD64']:
+        if not assets_filter and platform.machine() in ["x86_64", "AMD64"]:
             for asset in assets:
-                if 'x86_64' in asset['name']:
+                if "x86_64" in asset["name"]:
                     arch_matched_assets.append(asset)
             if arch_matched_assets:
                 assets = arch_matched_assets
 
         if assets:
             for asset in assets:
-                if assets_filter and not re.search(assets_filter, asset['name']):
+                if assets_filter and not re.search(assets_filter, asset["name"]):
                     continue
-                if not assets_filter and asset_does_not_belong_to_machine(asset['name']):
+                if not assets_filter and asset_does_not_belong_to_machine(
+                    asset["name"]
+                ):
                     log.info(
-                        'Asset %s does not belong to this machine, skipping', asset['name']
+                        "Asset %s does not belong to this machine, skipping",
+                        asset["name"],
                     )
                     continue
-                urls.append(asset['browser_download_url'])
+                urls.append(asset["browser_download_url"])
         else:
             download_url = self.release_download_url(release, short_urls)
             if not assets_filter or re.search(assets_filter, download_url):
@@ -394,4 +428,4 @@ class ProjectHolder(requests.Session):
     def get_canonical_link(self):
         if self.feed_url:
             return self.feed_url
-        return f'https://{self.hostname}/{self.repo}'
+        return f"https://{self.hostname}/{self.repo}"

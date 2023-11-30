@@ -9,7 +9,8 @@ log = logging.getLogger(__name__)
 
 class WordPressPluginRepoSession(ProjectHolder):
     """A class to represent a WordPress plugin project holder."""
-    DEFAULT_HOSTNAME = 'wordpress.org'
+
+    DEFAULT_HOSTNAME = "wordpress.org"
     REPO_URL_PROJECT_COMPONENTS = 1
     # For project URLs, e.g., https://wordpress.org/plugins/opcache-reset/
     # a URI does not start with a repo name, skip '/plugins/'
@@ -18,8 +19,8 @@ class WordPressPluginRepoSession(ProjectHolder):
     def get_project(self):
         """Get project JSON data."""
         project = None
-        url = f'https://api.{self.hostname}/plugins/info/1.0/{self.repo}.json'
-        log.info('Requesting %s', url)
+        url = f"https://api.{self.hostname}/plugins/info/1.0/{self.repo}.json"
+        log.info("Requesting %s", url)
         response = self.get(url)
         if response.status_code == 200:
             project = response.json()
@@ -46,24 +47,25 @@ class WordPressPluginRepoSession(ProjectHolder):
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version
         from .Version import Version
+
         if not major:
-            latest_ver = self.project['version']
+            latest_ver = self.project["version"]
             v = Version(latest_ver)
-            ret['version'] = v
+            ret["version"] = v
             # there are no tags, we just put version string there
-            ret['tag_name'] = latest_ver
+            ret["tag_name"] = latest_ver
         else:
-            for release_ver in self.project['versions']:
+            for release_ver in self.project["versions"]:
                 version = self.sanitize_version(release_ver, pre_ok, major)
                 if not version:
                     continue
-                if 'version' not in ret or version > ret['version']:
-                    ret['tag_name'] = release_ver
-                    ret['version'] = version
-                    log.info('Set current selection to %s', version)
+                if "version" not in ret or version > ret["version"]:
+                    ret["tag_name"] = release_ver
+                    ret["version"] = version
+                    log.info("Set current selection to %s", version)
                 else:
-                    log.info('Not set %s', version)
-        if 'tag_name' in ret:
+                    log.info("Not set %s", version)
+        if "tag_name" in ret:
             self.project.update(ret)
             return self.project
         return None
@@ -71,8 +73,8 @@ class WordPressPluginRepoSession(ProjectHolder):
     @staticmethod
     def make_canonical_link(repo):
         """Make canonical link from repo."""
-        return f'https://{WordPressPluginRepoSession.DEFAULT_HOSTNAME}/plugins/{repo}/'
+        return f"https://{WordPressPluginRepoSession.DEFAULT_HOSTNAME}/plugins/{repo}/"
 
     def get_canonical_link(self):
         """Get canonical link from repo."""
-        return f'https://{self.hostname}/plugins/{self.repo}/'
+        return f"https://{self.hostname}/plugins/{self.repo}/"

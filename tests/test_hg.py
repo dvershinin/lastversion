@@ -12,6 +12,6 @@ def test_hg_nginx():
     """Test NGINX."""
     repo = "https://nginx.org/"
 
-    output = latest(repo, 'version')
+    output = latest(repo, "version")
 
     assert output >= version.parse("1.18.0")

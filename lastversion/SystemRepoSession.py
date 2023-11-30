@@ -18,9 +18,10 @@ class SystemRepoSession(ProjectHolder):
         ret = None
         # noinspection PyUnresolvedReferences,PyPackageRequirements
         import dnf
+
         with dnf.Base() as base:
             releasever = dnf.rpm.detect_releasever(base.conf.installroot)
-            base.conf.substitutions['releasever'] = releasever
+            base.conf.substitutions["releasever"] = releasever
             # Repositories are needed if we want to install anything.
             base.read_all_repos()
             # A sack is needed for querying.
@@ -34,11 +35,11 @@ class SystemRepoSession(ProjectHolder):
             a = a.filter(name=self.repo)
             for pkg in a:  # `a` only gets evaluated here
                 version = self.sanitize_version(pkg.version, pre_ok, major)
-                if not ret or ret['version'] < version:
+                if not ret or ret["version"] < version:
                     ret = {
-                        'version': version,
-                        'tag_name': pkg.evr,
-                        'tag_date': datetime.datetime.fromtimestamp(pkg.buildtime)
+                        "version": version,
+                        "tag_name": pkg.evr,
+                        "tag_date": datetime.datetime.fromtimestamp(pkg.buildtime),
                     }
         return ret
 
@@ -47,12 +48,24 @@ class SystemRepoSession(ProjectHolder):
         ret = None
         # noinspection PyUnresolvedReferences,PyPackageRequirements
         import yum
-        yum_loggers = ['yum.filelogging.RPMInstallCallback', 'yum.verbose.Repos',
-                       'yum.verbose.plugin',
-                       'yum.Depsolve', 'yum.verbose', 'yum.plugin', 'yum.Repos', 'yum',
-                       'yum.verbose.YumBase',
-                       'yum.filelogging', 'yum.verbose.YumPlugins', 'yum.RepoStorage', 'yum.YumBase',
-                       'yum.filelogging.YumBase', 'yum.verbose.Depsolve']
+
+        yum_loggers = [
+            "yum.filelogging.RPMInstallCallback",
+            "yum.verbose.Repos",
+            "yum.verbose.plugin",
+            "yum.Depsolve",
+            "yum.verbose",
+            "yum.plugin",
+            "yum.Repos",
+            "yum",
+            "yum.verbose.YumBase",
+            "yum.filelogging",
+            "yum.verbose.YumPlugins",
+            "yum.RepoStorage",
+            "yum.YumBase",
+            "yum.filelogging.YumBase",
+            "yum.verbose.Depsolve",
+        ]
         for logger in yum_loggers:
             logging.getLogger(logger).setLevel(logging.CRITICAL)
         yb = yum.YumBase()
@@ -62,11 +75,8 @@ class SystemRepoSession(ProjectHolder):
         pkgs = yb.pkgSack.returnNewestByNameArch(patterns=[self.repo])
         for pkg in pkgs:
             version = self.sanitize_version(pkg.vr, pre_ok, major)
-            if not ret or ret['version'] < version:
-                ret = {
-                    'version': version,
-                    'tag_name': pkg.vr
-                }
+            if not ret or ret["version"] < version:
+                ret = {"version": version, "tag_name": pkg.vr}
         return ret
 
     def apt_get_available_version(self, pre_ok, major):
@@ -74,18 +84,19 @@ class SystemRepoSession(ProjectHolder):
         ret = None
         # noinspection PyUnresolvedReferences,PyPackageRequirements
         import apt
+
         cache = apt.cache.Cache()
         cache.update()
         cache.open()
         if self.repo in cache:
             pkg = cache[self.repo]
             for pkg_ver in pkg.versions:
-                version = pkg_ver.version.split('-')[0]
+                version = pkg_ver.version.split("-")[0]
                 version = self.sanitize_version(version, pre_ok, major)
-                if not ret or ret['version'] < version:
+                if not ret or ret["version"] < version:
                     ret = {
-                        'version': version,
-                        'tag_name': pkg_ver.version,
+                        "version": version,
+                        "tag_name": pkg_ver.version,
                         # 'tag_date': ?
                     }
         return ret

@@ -18,22 +18,22 @@ _version_re = re.compile(r"__version__\s=\s'(.*)'")
 install_requires = [
     # require at least requests==2.6.1 due to cachecontrol's bug:
     # https://github.com/ionrock/cachecontrol/issues/137
-    'requests>=2.6.1',
-    'packaging',
+    "requests>=2.6.1",
+    "packaging",
     # Cachecontrol 0.12.12 uses filelock instead of lockfile, and reverts to lockfile in 0.12.14.
     # Newer versions use filelock, but most distros package cachecontrol 0.12.11.
     # Ideally we can specify 0.12.14, but pip doesn't allow this, so just pin to what we can
-    'cachecontrol<=0.12.11',
-    'lockfile',
-    'appdirs',
-    'feedparser',
-    'python-dateutil',
-    'PyYAML',
-    'tqdm',
-    'beautifulsoup4',
-    'distro',
+    "cachecontrol<=0.12.11",
+    "lockfile",
+    "appdirs",
+    "feedparser",
+    "python-dateutil",
+    "PyYAML",
+    "tqdm",
+    "beautifulsoup4",
+    "distro",
     # pin due to https://github.com/ionrock/cachecontrol/issues/292
-    'urllib3 < 2'
+    "urllib3 < 2",
 ]
 tests_requires = [
     "pytest>=4.4.0",
@@ -42,22 +42,17 @@ tests_requires = [
     # somehow getting this issue only in Travis, anyway this should fix:
     # https://github.com/pytest-dev/pytest/issues/6887#issuecomment-600979770
     "pytest-xdist==1.29.0",
-    "pytest-cov"
+    "pytest-cov",
 ]
 
-docs_requires = [
-    "mkdocs==1.3.1",
-    "mkdocs-material",
-    "mkdocstrings",
-    "markdown-include"
-]
+docs_requires = ["mkdocs==1.3.1", "mkdocs-material", "mkdocstrings", "markdown-include"]
 
 with io.open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 base_dir = os.path.dirname(__file__)
 
-with open(os.path.join(base_dir, "lastversion", "__about__.py"), 'r') as f:
+with open(os.path.join(base_dir, "lastversion", "__about__.py"), "r") as f:
     version = _version_re.search(f.read()).group(1)
 
 setup(
@@ -87,6 +82,6 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Software Development",
         "Topic :: Utilities",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.6",
     ],
 )
