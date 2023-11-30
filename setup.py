@@ -12,7 +12,7 @@ import io
 import os
 import re
 
-_version_re = re.compile(r"__version__\s=\s'(.*)'")
+_version_re = re.compile(r"__version__\s=\s\"(.*)\"")
 
 
 install_requires = [
