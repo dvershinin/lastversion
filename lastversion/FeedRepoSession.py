@@ -11,10 +11,10 @@ log = logging.getLogger(__name__)
 
 class FeedRepoSession(ProjectHolder):
     KNOWN_REPOS_BY_NAME = {
-        'filezilla': {
-            'repo': 'filezilla',
-            'hostname': 'filezilla-project.org',
-            'only': 'FileZilla Client'
+        "filezilla": {
+            "repo": "filezilla",
+            "hostname": "filezilla-project.org",
+            "only": "FileZilla Client",
         }
     }
     CAN_BE_SELF_HOSTED = True
@@ -26,6 +26,7 @@ class FeedRepoSession(ProjectHolder):
         """Find the feed for a given site"""
         # noinspection PyPep8Naming
         from bs4 import BeautifulSoup as bs4
+
         raw = self.get(site).text
         result = []
         possible_feeds = []
@@ -49,7 +50,7 @@ class FeedRepoSession(ProjectHolder):
             if not href:
                 continue
             if "xml" in href or "rss" in href or "feed" in href:
-                possible_feeds.append(base + '/' + href.lstrip('/'))
+                possible_feeds.append(base + "/" + href.lstrip("/"))
         for url in list(set(possible_feeds)):
             f = feedparser.parse(url)
             if len(f.entries) > 0 and url not in result:
@@ -59,11 +60,11 @@ class FeedRepoSession(ProjectHolder):
     def __init__(self, repo, hostname):
         super(FeedRepoSession, self).__init__(repo, hostname)
         self.home_soup = None
-        feeds = self.find_feed('https://' + hostname + '/')
+        feeds = self.find_feed("https://" + hostname + "/")
         if not feeds:
             return
         self.hostname = hostname
-        log.info('Using feed URL: %s', feeds[0])
+        log.info("Using feed URL: %s", feeds[0])
         self.feed_url = feeds[0]
 
     def is_instance(self):
@@ -79,21 +80,17 @@ class FeedRepoSession(ProjectHolder):
         r = self.get(self.feed_url)
         feed = feedparser.parse(r.text)
         for tag in feed.entries:
-            tag_name = tag['title']
+            tag_name = tag["title"]
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue
-            if not ret or version > ret['version']:
+            if not ret or version > ret["version"]:
                 ret = tag
-                tag['tag_name'] = tag['title']
-                tag['version'] = version
-                if 'published_parsed' in tag:
+                tag["tag_name"] = tag["title"]
+                tag["version"] = version
+                if "published_parsed" in tag:
                     # converting from struct
-                    tag['tag_date'] = datetime.datetime(
-                        *tag['published_parsed'][:6]
-                    )
-                elif 'updated_parsed' in tag:
-                    tag['tag_date'] = datetime.datetime(
-                        *tag['updated_parsed'][:6]
-                    )
+                    tag["tag_date"] = datetime.datetime(*tag["published_parsed"][:6])
+                elif "updated_parsed" in tag:
+                    tag["tag_date"] = datetime.datetime(*tag["updated_parsed"][:6])
         return ret

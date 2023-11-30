@@ -17,13 +17,13 @@ def test_cli_format_devel():
       * `lastversion test 'blah-1.2.3-devel' # > 1.2.3.dev0`
     """
     process = subprocess.Popen(
-        ['lastversion', 'format', 'blah-1.2.3-devel'],
+        ["lastversion", "format", "blah-1.2.3-devel"],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
     )
     out, err = process.communicate()
 
-    assert version.parse(out.decode('utf-8').strip()) == version.parse("1.2.3.dev0")
+    assert version.parse(out.decode("utf-8").strip()) == version.parse("1.2.3.dev0")
 
 
 def test_cli_format_no_clear():
@@ -34,9 +34,9 @@ def test_cli_format_no_clear():
         * `lastversion test '1.2.x' # > False (no clear version)`
     """
     process = subprocess.Popen(
-        ['lastversion', 'format', '1.2.x'],
+        ["lastversion", "format", "1.2.x"],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
     )
 
     process.communicate()
@@ -53,19 +53,19 @@ def test_cli_format_rc1():
         * `lastversion test '1.2.3-rc1' # > 1.2.3rc1`
     """
     process = subprocess.Popen(
-        ['lastversion', 'format', '1.2.3-rc1'],
+        ["lastversion", "format", "1.2.3-rc1"],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        stderr=subprocess.PIPE,
     )
     out, err = process.communicate()
 
-    assert version.parse(out.decode('utf-8').strip()) == version.parse("1.2.3-rc1")
+    assert version.parse(out.decode("utf-8").strip()) == version.parse("1.2.3-rc1")
 
 
 def test_cli_format_rc_with_garbage(capsys):
     """Test that the CLI returns the correct version for a rc version."""
     with captured_exit_code() as get_exit_code:
-        main(['format', 'v5.12-rc1-do-not-use'])
+        main(["format", "v5.12-rc1-do-not-use"])
     exit_code = get_exit_code()
 
     captured = capsys.readouterr()
@@ -76,7 +76,7 @@ def test_cli_format_rc_with_garbage(capsys):
 def test_cli_format_rc_with_post(capsys):
     """Test that the CLI returns the correct version for a rc version."""
     with captured_exit_code() as get_exit_code:
-        main(['format', 'v2.41.0-rc2.windows.1'])
+        main(["format", "v2.41.0-rc2.windows.1"])
     exit_code = get_exit_code()
 
     captured = capsys.readouterr()
@@ -87,7 +87,7 @@ def test_cli_format_rc_with_post(capsys):
 def test_cli_gt_stable_vs_rc(capsys):
     """Test that the CLI comparison is positive when comparing stable to RC."""
     with captured_exit_code() as get_exit_code:
-        main(['v2.41.0.windows.1', '-gt', 'v2.41.0-rc2.windows.1'])
+        main(["v2.41.0.windows.1", "-gt", "v2.41.0-rc2.windows.1"])
     exit_code = get_exit_code()
 
     captured = capsys.readouterr()
@@ -97,10 +97,10 @@ def test_cli_gt_stable_vs_rc(capsys):
 
 def test_cli_get_assets(capsys):
     """Test that the CLI --assets return AppImage on Linux."""
-    if sys.platform == 'linux':
+    if sys.platform == "linux":
         with captured_exit_code() as get_exit_code:
-            main(['--assets', 'https://github.com/lastversion-test-repos/OneDriveGUI'])
+            main(["--assets", "https://github.com/lastversion-test-repos/OneDriveGUI"])
         exit_code = get_exit_code()
 
         captured = capsys.readouterr()
-        assert '.AppImage' in captured.out
+        assert ".AppImage" in captured.out

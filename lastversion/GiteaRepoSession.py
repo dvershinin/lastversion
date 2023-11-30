@@ -13,8 +13,10 @@ from .exceptions import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
 
-TOKEN_PRO_TIP = 'ProTip: set GITHUB_API_TOKEN env var as per ' \
-                'https://github.com/dvershinin/lastversion#tips'
+TOKEN_PRO_TIP = (
+    "ProTip: set GITHUB_API_TOKEN env var as per "
+    "https://github.com/dvershinin/lastversion#tips"
+)
 
 
 def asset_matches(asset, search, regex_matching):
@@ -27,11 +29,11 @@ def asset_matches(asset, search, regex_matching):
         bool: Whether match is satisfied
     """
     if regex_matching:
-        if asset['label'] and re.search(search, asset['label']):
+        if asset["label"] and re.search(search, asset["label"]):
             return True
-        if asset['name'] and re.search(search, asset['name']):
+        if asset["name"] and re.search(search, asset["name"]):
             return True
-    elif search in (asset['label'], asset['name']):
+    elif search in (asset["label"], asset["name"]):
         return True
     return False
 
@@ -39,7 +41,7 @@ def asset_matches(asset, search, regex_matching):
 class GiteaRepoSession(ProjectHolder):
     """A class to represent a GitHub project holder."""
 
-    DEFAULT_HOSTNAME = 'gitea.com'
+    DEFAULT_HOSTNAME = "gitea.com"
     CAN_BE_SELF_HOSTED = True
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
@@ -59,26 +61,26 @@ class GiteaRepoSession(ProjectHolder):
             return None
         cache_repo_names_file = f"{self.cache_dir}/repos.json"
         try:
-            with open(cache_repo_names_file, 'r', encoding='utf-8') as reader:
+            with open(cache_repo_names_file, "r", encoding="utf-8") as reader:
                 cache = json.load(reader)
         except (IOError, ValueError):
             cache = {}
         try:
-            if repo in cache and time.time() - cache[repo]['updated_at'] < 3600 * 24 * 30:
+            if (
+                repo in cache
+                and time.time() - cache[repo]["updated_at"] < 3600 * 24 * 30
+            ):
                 log.info("Found %s in repo short name cache", repo)
-                if not cache[repo]['repo']:
+                if not cache[repo]["repo"]:
                     raise BadProjectError(
-                        f'No project found on GitHub for search query: {repo}'
+                        f"No project found on GitHub for search query: {repo}"
                     )
                 # return cache[repo]['repo']
         except TypeError:
             pass
         log.info("Making query against GitHub API to search repo %s", repo)
         r = self.get(
-            f'{self.api_base}/search/repositories',
-            params={
-                'q': f"{repo} in:name"
-            }
+            f"{self.api_base}/search/repositories", params={"q": f"{repo} in:name"}
         )
         if r.status_code == 404:
             # when not found, skip using this holder in the factory by not
@@ -86,25 +88,22 @@ class GiteaRepoSession(ProjectHolder):
             return None
         if r.status_code != 200:
             raise BadProjectError(
-                f'Error while identifying full repository on GitHub for '
-                f'search query: {repo}'
+                f"Error while identifying full repository on GitHub for "
+                f"search query: {repo}"
             )
         data = r.json()
-        full_name = ''
-        if data['items']:
-            full_name = data['items'][0]['full_name']
-        cache[repo] = {
-            'repo': full_name,
-            'updated_at': int(time.time())
-        }
+        full_name = ""
+        if data["items"]:
+            full_name = data["items"][0]["full_name"]
+        cache[repo] = {"repo": full_name, "updated_at": int(time.time())}
         try:
-            with open(cache_repo_names_file, 'w', encoding='utf-8') as writer:
+            with open(cache_repo_names_file, "w", encoding="utf-8") as writer:
                 json.dump(cache, writer)
         except (IOError, ValueError):
             pass
         if not full_name:
             raise BadProjectError(
-                f'No project found on GitHub for search query: {repo}'
+                f"No project found on GitHub for search query: {repo}"
             )
         return full_name
 
@@ -116,7 +115,7 @@ class GiteaRepoSession(ProjectHolder):
         """
         project_page = f"https://{self.hostname}/{self.repo}"
         # log the URL we are about to check
-        log.info('Checking as Gitea project at %s', project_page)
+        log.info("Checking as Gitea project at %s", project_page)
         response = self.get(project_page, timeout=10)
         if response.status_code == 200:
             # create beautiful soup :)
@@ -136,69 +135,71 @@ class GiteaRepoSession(ProjectHolder):
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME
         # Explicitly specify the API version that we want:
-        self.headers.update({
-            'Accept': 'application/vnd.github.v3+json'
-        })
+        self.headers.update({"Accept": "application/vnd.github.v3+json"})
         if self.api_token:
-            log.info('Using API token.')
-            self.headers.update({'Authorization': f"token {self.api_token}"})
+            log.info("Using API token.")
+            self.headers.update({"Authorization": f"token {self.api_token}"})
         if self.hostname != self.DEFAULT_HOSTNAME:
-            self.api_base = f'https://{self.hostname}/api/v1'
+            self.api_base = f"https://{self.hostname}/api/v1"
         else:
-            self.api_base = f'https://{self.DEFAULT_HOSTNAME}/api/v1'
-        if '/' not in repo:
+            self.api_base = f"https://{self.DEFAULT_HOSTNAME}/api/v1"
+        if "/" not in repo:
             official_repo = self.try_get_official(repo)
             if official_repo:
                 repo = official_repo
-                log.info('Using official repo %s', repo)
+                log.info("Using official repo %s", repo)
             else:
                 repo = self.find_repo_by_name_only(repo)
                 if repo:
-                    log.info(
-                        'Using repo %s obtained from search API',
-                        self.repo
-                    )
+                    log.info("Using repo %s obtained from search API", self.repo)
                 else:
                     return
 
     def get_rate_limit_url(self):
-        return f'{self.api_base}/rate_limit'
+        return f"{self.api_base}/rate_limit"
 
     def get(self, url, **kwargs):
         """Send GET request and account for GitHub rate limits and such."""
         r = super(GiteaRepoSession, self).get(url, **kwargs)
-        log.info('Got HTTP status code %s from %s', r.status_code, url)
+        log.info("Got HTTP status code %s from %s", r.status_code, url)
         if r.status_code == 401:
             if self.api_token:
                 raise ApiCredentialsError(
-                    'API request was denied despite using an API token. '
-                    'Missing scopes?')
+                    "API request was denied despite using an API token. "
+                    "Missing scopes?"
+                )
             raise ApiCredentialsError(
-                'Denied API access. Please set GITHUB_API_TOKEN env var as '
-                'per https://github.com/dvershinin/lastversion#tips')
-        if r.status_code == 403 and 'X-RateLimit-Reset' in r.headers \
-                and 'X-RateLimit-Remaining' in r.headers:
+                "Denied API access. Please set GITHUB_API_TOKEN env var as "
+                "per https://github.com/dvershinin/lastversion#tips"
+            )
+        if (
+            r.status_code == 403
+            and "X-RateLimit-Reset" in r.headers
+            and "X-RateLimit-Remaining" in r.headers
+        ):
             if self.rate_limited_count > 2:
                 raise ApiCredentialsError(
-                    f'API requests were denied after retrying '
-                    f'{self.rate_limited_count} times'
+                    f"API requests were denied after retrying "
+                    f"{self.rate_limited_count} times"
                 )
-            remaining = int(r.headers['X-RateLimit-Remaining'])
+            remaining = int(r.headers["X-RateLimit-Remaining"])
             # One sec to account for skewed clock between GitHub and client
-            wait_for = float(r.headers['X-RateLimit-Reset']) - time.time() + 1.0
+            wait_for = float(r.headers["X-RateLimit-Reset"]) - time.time() + 1.0
             wait_for = math.ceil(wait_for)
             if not remaining:
                 # got 403, likely due to used quota
                 if wait_for < 300:
                     if wait_for < 0:
                         log.warning(
-                            'Exceeded API quota. Repeating request because quota is about to '
-                            'be reinstated'
+                            "Exceeded API quota. Repeating request because quota is about to "
+                            "be reinstated"
                         )
                     else:
-                        w = f'Waiting {wait_for} seconds for API quota reinstatement.'
-                        if "GITHUB_API_TOKEN" not in os.environ \
-                                and 'GITHUB_TOKEN' not in os.environ:
+                        w = f"Waiting {wait_for} seconds for API quota reinstatement."
+                        if (
+                            "GITHUB_API_TOKEN" not in os.environ
+                            and "GITHUB_TOKEN" not in os.environ
+                        ):
                             w = f"{w} {TOKEN_PRO_TIP}"
                         log.warning(w)
                         time.sleep(wait_for)
@@ -215,37 +216,37 @@ class GiteaRepoSession(ProjectHolder):
 
     def rate_limit(self):
         """Get rate limit info."""
-        url = f'{self.api_base}/rate_limit'
+        url = f"{self.api_base}/rate_limit"
         return self.get(url)
 
     def repo_query(self, uri):
         """Query the repo API."""
-        url = f'{self.api_base}/repos/{self.repo}{uri}'
+        url = f"{self.api_base}/repos/{self.repo}{uri}"
         return self.get(url)
 
     def repo_license(self, tag):
         """Get the license file for a tag."""
-        r = self.repo_query(f'/license?ref={tag}')
+        r = self.repo_query(f"/license?ref={tag}")
         if r.status_code == 200:
             # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag
             # we have to double-check whether the license file exists "at release tag"
             license_data = r.json()
-            license_path = license_data['path']
-            license_r = self.repo_query(f'/contents/{license_path}?ref={tag}')
+            license_path = license_data["path"]
+            license_r = self.repo_query(f"/contents/{license_path}?ref={tag}")
             if license_r.status_code == 200:
                 return license_data
         return None
 
     def repo_readme(self, tag):
         """Get the readme file for a tag."""
-        r = self.repo_query(f'/readme?ref={tag}')
+        r = self.repo_query(f"/readme?ref={tag}")
         if r.status_code == 200:
             return r.json()
         return None
 
     def get_formal_release_for_tag(self, tag):
         """Get the formal release for a tag, if it exists."""
-        r = self.repo_query(f'/releases/tags/{tag}')
+        r = self.repo_query(f"/releases/tags/{tag}")
         if r.status_code == 200:
             # noinspection SpellCheckingInspection
             return r.json()
@@ -256,34 +257,36 @@ class GiteaRepoSession(ProjectHolder):
     # in: current release to be returned, output: newer release to be returned
     def find_in_tags(self, pre_ok, major):
         ret = None
-        r = self.repo_query('/tags?per_page=100')
+        r = self.repo_query("/tags?per_page=100")
         if r.status_code != 200:
             return None
         tags = r.json()
-        while 'next' in r.links.keys():
-            r = self.get(r.links['next']['url'])
+        while "next" in r.links.keys():
+            r = self.get(r.links["next"]["url"])
             tags.extend(r.json())
 
         for t in tags:
-            tag_name = t['name']
+            tag_name = t["name"]
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue
-            d = parser.parse(t['commit']['created'])
+            d = parser.parse(t["commit"]["created"])
 
-            if not ret or version > ret['version'] or d > ret['tag_date']:
+            if not ret or version > ret["version"] or d > ret["tag_date"]:
                 # rare case: if upstream filed formal pre-release that passes as stable
                 # version (tag is 1.2.3 instead of 1.2.3b) double check if pre-release
                 # TODO handle API failure here as it may result in "false positive"?
                 release_for_tag = self.get_formal_release_for_tag(tag_name)
                 if release_for_tag:
-                    ret = self.set_matching_formal_release(ret, release_for_tag, version, pre_ok)
+                    ret = self.set_matching_formal_release(
+                        ret, release_for_tag, version, pre_ok
+                    )
                 else:
                     ret = t
-                    ret['tag_name'] = tag_name
-                    ret['tag_date'] = d
-                    ret['version'] = version
-                    ret['type'] = 'tag'
+                    ret["tag_name"] = tag_name
+                    ret["tag_date"] = d
+                    ret["version"] = version
+                    ret["type"] = "tag"
         return ret
 
     def get_latest(self, pre_ok=False, major=None):
@@ -304,36 +307,41 @@ class GiteaRepoSession(ProjectHolder):
 
         return ret
 
-    def set_matching_formal_release(self, ret, formal_release, version, pre_ok,
-                                    data_type='release'):
+    def set_matching_formal_release(
+        self, ret, formal_release, version, pre_ok, data_type="release"
+    ):
         """Set the current release selection to this formal release if matching conditions."""
-        if not pre_ok and formal_release['prerelease']:
+        if not pre_ok and formal_release["prerelease"]:
             log.info(
                 "Found formal release for this tag which is unwanted "
-                "pre-release: %s.", version)
+                "pre-release: %s.",
+                version,
+            )
             return ret
         if self.having_asset:
-            if 'assets' not in formal_release or not formal_release['assets']:
-                log.info('Skipping this release due to no assets.')
+            if "assets" not in formal_release or not formal_release["assets"]:
+                log.info("Skipping this release due to no assets.")
                 return ret
             if self.having_asset is not True:
                 regex_matching = False
                 search = self.having_asset
-                if search.startswith('~'):
-                    search = fr'{search.lstrip("~")}'
+                if search.startswith("~"):
+                    search = rf'{search.lstrip("~")}'
                     regex_matching = True
                 found_asset = False
-                for asset in formal_release['assets']:
+                for asset in formal_release["assets"]:
                     if asset_matches(asset, search, regex_matching=regex_matching):
                         found_asset = True
                         break
                 if not found_asset:
-                    log.info('Desired asset not found in the release.')
+                    log.info("Desired asset not found in the release.")
                     return ret
-        formal_release['tag_date'] = parser.parse(formal_release['published_at'])
-        formal_release['version'] = version
-        formal_release['type'] = data_type
-        log.info("Selected version as current selection: %s.", formal_release['version'])
+        formal_release["tag_date"] = parser.parse(formal_release["published_at"])
+        formal_release["version"] = version
+        formal_release["type"] = data_type
+        log.info(
+            "Selected version as current selection: %s.", formal_release["version"]
+        )
         return formal_release
 
     def try_get_official(self, repo):
@@ -343,8 +351,8 @@ class GiteaRepoSession(ProjectHolder):
             str: updated repo
         """
         official_repo = f"{repo}/{repo}"
-        log.info('Checking existence of %s', official_repo)
-        r = self.get(f'https://{self.hostname}/{official_repo}/releases.atom')
+        log.info("Checking existence of %s", official_repo)
+        r = self.get(f"https://{self.hostname}/{official_repo}/releases.atom")
         # API requests are varied by cookie, we don't want serializer for
         # cache fail because of that
         self.cookies.clear()
