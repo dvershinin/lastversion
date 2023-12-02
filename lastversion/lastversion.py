@@ -440,7 +440,10 @@ def update_spec(repo, res, sem="minor"):
     if not lastversion_dir_present:
         # Insert %lastversion_dir after %lastversion_tag
         lastversion_tag_index = out.index(f'%global lastversion_tag {res["spec_tag"]}')
-        out.insert(lastversion_tag_index + 1, f"%global lastversion_dir {res['spec_name']}-{res['spec_tag_no_prefix']}")
+        out.insert(
+            lastversion_tag_index + 1,
+            f"%global lastversion_dir {res['spec_name']}-{res['spec_tag_no_prefix']}",
+        )
 
     with open(repo, "w") as f:
         f.write("\n".join(out))
