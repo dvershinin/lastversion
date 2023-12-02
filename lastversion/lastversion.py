@@ -81,6 +81,8 @@ def get_repo_data_from_spec(rpmspec_filename):
                 name = line.split("Name:")[1].strip()
             elif line.startswith("URL:"):
                 spec_url = line.split("URL:")[1].strip()
+            elif line.startswith("Source0:") and not spec_url:
+                spec_url = line.split("Source0:")[1].strip()
             elif line.startswith("%global upstream_version "):
                 current_version = shlex.split(line)[2].strip()
                 # influences %spec_tag to use %upstream_version instead of %version
@@ -91,14 +93,9 @@ def get_repo_data_from_spec(rpmspec_filename):
                 repo_data["only"] = shlex.split(line)[2].strip()
             elif line.startswith("%global lastversion_having_asset"):
                 repo_data["having_asset"] = shlex.split(line)[2].strip()
-        if spec_url:
-            spec_host = urlparse(spec_url).hostname
-            if spec_host in ["github.com"] and not upstream_github and not spec_repo:
-                log.warning(
-                    "Neither %upstream_github nor %lastversion_repo macros were found. "
-                    "Please prepare your spec file using instructions: "
-                    "https://lastversion.getpagespeed.com/spec-preparing.html"
-                )
+            elif line.startswith("%global lastversion_major"):
+                repo_data["major"] = shlex.split(line)[2].strip()
+
         if not current_version:
             log.critical(
                 "Did not find neither Version: nor %upstream_version in the spec file"
@@ -230,7 +227,7 @@ def latest(
         project.set_exclude(exclude)
         project.set_having_asset(repo_data.get("having_asset", having_asset))
         project.set_even(even)
-        release = project.get_latest(pre_ok=pre_ok, major=major)
+        release = project.get_latest(pre_ok=pre_ok, major=repo_data.get("major", major))
 
         # bail out, found nothing that looks like a release
         if not release:
@@ -390,18 +387,24 @@ def update_spec(repo, res, sem="minor"):
     else:
         log.info("No newer version than already present in spec file")
         sys.exit(2)
-    # update %lastversion_tag and %lastversion_dir, Version (?), Release
+    # update or add %lastversion_tag and %lastversion_dir, Version (?), Release
+    # Flag to track if '%global lastversion_tag' is present
+    lastversion_tag_present = False
+    # Flag to track if '%global lastversion_dir' is present
+    lastversion_dir_present = False
     out = []
     packager = get_rpm_packager()
     with open(repo) as f:
         for ln in f.readlines():
             if ln.startswith("%global lastversion_tag "):
                 out.append(f'%global lastversion_tag {res["spec_tag"]}')
+                lastversion_tag_present = True
             elif ln.startswith("%global lastversion_dir "):
                 out.append(
                     f"%global lastversion_dir "
                     f'{res["spec_name"]}-{res["spec_tag_no_prefix"]}'
                 )
+                lastversion_dir_present = True
             elif ln.startswith("%global upstream_version "):
                 out.append(f'%global upstream_version {res["version"]}')
             elif ln.startswith("Version:") and (
@@ -429,6 +432,16 @@ def update_spec(repo, res, sem="minor"):
                 out.append("Release:" + m.group(1) + "1" + release)
             else:
                 out.append(ln.rstrip())
+
+    if not lastversion_tag_present:
+        # Insert %lastversion_tag at the top of the spec file
+        out.insert(0, f'%global lastversion_tag {res["spec_tag"]}')
+
+    if not lastversion_dir_present:
+        # Insert %lastversion_dir after %lastversion_tag
+        lastversion_tag_index = out.index(f'%global lastversion_tag {res["spec_tag"]}')
+        out.insert(lastversion_tag_index + 1, f"%global lastversion_dir {res['spec_name']}-{res['spec_tag_no_prefix']}")
+
     with open(repo, "w") as f:
         f.write("\n".join(out))
 

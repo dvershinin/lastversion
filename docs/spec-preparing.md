@@ -32,8 +32,6 @@ The header of the .spec file must have the following macros defined:
 
 ```rpmspec
 %global upstream_github <repository owner>
-%global lastversion_tag x
-%global lastversion_dir x
 ```
 
 The `%upstream_github` is static and defines the owner of a GitHub repository, e.g. for `google/brotli` repository, you will have:
@@ -49,8 +47,8 @@ If the package name and GitHub repository `Name:` of your package do not match, 
 %global upstream_name brotli
 ```
 
-The `lastversion_tag` and `lastversion_dir` macros are not static. 
-These globals, as well as `Version:` tag, are be updated by `lastversion` with the proper values for the last release, whenever you run `lastversion foo.spec`.
+When you run `lastversion foo.spec`, it will automatically add `lastversion_tag` and `lastversion_dir` macros. 
+These globals, as well as `Version:` tag, are updated by `lastversion` with the proper values for the last release.
 
 The `URL:` and `Source0:` tags of your spec file must be put to the following form:
 
@@ -63,18 +61,11 @@ URL:            https://github.com/%{upstream_github}/%{name}
 Source0:        %{url}/archive/%{lastversion_tag}/%{name}-%{lastversion_tag}.tar.gz
 ```
 
-Wherever in the `.spec` file you unpack the tarball and have to reference the extracted directory name, use `%{lastversion_dir}`.
+Finally, use `lastversion_dir` macro in the `%prep` section to properly specify extracted name directory:
 
 Example:
 
 ```rpmspec
-%global upstream_github <repository owner>
-%global lastversion_tag x
-%global lastversion_dir x
-Name:           <name>
-URL:            https://github.com/%{upstream_github}/%{name}
-Source0:        %{url}/archive/%{lastversion_tag}/%{name}-%{lastversion_tag}.tar.gz
-
 %prep
 %autosetup -n %{lastversion_dir}
 ```
@@ -104,8 +95,6 @@ which is a spec file for building the immutable NGINX module
 %global upstream_github GetPageSpeed
 %global upstream_name ngx_immutable
 #############################################
-%global lastversion_tag x
-%global lastversion_dir x
 %global upstream_version x
 ############################################
 ```
