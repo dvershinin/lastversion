@@ -15,6 +15,7 @@ import json
 import logging
 import os
 import re
+import shlex
 import sys
 from os.path import expanduser
 from pathlib import Path
@@ -39,18 +40,28 @@ from .utils import (
 from lastversion.exceptions import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
-fails_sem_err_fmt = (
-    "Latest version %s fails semantic %s constraint against " "current version %s"
+FAILS_SEM_ERR_FMT = (
+    "Latest version %s fails semantic %s constraint against current version %s"
 )
 
 
 # noinspection GrazieInspection
 def get_repo_data_from_spec(rpmspec_filename):
-    # The repo is specified inside the .spec file
-    # GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
-    # no upstream_github global means that the spec was not prepared for lastversion
-    # optional: use of spec_tag macros if the source is from GitHub. In edge cases we check
-    # new version via GitHub, but prepared sources are elsewhere
+    """
+    Extracts repo data and CLI args from .spec file
+
+    The project (repo) is specified inside the .spec file
+    GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
+    No upstream_github global means that the spec was not prepared for lastversion
+    Optional: use of spec_tag macros if the source is from GitHub. In edge cases we check
+    new version via GitHub, but prepared sources are elsewhere
+
+    Args:
+        rpmspec_filename:
+
+    Returns:
+
+    """
     repo_data = {}
     with open(rpmspec_filename) as f:
         name = None
@@ -61,23 +72,25 @@ def get_repo_data_from_spec(rpmspec_filename):
         spec_url = None
         for line in f.readlines():
             if line.startswith("%global lastversion_repo"):
-                spec_repo = line.split(" ")[2].strip()
+                spec_repo = shlex.split(line)[2].strip()
             elif line.startswith("%global upstream_github"):
-                upstream_github = line.split(" ")[2].strip()
+                upstream_github = shlex.split(line)[2].strip()
             elif line.startswith("%global upstream_name"):
-                upstream_name = line.split(" ")[2].strip()
+                upstream_name = shlex.split(line)[2].strip()
             elif line.startswith("Name:"):
                 name = line.split("Name:")[1].strip()
             elif line.startswith("URL:"):
                 spec_url = line.split("URL:")[1].strip()
             elif line.startswith("%global upstream_version "):
-                current_version = line.split(" ")[2].strip()
+                current_version = shlex.split(line)[2].strip()
                 # influences %spec_tag to use %upstream_version instead of %version
                 repo_data["module_of"] = True
             elif line.startswith("Version:") and not current_version:
                 current_version = line.split("Version:")[1].strip()
             elif line.startswith("%global lastversion_only"):
-                repo_data["only"] = line.split(" ")[2].strip()
+                repo_data["only"] = shlex.split(line)[2].strip()
+            elif line.startswith("%global lastversion_having_asset"):
+                repo_data["having_asset"] = shlex.split(line)[2].strip()
         if spec_url:
             spec_host = urlparse(spec_url).hostname
             if spec_host in ["github.com"] and not upstream_github and not spec_repo:
@@ -215,7 +228,7 @@ def latest(
     ) as project:
         project.set_only(repo_data.get("only", only))
         project.set_exclude(exclude)
-        project.set_having_asset(having_asset)
+        project.set_having_asset(repo_data.get("having_asset", having_asset))
         project.set_even(even)
         release = project.get_latest(pre_ok=pre_ok, major=major)
 
@@ -366,12 +379,12 @@ def update_spec(repo, res, sem="minor"):
             if sem in ["minor", "patch"]:
                 if latest_major != current_major:
                     log.warning(
-                        fails_sem_err_fmt, res["version"], sem, res["current_version"]
+                        FAILS_SEM_ERR_FMT, res["version"], sem, res["current_version"]
                     )
                     sys.exit(4)
                 if sem == "patch" and latest_minor != current_minor:
                     log.warning(
-                        fails_sem_err_fmt, res["version"], sem, res["current_version"]
+                        FAILS_SEM_ERR_FMT, res["version"], sem, res["current_version"]
                     )
                     sys.exit(4)
     else:

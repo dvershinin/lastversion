@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.4.0] - 2023-12-02
+### Added
+* `lastversion_only` global is respected in `.spec` files
+* `lastversion_having_asset` global is respected in `.spec` files
+### Fixed
+* Reworked search across different project locations to be more consistent
+
 ## [3.3.2] - 2023-09-25
 ### Fixed
 * Fix regression in semver preference

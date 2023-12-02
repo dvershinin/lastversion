@@ -122,3 +122,19 @@ Version: %{nginx_version}+%{upstream_version}
 
 Updating the parent software version is not in the scope of this article. But you can also use `lastversion` to e.g. create a `-devel` package where the parent software's version is written to the appropriate (in this case, `nginx_version`) macro.
 
+## Specifying command-line arguments within `.spec` files
+
+`lastversion` will read some `.spec` defined globas and treat them as command-line
+arguments, including:
+
+* `lastversion_having_asset` is treated same as `--having-asset` command line argument
+* `lastversion_only` is treated same as `--only` command line argument
+
+Example:
+
+```rpmspec
+%global lastversion_having_asset "Linux 64 bit: Binary"
+```
+
+In this example, "Linux 64 bit: Binary" is the asset name as it appears on 
+GitHub release page.
