@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.4.1] - 2023-12-07
+### Fixed
+* GitLab `--format json` failed when no assets were present
+
 ## [3.4.0] - 2023-12-02
 ### Added
 * `lastversion_only` global is respected in `.spec` files

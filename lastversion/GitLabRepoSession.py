@@ -90,7 +90,7 @@ class GitLabRepoSession(ProjectHolder):
 
     def get_assets(self, release, short_urls, assets_filter=None):
         urls = []
-        assets = release.get("assets", []).get("links", [])
+        assets = release.get("assets", {}).get("links", [])
         arch_matched_assets = []
         if not assets_filter and platform.machine() in ["x86_64", "AMD64"]:
             for asset in assets:

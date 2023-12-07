@@ -17,6 +17,15 @@ def test_gitlab_1():
     assert v >= version.parse("0.4.1")
 
 
+def test_gitlab_format_json():
+    """Test specifying a deep-level link at GitLab."""
+    repo = "https://gitlab.com/ddcci-driver-linux/ddcci-driver-linux/-/tree/master"
+
+    v = latest(repo, output_format="dict")
+
+    assert 'tag_date' in v and v['tag_date'].day == 20
+
+
 def test_gitlab_at():
     """Test specifying GitLab repo with an --at parameter."""
     repo = "ddcci-driver-linux/ddcci-driver-linux"
