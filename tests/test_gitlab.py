@@ -23,7 +23,7 @@ def test_gitlab_format_json():
 
     v = latest(repo, output_format="dict")
 
-    assert 'tag_date' in v and v['tag_date'].day == 20
+    assert "tag_date" in v and v["tag_date"].day == 20
 
 
 def test_gitlab_at():
