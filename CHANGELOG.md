@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.4.2] - 2023-12-10
+### Fixed
+* `--format source` did not include valid links
+### Added
+* `source_url` is now included in `--format json` output
+* [Web API!](https://lastversion.getpagespeed.com/api/) Hooray! 
+
 ## [3.4.1] - 2023-12-07
 ### Fixed
 * GitLab `--format json` failed when no assets were present

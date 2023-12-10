@@ -13,9 +13,9 @@ Examples:
 
 * https://lastversion-api.getpagespeed.com/dvershinin/lastversion
 
-Note that API caches results for 1 hour.
+Note that API caches results for 2 hours.
 
-## Badges with latest version
+## Badges with the latest version
 
 You can use the following badges in your project's `README.md` to show the latest version of your project:
 
