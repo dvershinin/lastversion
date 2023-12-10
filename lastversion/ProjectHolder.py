@@ -375,9 +375,7 @@ class ProjectHolder(requests.Session):
     def release_download_url(self, release, shorter=False):
         """Get release download URL."""
         if not self.RELEASE_URL_FORMAT:
-            log.warning(
-                f"Getting release URL for {self._type()} is not implemented"
-            )
+            log.warning(f"Getting release URL for {self._type()} is not implemented")
             return None
         ext = "zip" if os.name == "nt" else "tar.gz"
 
