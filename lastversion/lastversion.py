@@ -292,9 +292,7 @@ def latest(
                 if rpmspec_licence:
                     release["rpmspec_license"] = rpmspec_licence
 
-            release["source_url"] = project.release_download_url(
-                release, short_urls
-            )
+            release["source_url"] = project.release_download_url(release, short_urls)
 
             return release
 
