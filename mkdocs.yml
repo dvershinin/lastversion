@@ -27,6 +27,7 @@ nav:
   - Code Reference:
     - lastversion.py: reference/lastversion.md
     - Version.py: reference/Version.md
+  - Web API: api.md
   - RPM Auto-Builds:
     - Preparing SPEC files: spec-preparing.md
   - Changelog: changelog.md

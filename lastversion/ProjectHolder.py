@@ -86,10 +86,12 @@ class ProjectHolder(requests.Session):
     # Instance of project holder itself uniquely identifies a project (noname)
     REPO_IS_HOLDER = False
 
-    def set_repo(self, repo):
-        """Set repo ID property of project holder instance."""
-        self.repo = repo
-        self.name = repo.split("/")[-1]
+    @property
+    def name(self):
+        """Get project name, useful in URLs for assets, etc."""
+        if self.repo:
+            return self.repo.split("/")[-1]
+        return None
 
     def __init__(self, name=None, hostname=None):
         super(ProjectHolder, self).__init__()
@@ -118,8 +120,6 @@ class ProjectHolder(requests.Session):
         # identifies project on a given hostname
         # normalize repo to number of meaningful parameters
         self.repo = self.get_base_repo_from_repo_arg(name)
-        # short name for "repo", useful in URLs
-        self.name = None
         # in some case we do not specify repo, but feed is discovered, no repo is given then
         self.feed_url = None
         self.even = False

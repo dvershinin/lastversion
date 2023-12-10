@@ -169,7 +169,7 @@ class GitHubRepoSession(ProjectHolder):
             self.api_base = f"https://api.{self.DEFAULT_HOSTNAME}"
 
         if "/" not in repo:
-            self.set_repo(self.find_repo_by_name_only(repo))
+            self.repo = self.find_repo_by_name_only(repo)
 
     def get_rate_limit_url(self):
         return f"{self.api_base}/rate_limit"
@@ -493,7 +493,7 @@ class GitHubRepoSession(ProjectHolder):
                         self.repo,
                         repo_data["full_name"],
                     )
-                    self.set_repo(repo_data["full_name"])
+                    self.repo = repo_data["full_name"]
                     # request the feed from the new location
                     return self.get_releases_feed_contents(rename_checked=False)
         if r.status_code == 200:
