@@ -7,13 +7,19 @@ package to use it. You can use the public web API at `lastversion-api.getpagespe
 
 Make a GET request to `https://lastversion-api.getpagespeed.com/<github-repo>` to get the latest version of the repository in JSON format.
 
-To get only the version number, append `?output_format=version` to the URL.
+To get only the version number, append `?version` to the URL.
 
 Examples:
 
-* https://lastversion-api.getpagespeed.com/dvershinin/lastversion
+* [https://lastversion-api.getpagespeed.com/dvershinin/lastversion](https://lastversion-api.getpagespeed.com/dvershinin/lastversion)
+* [https://lastversion-api.getpagespeed.com/dvershinin/lastversion?version](https://lastversion-api.getpagespeed.com/dvershinin/lastversion?version)
 
 Note that API caches results for 2 hours.
+
+For faster updates of your own project, please set up a webhook for your 
+GitHub repo that points to:
+
+    https://lastversion-api.getpagespeed.com/hooks/github
 
 ## Badges with the latest version
 
