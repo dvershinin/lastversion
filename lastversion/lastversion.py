@@ -294,9 +294,7 @@ def latest(
                 if rpmspec_licence:
                     release["rpmspec_license"] = rpmspec_licence
 
-            release["source_url"] = project.release_download_url(
-                release, short_urls
-            )
+            release["source_url"] = project.release_download_url(release, short_urls)
 
             return release
 
@@ -853,7 +851,7 @@ def main(argv=None):
             having_asset=args.having_asset,
             exclude=args.exclude,
             even=args.even,
-            formal=args.formal
+            formal=args.formal,
         )
     except (ApiCredentialsError, BadProjectError) as error:
         log.critical(str(error))

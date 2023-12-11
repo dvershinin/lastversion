@@ -591,7 +591,6 @@ class GitHubRepoSession(ProjectHolder):
                     log.info("Selected version as current selection: %s.", version)
         return ret
 
-
     def get_latest(self, pre_ok=False, major=None):
         """
         Get the latest release satisfying "pre-releases are OK" or major/branch constraints
