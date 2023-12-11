@@ -123,6 +123,7 @@ class ProjectHolder(requests.Session):
         # in some case we do not specify repo, but feed is discovered, no repo is given then
         self.feed_url = None
         self.even = False
+        self.formal = False
 
     def get_name_cache(self):
         """Return name cache from file."""
@@ -172,6 +173,13 @@ class ProjectHolder(requests.Session):
         self.even = even
         if even:
             log.info("Only considering releases with even numbering")
+        return self
+
+    def set_formal(self, formal):
+        """Set to return only formally tagged releases."""
+        self.formal = formal
+        if formal:
+            log.info("Only considering formally tagged releases")
         return self
 
     def set_having_asset(self, having_asset):

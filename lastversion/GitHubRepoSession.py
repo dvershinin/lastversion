@@ -523,22 +523,9 @@ class GitHubRepoSession(ProjectHolder):
             release["install_name"] = self.name
         return release
 
-    def get_latest(self, pre_ok=False, major=None):
-        """
-        Get the latest release satisfying "pre-releases are OK" or major/branch constraints
-        Strive to fetch formal API release if it exists, because it has useful information
-        like assets.
-        """
-        # data of selected tag, always contains ['version', 'tag_name', 'tag_date', 'type'] will
-        # be returned
+    def get_release_from_feed(self, pre_ok, major):
+        """Get the latest release from the `releases.atom` feed."""
         ret = None
-
-        # then always get *all* tags through pagination
-
-        # if pre not ok, filter out tags to check
-
-        # if major, filter out tags to check for major
-
         seen_semver = False
 
         feed_entries = self.get_releases_feed_entries()
@@ -602,16 +589,39 @@ class GitHubRepoSession(ProjectHolder):
                     tag.pop("published_parsed", None)
                     ret = tag
                     log.info("Selected version as current selection: %s.", version)
+        return ret
 
-        # we are good with release from feeds only without looking at the API
-        # simply because feeds list stuff in order of recency,
-        # however, still use /tags unless releases.atom has data within a year
-        if ret and ret["tag_date"].replace(tzinfo=None) > (
-            datetime.utcnow() - timedelta(days=365)
-        ):
-            return self.enrich_release_info(ret)
 
-        log.info("Feed contained none or only tags older than 1 year. Switching to API")
+    def get_latest(self, pre_ok=False, major=None):
+        """
+        Get the latest release satisfying "pre-releases are OK" or major/branch constraints
+        Strive to fetch formal API release if it exists, because it has useful information
+        like assets.
+        """
+        # data of selected tag, always contains ['version', 'tag_name', 'tag_date', 'type'] will
+        # be returned
+        ret = None
+
+        # then always get *all* tags through pagination
+
+        # if pre not ok, filter out tags to check
+
+        # if major, filter out tags to check for major
+
+        if not self.formal:
+            ret = self.get_release_from_feed(pre_ok, major)
+
+            # we are good with release from feeds only without looking at the API
+            # simply because feeds list stuff in order of recency,
+            # however, still use /tags unless releases.atom has data within a year
+            if ret and ret["tag_date"].replace(tzinfo=None) > (
+                datetime.utcnow() - timedelta(days=365)
+            ):
+                return self.enrich_release_info(ret)
+
+            log.info(
+                "Feed contained none or only tags older than 1 year. Switching to API"
+            )
 
         # only if we did not find desired stuff through feeds, we switch to using API :)
         # this may be required in cases
@@ -628,7 +638,7 @@ class GitHubRepoSession(ProjectHolder):
             if not ret or version > ret["version"]:
                 ret = self.set_matching_formal_release(ret, release, version, pre_ok)
 
-        if self.having_asset:
+        if self.having_asset or self.formal:
             # only formal releases which we enumerated above already, have assets,
             # so there is no point looking in the tags/graphql below
             # return whatever we got

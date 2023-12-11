@@ -165,6 +165,7 @@ def latest(
     having_asset=None,
     exclude=None,
     even=False,
+    formal=False,
 ):
     r"""Find the latest release version for a project.
 
@@ -227,6 +228,7 @@ def latest(
         project.set_exclude(exclude)
         project.set_having_asset(repo_data.get("having_asset", having_asset))
         project.set_even(even)
+        project.set_formal(formal)
         release = project.get_latest(pre_ok=pre_ok, major=repo_data.get("major", major))
 
         # bail out, found nothing that looks like a release
@@ -596,6 +598,12 @@ def main(argv=None):
         help="Include pre-releases in potential versions",
     )
     parser.add_argument(
+        "--formal",
+        dest="formal",
+        action="store_true",
+        help="Include only formally tagged versions",
+    )
+    parser.add_argument(
         "--sem",
         dest="sem",
         choices=["major", "minor", "patch", "any"],
@@ -715,6 +723,7 @@ def main(argv=None):
         verbose=False,
         format="version",
         pre=False,
+        formal=False,
         assets=False,
         newer_than=False,
         filter=False,
@@ -844,6 +853,7 @@ def main(argv=None):
             having_asset=args.having_asset,
             exclude=args.exclude,
             even=args.even,
+            formal=args.formal
         )
     except (ApiCredentialsError, BadProjectError) as error:
         log.critical(str(error))

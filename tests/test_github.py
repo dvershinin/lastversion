@@ -83,3 +83,17 @@ def test_github_search_python():
     repo = "python"
     output = latest(repo)
     assert output > version.parse("3.11")
+
+
+def test_github_formal_filter():
+    """Test filtering a GitHub project and only formal releases."""
+    repo = "https://github.com/lastversion-test-repos/cadvisor"
+    output = latest(repo, formal=True)
+    assert output == version.parse("0.48.0")
+
+
+def test_github_not_formal_filter():
+    """Test filtering a GitHub project and only formal releases."""
+    repo = "https://github.com/lastversion-test-repos/cadvisor"
+    output = latest(repo, formal=False)
+    assert output == version.parse("0.48.1")

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.4.3] - 2023-12-11
+### Fixed
+* Added `--formal` switch to allow for formal releases only
+
 ## [3.4.2] - 2023-12-10
 ### Fixed
 * `--format source` did not include valid links
