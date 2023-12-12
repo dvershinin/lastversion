@@ -148,7 +148,6 @@ def get_repo_data_from_yml(repo):
             name = os.path.splitext(os.path.basename(repo))[0]
             if "module_of" in repo_data:
                 name = f'{repo_data["module_of"]}-module-{name}'
-            repo = repo_data["repo"]
             repo_data["name"] = name
     return repo_data
 
@@ -526,7 +525,7 @@ def install_release(res, args):
 
     rpms = [asset for asset in res["assets"] if asset.endswith(".rpm")]
     if rpms:
-        return install_rpms(rpms, args)
+        return install_rpms(res, rpms, args)
 
     # static files are those without an extension
     static_binaries = [
@@ -662,7 +661,7 @@ def main(argv=None):
         "--major",
         "--branch",
         metavar="MAJOR",
-        help="Only consider releases of a specific major " "version, e.g. 2.1.x",
+        help="Only consider releases of a specific major version, e.g. 2.1.x",
     )
     parser.add_argument(
         "--only",

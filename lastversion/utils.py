@@ -236,7 +236,7 @@ def extract_appimage_desktop_file(appimage_path):
             subprocess.call([xdg_desktop_menu_path, "install", desktop_file])
         else:
             log.warning(
-                "xdg-desktop-menu is not available, can't install the " ".desktop file"
+                "xdg-desktop-menu is not available, can't install the .desktop file"
             )
 
     # Remove the temporary directory
