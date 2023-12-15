@@ -1,3 +1,4 @@
+"""Gitea repository session class."""
 import json
 import logging
 import math
@@ -10,6 +11,7 @@ from dateutil import parser
 
 from .ProjectHolder import ProjectHolder
 from .exceptions import ApiCredentialsError, BadProjectError
+
 
 log = logging.getLogger(__name__)
 

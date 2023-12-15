@@ -139,6 +139,7 @@ def get_repo_data_from_spec(rpmspec_filename):
 
 
 def get_repo_data_from_yml(repo):
+    """Get repo data from YAML file."""
     repo_data = {}
     with open(repo) as fpi:
         repo_data = yaml.safe_load(fpi)

@@ -1,9 +1,14 @@
 """Provides a custom argparse action to show program's version and exit."""
+import logging
 import sys as _sys
 from argparse import SUPPRESS, Action
 
 import lastversion
 from .__about__ import __version__
+from .exceptions import ApiCredentialsError
+
+
+log = logging.getLogger(__name__)
 
 
 class VersionAction(Action):
@@ -29,11 +34,14 @@ class VersionAction(Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         version = f"%(prog)s {__version__}"
-        last_version = lastversion.latest(lastversion.__self__)
-        if __version__ == str(last_version):
-            version += ", up to date"
-        else:
-            version += f", newer version {last_version} available"
+        try:
+            last_version = lastversion.latest(lastversion.__self__)
+            if __version__ == str(last_version):
+                version += ", up to date"
+            else:
+                version += f", newer version {last_version} available"
+        except ApiCredentialsError as e:
+            logging.warning(e)
         formatter = parser.formatter_class(prog=parser.prog)
         formatter.add_text(version)
         _sys.stdout.write(formatter.format_help())

@@ -182,7 +182,7 @@ class GitHubRepoSession(ProjectHolder):
             if self.api_token:
                 raise ApiCredentialsError(
                     "API request was denied despite using an API token. "
-                    "Missing scopes?"
+                    "Missing scopes? Expired token? Invalid token?"
                 )
             raise ApiCredentialsError(
                 "Denied API access. Please set GITHUB_API_TOKEN env var "

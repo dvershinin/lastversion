@@ -333,7 +333,10 @@ class ProjectHolder(requests.Session):
             log.info("Failed to parse %s as Version.", version_s)
             # attempt to remove extraneous chars and revalidate
             # we use findall for cases where "tag" may be 'foo/2.x/2.45'
-            matches = re.findall(r"([0-9]+([.][0-9x]+)+(rc[0-9]?)?)", version_s)
+            matches = re.findall(
+                re.compile(r"([0-9]+([.][0-9x]+)+(rc[0-9]?)?)"),
+                version_s
+            )
             for s in matches:
                 version_s = s[0]
                 log.info("Sanitized tag name value to %s.", version_s)
