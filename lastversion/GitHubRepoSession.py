@@ -1,3 +1,4 @@
+"""GitHub repository session class."""
 import logging
 from urllib.parse import unquote
 
@@ -172,6 +173,7 @@ class GitHubRepoSession(ProjectHolder):
             self.repo = self.find_repo_by_name_only(repo)
 
     def get_rate_limit_url(self):
+        """Get rate limit URL."""
         return f"{self.api_base}/rate_limit"
 
     def get(self, url, **kwargs):
@@ -242,6 +244,7 @@ class GitHubRepoSession(ProjectHolder):
         return self.get(url)
 
     def repo_license(self, tag):
+        """API query for a repository's LICENSE"""
         r = self.repo_query(f"/license?ref={tag}")
         if r.status_code == 200:
             # unfortunately, unlike /readme, API always returns *latest* license, ignoring tag

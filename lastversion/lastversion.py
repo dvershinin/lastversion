@@ -287,7 +287,7 @@ def latest(
             release["from"] = project.get_canonical_link()
 
             if "license" in release and release["license"]:
-                spdx_id = release["license"]["license"]["spdx_id"]
+                spdx_id = release["license"].get("license", {}).get("spdx_id")
                 rpmspec_licence = (
                     rpmspec_licenses[spdx_id] if spdx_id in rpmspec_licenses else None
                 )

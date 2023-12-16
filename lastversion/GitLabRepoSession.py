@@ -18,6 +18,9 @@ class GitLabRepoSession(ProjectHolder):
     # Domains gitlab.example.com
     SUBDOMAIN_INDICATOR = "gitlab"
 
+    # GitLab has unlimited nesting in subgroups
+    REPO_URL_PROJECT_COMPONENTS = True
+
     def __init__(self, repo, hostname):
         super(GitLabRepoSession, self).__init__(repo, hostname)
         self.pa_token = os.getenv("GITLAB_PA_TOKEN")
@@ -28,12 +31,15 @@ class GitLabRepoSession(ProjectHolder):
             log.info("Using Personal Access token.")
             self.headers.update({"Private-Token": self.pa_token})
         self.api_base = f"https://{self.hostname}/api/v4"
-        self.repo_id = self.repo.replace("/", "%2F")
+        self.repo = self.find_gitlab_project_path(repo)
         # lazy loaded dict cache of /releases response keyed by tag, only first page
         self.formal_releases_by_tag = None
 
     def repo_query(self, uri):
-        url = f"{self.api_base}/projects/{self.repo_id}{uri}"
+        """Query the repo API."""
+        repo_enc = self.repo.replace("/", "%2F")
+        url = f"{self.api_base}/projects/{repo_enc}{uri}"
+        log.debug("Querying %s", url)
         return self.get(url)
 
     def ensure_formal_releases_fetched(self):
@@ -58,6 +64,36 @@ class GitLabRepoSession(ProjectHolder):
                 self.formal_releases_by_tag[tag] = r.json()
 
         return self.formal_releases_by_tag.get(tag)
+
+    def find_gitlab_project_path(self, uri):
+        """
+        Finds the GitLab project path from a given URL.
+
+        Args:
+            repo (str): The GitLab URI.
+
+        Returns:
+            str: The path of the project if found, otherwise None.
+        """
+
+        # /librewolf-community/browser/appimage/-/releases could be passed,
+        # remove all starting /-/ as it is not part of the project path
+        uri = uri.split("/-/")[0]
+
+        url_parts = uri.split("/")
+
+        for i in range(len(url_parts), 1, -1):
+            potentional_repo = "/".join(url_parts[:i])
+            potentional_repo_enc = potentional_repo.replace("/", "%2F")
+            api_url = f"{self.api_base}/projects/{potentional_repo_enc}"
+
+            log.debug("Checking if %s is repo", api_url)
+            response = self.get(api_url)
+            if response.status_code == 200:
+                log.debug("Found repo %s", potentional_repo)
+                return potentional_repo
+
+        return None
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
@@ -89,6 +125,7 @@ class GitLabRepoSession(ProjectHolder):
         return ret
 
     def get_assets(self, release, short_urls, assets_filter=None):
+        """Get assets for a given release."""
         urls = []
         assets = release.get("assets", {}).get("links", [])
         arch_matched_assets = []
@@ -129,5 +166,14 @@ class GitLabRepoSession(ProjectHolder):
         )
 
     def repo_license(self, tag):
-        # TODO implement
-        pass
+        """Get repo license."""
+
+        response = self.get(
+            f"https://{self.hostname}/{self.repo}/-/raw/{tag}/LICENSE?ref_type=tags"
+        )
+        if response.status_code == 200:
+            return {
+                "text": response.text
+            }
+        else:
+            return None

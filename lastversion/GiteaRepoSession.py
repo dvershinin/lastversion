@@ -77,7 +77,6 @@ class GiteaRepoSession(ProjectHolder):
                     raise BadProjectError(
                         f"No project found on GitHub for search query: {repo}"
                     )
-                # return cache[repo]['repo']
         except TypeError:
             pass
         log.info("Making query against GitHub API to search repo %s", repo)
