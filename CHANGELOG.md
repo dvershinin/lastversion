@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.4.4] - 2023-12-16
+### Fixed
+* No release could be found for GitLab projects in subgroups #132
+### Added
+* For GitLab, structured output now includes `/LICENSE` file contents, when available
+
 ## [3.4.3] - 2023-12-11
 ### Fixed
 * Added `--formal` switch to allow for formal releases only
