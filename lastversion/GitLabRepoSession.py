@@ -172,8 +172,6 @@ class GitLabRepoSession(ProjectHolder):
             f"https://{self.hostname}/{self.repo}/-/raw/{tag}/LICENSE?ref_type=tags"
         )
         if response.status_code == 200:
-            return {
-                "text": response.text
-            }
+            return {"text": response.text}
         else:
             return None
