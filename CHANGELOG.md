@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.4.5] - 2023-12-16
+### Fixed
+* Some authors tag with build numbers, e.g. `1.2.3-1`, which incorrectly was in the version #134
+
 ## [3.4.4] - 2023-12-16
 ### Fixed
 * No release could be found for GitLab projects in subgroups #132

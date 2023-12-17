@@ -1,3 +1,4 @@
+"""FeedRepoSession class."""
 import datetime
 import logging
 from urllib.parse import urlparse
@@ -10,6 +11,8 @@ log = logging.getLogger(__name__)
 
 
 class FeedRepoSession(ProjectHolder):
+    """Feed repo session."""
+
     KNOWN_REPOS_BY_NAME = {
         "filezilla": {
             "repo": "filezilla",
@@ -58,7 +61,7 @@ class FeedRepoSession(ProjectHolder):
         return result
 
     def __init__(self, repo, hostname):
-        super(FeedRepoSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         self.home_soup = None
         feeds = self.find_feed("https://" + hostname + "/")
         if not feeds:
@@ -72,7 +75,7 @@ class FeedRepoSession(ProjectHolder):
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
-        ret = None
+        ret = {}
         # To leverage `cachecontrol`, we fetch the feed using requests as
         # usual, then feed the feed to feedparser as a raw string e.g.
         # https://hg.nginx.org/nginx/atom-tags
@@ -93,4 +96,4 @@ class FeedRepoSession(ProjectHolder):
                     tag["tag_date"] = datetime.datetime(*tag["published_parsed"][:6])
                 elif "updated_parsed" in tag:
                     tag["tag_date"] = datetime.datetime(*tag["updated_parsed"][:6])
-        return ret
+        return ret if ret else None

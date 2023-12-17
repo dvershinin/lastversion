@@ -1,3 +1,4 @@
+"""GitLab repo session."""
 import logging
 import os
 import platform
@@ -6,13 +7,17 @@ from datetime import timedelta
 
 from dateutil import parser
 
-from .ProjectHolder import ProjectHolder
-from .utils import asset_does_not_belong_to_machine
+from lastversion.ProjectHolder import ProjectHolder
+from lastversion.utils import asset_does_not_belong_to_machine
+
+from lastversion.exceptions import BadProjectError
 
 log = logging.getLogger(__name__)
 
 
 class GitLabRepoSession(ProjectHolder):
+    """GitLab repo session."""
+
     DEFAULT_HOSTNAME = "gitlab.com"
     CAN_BE_SELF_HOSTED = True
     # Domains gitlab.example.com
@@ -22,7 +27,7 @@ class GitLabRepoSession(ProjectHolder):
     REPO_URL_PROJECT_COMPONENTS = True
 
     def __init__(self, repo, hostname):
-        super(GitLabRepoSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         self.pa_token = os.getenv("GITLAB_PA_TOKEN")
         self.hostname = hostname
         if not self.hostname:
@@ -70,7 +75,7 @@ class GitLabRepoSession(ProjectHolder):
         Finds the GitLab project path from a given URL.
 
         Args:
-            repo (str): The GitLab URI.
+            uri (str): The GitLab URI.
 
         Returns:
             str: The path of the project if found, otherwise None.
@@ -92,12 +97,14 @@ class GitLabRepoSession(ProjectHolder):
             if response.status_code == 200:
                 log.debug("Found repo %s", potentional_repo)
                 return potentional_repo
-
-        return None
+        raise BadProjectError(
+            f"Could not find GitLab project for {uri} on {self.hostname}. "
+            "Check your GITLAB_PA_TOKEN and URL for correctness."
+        )
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
-        ret = None
+        ret = {}
 
         # gitlab returns tags by updated in desc order; this is just what we want :)
         r = self.repo_query("/repository/tags")
@@ -122,7 +129,7 @@ class GitLabRepoSession(ProjectHolder):
             formal_release = self.get_formal_release_for_tag(ret["tag_name"])
             if formal_release:
                 ret.update(formal_release)
-        return ret
+        return ret if ret else None
 
     def get_assets(self, release, short_urls, assets_filter=None):
         """Get assets for a given release."""
@@ -173,5 +180,4 @@ class GitLabRepoSession(ProjectHolder):
         )
         if response.status_code == 200:
             return {"text": response.text}
-        else:
-            return None
+        return None

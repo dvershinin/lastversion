@@ -39,7 +39,7 @@ def test_high_micro_is_not_beta():
 
     output = latest(repo)
 
-    assert output == version.parse("2.1.20230410")
+    assert output == version.parse("2.1")
 
 
 def test_semver_preferred():

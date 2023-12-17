@@ -1,3 +1,4 @@
+"""Test GitLab support."""
 import os
 
 from packaging import version
@@ -41,4 +42,4 @@ def test_gitlab_nested_subgroup_project():
 
     release = latest(repo, output_format="dict")
 
-    assert release["version"] == version.parse("120.0.1")
+    assert release["version"] == version.parse("120.0")

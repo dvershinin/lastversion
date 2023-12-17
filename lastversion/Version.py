@@ -44,6 +44,7 @@ class Version(PackagingVersion):
     }
 
     def fix_letter_post_release(self, match):
+        """Fix letter post release"""
         self.fixed_letter_post_release = True
         return match.group(1) + ".post" + str(ord(match.group(2)))
 
@@ -126,6 +127,14 @@ class Version(PackagingVersion):
         # ones in the tail)
         parts_n[0] = re.sub("^[^0-9]+", "", parts_n[0], 1)
 
+        # Remove empty elements
+        parts_n = [item for item in parts_n if item != ""]
+
+        # If more than 1 element and second element are a number, use only first
+        # e.g. 1.2.3-4 -> 1.2.3
+        if len(parts_n) > 1 and "." in parts_n[0] and parts_n[1].isdigit():
+            parts_n = parts_n[:1]
+
         # go back to full string parse out
         version = ".".join(parts_n)
         return version
@@ -158,7 +167,7 @@ class Version(PackagingVersion):
                 continue
             version.append(p)
         version = ".".join(version)
-        super(Version, self).__init__(version)
+        super().__init__(version)
 
     @property
     def epoch(self):
