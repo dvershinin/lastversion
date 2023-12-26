@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.4.6] - 2023-12-26
+### Fixed
+* Looking at more tags in GitLab API to fix #135
+
 ## [3.4.5] - 2023-12-16
 ### Fixed
 * Some authors tag with build numbers, e.g. `1.2.3-1`, which incorrectly was in the version #134

@@ -40,12 +40,12 @@ class GitLabRepoSession(ProjectHolder):
         # lazy loaded dict cache of /releases response keyed by tag, only first page
         self.formal_releases_by_tag = None
 
-    def repo_query(self, uri):
+    def repo_query(self, uri, params=None):
         """Query the repo API."""
         repo_enc = self.repo.replace("/", "%2F")
         url = f"{self.api_base}/projects/{repo_enc}{uri}"
         log.debug("Querying %s", url)
-        return self.get(url)
+        return self.get(url, params=params)
 
     def ensure_formal_releases_fetched(self):
         """
@@ -107,7 +107,7 @@ class GitLabRepoSession(ProjectHolder):
         ret = {}
 
         # gitlab returns tags by updated in desc order; this is just what we want :)
-        r = self.repo_query("/repository/tags")
+        r = self.repo_query("/repository/tags", params={"per_page": 100})
         if r.status_code == 200:
             for t in r.json():
                 tag = t["name"]
