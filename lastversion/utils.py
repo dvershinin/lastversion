@@ -48,6 +48,7 @@ os_extensions = {
     "posix": (".tgz", ".tar.gz"),
 }
 
+# Extensions exclusive to specific distros as per `distro.id()`
 extension_distros = {
     "deb": ["ubuntu", "debian"],
     "rpm": ["rhel", "centos", "fedora", "amazon", "cloudlinux"],
@@ -110,9 +111,9 @@ def is_asset_name_compatible_with_platform(asset_name):
 def is_not_compatible_to_distro(asset_ext):
     """
     Check if the file extension is not compatible with the current distro.
-    The function supports only Linux distros.
+    The function supports only Linux and OSX distros.
     """
-    if not sys.platform.startswith("linux"):
+    if not sys.platform.startswith("linux") and "darwin" != sys.platform:
         return False
     # Weeding out non-matching Linux distros
     if asset_ext != "AppImage":
