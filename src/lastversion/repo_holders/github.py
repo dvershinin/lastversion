@@ -12,8 +12,8 @@ from datetime import timedelta
 import feedparser
 from dateutil import parser
 
-from .ProjectHolder import ProjectHolder
-from .exceptions import ApiCredentialsError, BadProjectError
+from lastversion.repo_holders.base import BaseProjectHolder
+from lastversion.exceptions import ApiCredentialsError, BadProjectError
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def asset_matches(asset, search, regex_matching):
     return False
 
 
-class GitHubRepoSession(ProjectHolder):
+class GitHubRepoSession(BaseProjectHolder):
     """A class to represent a GitHub project holder."""
 
     DEFAULT_HOSTNAME = "github.com"

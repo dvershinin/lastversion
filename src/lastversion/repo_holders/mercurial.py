@@ -2,10 +2,10 @@ import datetime
 
 import feedparser
 
-from .ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 
 
-class MercurialRepoSession(ProjectHolder):
+class MercurialRepoSession(BaseProjectHolder):
     CAN_BE_SELF_HOSTED = True
     REPO_URL_PROJECT_COMPONENTS = 1
     KNOWN_REPO_URLS = {

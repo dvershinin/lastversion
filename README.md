@@ -211,9 +211,9 @@ The `--format` will affect what kind of information from the last release and in
 
 An asset is a downloadable file that typically represents an executable, or otherwise 
 "ready to launch" project. It's what you see filed under formal releases, and is usually a compiled 
-(for specific platform), program.
+(for a specific platform), program.
 
-Source files, are either tarballs or zipballs of sources for the source code of release. 
+Source files are either tarballs or zipballs of sources for the source code of release. 
 
 You can display either assets or source URLs of the latest release, by passing the corresponding
  `--format flag`, e.g. `--format source`
@@ -297,14 +297,14 @@ something else:
 wget $(lastversion --assets mautic/mautic)
 ```
 
-This will download all assets of the newest stable Mautic, which are 2 zip files.
+This will download all assets of the newest stable Mautic, which are two zip files.
 
 How this works: `lastversion` outputs all asset URLs, each on a new line, and `wget` is smart 
 enough to download each URL. Magic :)
 
 For releases that have no assets added, it will download the source archive.  
 
-To always download source, use `--source` instead:
+To always download the source, use `--source` instead:
 
 ```bash
 wget $(lastversion --source mautic/mautic)  
@@ -393,16 +393,16 @@ An easy compromise that `lastversion` does about this, is hard coding well-known
 Wikipedia behind the scenes:
 
 ```bash 
-lastversion rocky #> 8.4
-lastversion windows #> 10.0.19043.1081
-lastversion ios #> 14.6
+lastversion rocky  #> 8.4 
+lastversion windows  #> 10.0.19043.1081
+lastversion ios  #> 14.6
 ```
 
-You can supply a fully-qualified URL to a Wikipedia page for an OS/software project to get version
+You can supply a fully qualified URL to a Wikipedia page for an OS/software project to get version
 from there, e.g.:
 
 ```bash
-lastversion https://en.wikipedia.org/wiki/Rocky_Linux #> 8.4
+lastversion https://en.wikipedia.org/wiki/Rocky_Linux  #> 8.4
 ```
 
 ### Special use case: NGINX stable vs mainline branch version
@@ -459,7 +459,7 @@ If the Mailspring GitHub repo posts a release with newer `.rpm`, then it will be
   
 You'll even get an email alert after update (standard cron feature).
 
-Needless to say, more often than not such RPM packages have no idea about all potentially missing
+Needless to say, more often than not, such RPM packages have no idea about all potentially missing
 dependencies. Thus, only use `lastversion install ...` if the software is missing from the base
 `yum` repositories.
 
@@ -557,9 +557,9 @@ Automatic builds become easy with:
 
 ```bash
 CURRENTLY_BUILT_VER=1.2.3 # stored somewhere, e.g. spec file in my case
-LASTVER=$(lastversion repo/owner -gt ${CURRENTLY_BUILT_VER})
+LAST_VER=$(lastversion repo/owner -gt ${CURRENTLY_BUILT_VER})
 if [[ $? -eq 0 ]]; then
-  # LASTVER is newer, update and trigger build
+  # LAST_VER is newer, update and trigger build
   # ....
 fi
 ```
@@ -567,7 +567,7 @@ fi
 Here, the `-gt` is actually a switch passed to `lastversion`, which acts in a similar fashion to
  `-gt` comparison in bash.
 
-There is more to it, if you want to make this reliable.
+There is more to it if you want to make this reliable.
 See my ranting on 
 [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
 

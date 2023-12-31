@@ -19,19 +19,18 @@ import shlex
 import sys
 from os.path import expanduser
 from pathlib import Path
-from urllib.parse import urlparse
 
 import yaml
 from packaging.version import InvalidVersion
 
-from .TestProjectHolder import TestProjectHolder
-from .GitHubRepoSession import TOKEN_PRO_TIP
-from .HolderFactory import HolderFactory
-from .Version import Version
-from .__about__ import __self__
-from .argparse_version import VersionAction
-from .spdx_id_to_rpmspec import rpmspec_licenses
-from .utils import (
+from lastversion.repo_holders.test import TestProjectHolder
+from lastversion.repo_holders.github import TOKEN_PRO_TIP
+from lastversion.holder_factory import HolderFactory
+from lastversion.version import Version
+from lastversion.__about__ import __self__
+from lastversion.argparse_version import VersionAction
+from lastversion.spdx_id_to_rpmspec import rpmspec_licenses
+from lastversion.utils import (
     download_file,
     extract_file,
     rpm_installed_version,
@@ -140,7 +139,6 @@ def get_repo_data_from_spec(rpmspec_filename):
 
 def get_repo_data_from_yml(repo):
     """Get repo data from YAML file."""
-    repo_data = {}
     with open(repo) as fpi:
         repo_data = yaml.safe_load(fpi)
         if "repo" in repo_data:
@@ -190,6 +188,7 @@ def latest(
                                          Pass `True` for any asset
         exclude (str): Only consider releases NOT containing this text/regular expression.
         even (bool): Consider as stable only releases with even minor component, e.g. 1.2.3
+        formal (bool): Consider as stable only releases with formal tags set up in Web UI
 
     Examples:
         Find the latest version of Mautic, it is OK to consider betas.
@@ -738,6 +737,7 @@ def main(argv=None):
         args.repo = __self__
 
     # "expand" repo:1.2 as repo --branch 1.2
+    # noinspection HttpUrlsUsage
     if ":" in args.repo and not (
         args.repo.startswith(("https://", "http://")) and args.repo.count(":") == 1
     ):

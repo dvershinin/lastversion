@@ -3,10 +3,10 @@ from urllib.parse import urlunparse, urlparse
 
 import feedparser
 
-from .ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 
 
-class SourceForgeRepoSession(ProjectHolder):
+class SourceForgeRepoSession(BaseProjectHolder):
     """SourceForce project holder."""
 
     REPO_URL_PROJECT_COMPONENTS = 1

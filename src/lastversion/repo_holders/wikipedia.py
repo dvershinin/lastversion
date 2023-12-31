@@ -5,7 +5,7 @@ import logging
 from bs4 import BeautifulSoup
 from dateutil import parser
 
-from .ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def remove_words(title):
     return " ".join(parts_n)
 
 
-class WikipediaRepoSession(ProjectHolder):
+class WikipediaRepoSession(BaseProjectHolder):
     """Wikipedia repo session."""
 
     KNOWN_REPOS_BY_NAME = {

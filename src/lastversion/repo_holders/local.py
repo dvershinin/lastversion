@@ -3,12 +3,12 @@
 # to /usr/local/share/builder/nginx-stable.ver
 import logging
 
-from .ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
 
-class LocalVersionSession(ProjectHolder):
+class LocalVersionSession(BaseProjectHolder):
     DEFAULT_HOSTNAME = None
 
     def __init__(self, repo, hostname):

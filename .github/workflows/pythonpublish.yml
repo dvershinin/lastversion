@@ -6,6 +6,7 @@ on:
 
 jobs:
   deploy:
+    needs: pythonpackage
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3

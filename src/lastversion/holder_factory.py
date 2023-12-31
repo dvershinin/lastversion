@@ -1,20 +1,20 @@
 import logging
 from urllib.parse import urlparse
 from collections import OrderedDict
-from .BitBucketRepoSession import BitBucketRepoSession
-from .FeedRepoSession import FeedRepoSession
-from .GitHubRepoSession import GitHubRepoSession
-from .GitLabRepoSession import GitLabRepoSession
-from .GiteaRepoSession import GiteaRepoSession
-from .HelmChartRepoSession import HelmChartRepoSession
-from .LocalVersionSession import LocalVersionSession
-from .MercurialRepoSession import MercurialRepoSession
-from .PypiRepoSession import PypiRepoSession
-from .SourceForgeRepoSession import SourceForgeRepoSession
-from .SystemRepoSession import SystemRepoSession
-from .WikipediaRepoSession import WikipediaRepoSession
-from .WordPressPluginRepoSession import WordPressPluginRepoSession
-from .exceptions import BadProjectError
+from lastversion.repo_holders.bibucket import BitBucketRepoSession
+from lastversion.repo_holders.feed import FeedRepoSession
+from lastversion.repo_holders.github import GitHubRepoSession
+from lastversion.repo_holders.gitlab import GitLabRepoSession
+from lastversion.repo_holders.gitea import GiteaRepoSession
+from lastversion.repo_holders.helmchat import HelmChartRepoSession
+from lastversion.repo_holders.local import LocalVersionSession
+from lastversion.repo_holders.mercurial import MercurialRepoSession
+from lastversion.repo_holders.pypi import PypiRepoSession
+from lastversion.repo_holders.sourceforge import SourceForgeRepoSession
+from lastversion.repo_holders.system import SystemRepoSession
+from lastversion.repo_holders.wikipedia import WikipediaRepoSession
+from lastversion.repo_holders.wordpress import WordPressPluginRepoSession
+from lastversion.exceptions import BadProjectError
 
 log = logging.getLogger(__name__)
 

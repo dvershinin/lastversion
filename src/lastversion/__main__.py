@@ -1,4 +1,4 @@
 """Used to run the package as a script with `python -m lastversion`."""
-from . import lastversion
+from lastversion import lastversion
 
 lastversion.main()

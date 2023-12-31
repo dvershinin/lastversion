@@ -2,12 +2,12 @@ import logging
 
 import yaml
 
-from .ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
 
-class HelmChartRepoSession(ProjectHolder):
+class HelmChartRepoSession(BaseProjectHolder):
     # Any URI identifies a project
     REPO_IS_URI = True
 

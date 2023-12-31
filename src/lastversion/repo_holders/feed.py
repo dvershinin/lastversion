@@ -5,12 +5,12 @@ from urllib.parse import urlparse
 
 import feedparser
 
-from .ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
 
-class FeedRepoSession(ProjectHolder):
+class FeedRepoSession(BaseProjectHolder):
     """Feed repo session."""
 
     KNOWN_REPOS_BY_NAME = {

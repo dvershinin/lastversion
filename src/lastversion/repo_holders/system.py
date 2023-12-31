@@ -1,12 +1,12 @@
 import datetime
 import logging
 
-from .ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
 
-class SystemRepoSession(ProjectHolder):
+class SystemRepoSession(BaseProjectHolder):
     """Version holder based on system package repositories."""
 
     # noinspection PyUnusedLocal

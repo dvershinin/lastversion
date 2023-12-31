@@ -45,12 +45,17 @@ tests_requires = [
     "pytest-cov",
 ]
 
-docs_requires = ["mkdocs==1.3.1", "mkdocs-material", "mkdocstrings", "markdown-include"]
+docs_requires = [
+    "mkdocs==1.5.3",
+    "mkdocs-material==9.5.3",
+    "mkdocstrings[python]",
+    "markdown-include"
+]
 
 with io.open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-base_dir = os.path.dirname(__file__)
+base_dir = os.path.join(os.path.dirname(__file__), "src")
 
 with open(os.path.join(base_dir, "lastversion", "__about__.py"), "r") as f:
     version = _version_re.search(f.read()).group(1)
@@ -64,7 +69,8 @@ setup(
     description="A CLI tool to find the latest stable version of an arbitrary project",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(exclude=["tests", "docs"]),
+    package_dir={'': 'src'},
+    packages=find_packages(where='src'),
     zip_safe=False,
     license="BSD",
     install_requires=install_requires,
@@ -81,7 +87,19 @@ setup(
         "Intended Audience :: System Administrators",
         "Operating System :: OS Independent",
         "Topic :: Software Development",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: Software Development :: Version Control",
         "Topic :: Utilities",
+        "License :: OSI Approved :: BSD License",
+        "Environment :: Console",
+        "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
+    python_requires='>=3.6',
 )

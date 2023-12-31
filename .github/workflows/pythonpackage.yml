@@ -9,7 +9,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12]
 
     steps:
     - uses: actions/checkout@v3
@@ -41,9 +41,18 @@ jobs:
 #        limit-access-to-users: dvershinin
     - name: Test with pytest
       run: |
-        pytest -v -n auto --cov=$REPO_NAME --cov-report=xml
+        pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-${{ matrix.python-version }}.xml
       env:
         LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
+
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: junit/test-results-${{ matrix.python-version }}.xml
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
+
     - name: Upload coverage to Codacy
       run: |
         bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml

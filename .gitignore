@@ -1,7 +1,7 @@
 /.idea
 /dist
 /venv*
-/*.egg-info
+*.egg-info
 /.pytest_cache
 *.pyc
 /site/

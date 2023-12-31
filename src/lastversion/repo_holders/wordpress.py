@@ -1,13 +1,14 @@
 """Provides class to represent a WordPress plugin project holder."""
 import logging
 
-from .ProjectHolder import ProjectHolder
-from .exceptions import BadProjectError
+from lastversion.repo_holders.base import BaseProjectHolder
+from lastversion.version import Version
+
 
 log = logging.getLogger(__name__)
 
 
-class WordPressPluginRepoSession(ProjectHolder):
+class WordPressPluginRepoSession(BaseProjectHolder):
     """A class to represent a WordPress plugin project holder."""
 
     DEFAULT_HOSTNAME = "wordpress.org"
@@ -46,7 +47,6 @@ class WordPressPluginRepoSession(ProjectHolder):
         ret = {}
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version
-        from .Version import Version
 
         if not major:
             latest_ver = self.project["version"]

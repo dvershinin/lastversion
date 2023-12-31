@@ -5,8 +5,9 @@ from tempfile import TemporaryDirectory
 from packaging import version
 
 from lastversion import main
+from lastversion.version import Version
 from lastversion.lastversion import latest
-from .helpers import captured_exit_code
+from tests.helpers import captured_exit_code
 
 
 def test_ndk():

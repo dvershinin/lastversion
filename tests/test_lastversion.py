@@ -5,9 +5,8 @@ import subprocess
 import pytest
 from packaging import version
 
-from lastversion.ProjectHolder import ProjectHolder
-from lastversion.TestProjectHolder import TestProjectHolder
-from lastversion.Version import Version
+from lastversion.repo_holders.test import TestProjectHolder
+from lastversion.version import Version
 from lastversion.lastversion import latest
 
 from lastversion.exceptions import BadProjectError

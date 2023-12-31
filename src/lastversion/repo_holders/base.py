@@ -11,8 +11,8 @@ from cachecontrol import CacheControlAdapter
 from cachecontrol.caches.file_cache import FileCache
 from packaging.version import InvalidVersion
 
-from .Version import Version
-from .__about__ import __version__
+from lastversion.version import Version
+from lastversion.__about__ import __version__
 
 # this class basically corresponds to something (often a website) which holds
 # projects (usually a bunch). often this is a github-like website, so we subclass session
@@ -20,7 +20,7 @@ from .__about__ import __version__
 # information for a project based on its URL or name (see LocalVersionSession)
 # it is instantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
-from .utils import asset_does_not_belong_to_machine, ensure_directory_exists
+from lastversion.utils import asset_does_not_belong_to_machine, ensure_directory_exists
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def matches_filter(filter_s, positive, version_s):
     return positive == bool(filter_s in version_s)
 
 
-class ProjectHolder(requests.Session):
+class BaseProjectHolder(requests.Session):
     """
     Generic project holder class abstracts a web-accessible project storage.
     E.g. project on GitHub, project on Gitlab, etc.
@@ -94,7 +94,7 @@ class ProjectHolder(requests.Session):
         return None
 
     def __init__(self, name=None, hostname=None):
-        super(ProjectHolder, self).__init__()
+        super().__init__()
 
         app_name = __name__.split(".")[0]
 
@@ -106,7 +106,7 @@ class ProjectHolder(requests.Session):
         self.mount("http://", cache_adapter)
         self.mount("https://", cache_adapter)
 
-        self.names_cache_filename = "{}/repos.json".format(self.cache_dir)
+        self.names_cache_filename = f"{self.cache_dir}/repos.json"
 
         self.headers.update({"User-Agent": f"{app_name}/{__version__}"})
         log.info("Created instance of %s", type(self).__name__)
@@ -130,7 +130,7 @@ class ProjectHolder(requests.Session):
         if not os.path.exists(self.names_cache_filename):
             return {}
         try:
-            with open(self.names_cache_filename, "r") as reader:
+            with open(self.names_cache_filename, "r", encoding="utf-8") as reader:
                 cache = json.load(reader)
             return cache
         except (IOError, ValueError) as e:
@@ -141,7 +141,7 @@ class ProjectHolder(requests.Session):
         """Update name cache file with new data."""
         try:
             ensure_directory_exists(self.cache_dir)
-            with open(self.names_cache_filename, "w") as writer:
+            with open(self.names_cache_filename, "w", encoding="utf-8") as writer:
                 json.dump(cache_data, writer)
         except (IOError, ValueError) as e:
             log.warning("Error writing to cache file: %s", e)
@@ -403,6 +403,7 @@ class ProjectHolder(requests.Session):
         )
 
     def get_assets(self, release, short_urls, assets_filter=None):
+        """Get assets for a given release."""
         urls = []
         assets = release.get("assets", [])
         arch_matched_assets = []
@@ -433,6 +434,7 @@ class ProjectHolder(requests.Session):
         return urls
 
     def get_canonical_link(self):
+        """Get canonical link for a project."""
         if self.feed_url:
             return self.feed_url
         return f"https://{self.hostname}/{self.repo}"

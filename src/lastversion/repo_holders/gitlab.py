@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from dateutil import parser
 
-from lastversion.ProjectHolder import ProjectHolder
+from lastversion.repo_holders.base import BaseProjectHolder
 from lastversion.utils import asset_does_not_belong_to_machine
 
 from lastversion.exceptions import BadProjectError
@@ -15,7 +15,7 @@ from lastversion.exceptions import BadProjectError
 log = logging.getLogger(__name__)
 
 
-class GitLabRepoSession(ProjectHolder):
+class GitLabRepoSession(BaseProjectHolder):
     """GitLab repo session."""
 
     DEFAULT_HOSTNAME = "gitlab.com"

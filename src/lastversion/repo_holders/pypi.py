@@ -2,13 +2,13 @@ import logging
 
 from dateutil import parser
 
-from .ProjectHolder import ProjectHolder
-from .exceptions import BadProjectError
+from lastversion.repo_holders.base import BaseProjectHolder
+from lastversion.version import Version
 
 log = logging.getLogger(__name__)
 
 
-class PypiRepoSession(ProjectHolder):
+class PypiRepoSession(BaseProjectHolder):
     """A class to represent a Pypi project holder."""
 
     DEFAULT_HOSTNAME = "pypi.org"
@@ -51,7 +51,6 @@ class PypiRepoSession(ProjectHolder):
         ret = self.project
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version
-        from .Version import Version
 
         if self.project is None:
             print("Project is not listed on PyPI")
