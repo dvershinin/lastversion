@@ -38,7 +38,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 content_disposition_regex = re.compile(
-    r"filename(?P<priority>\*)?=((?P<encoding>[\S-]+)'')?(?P<filename>[^;]*)"
+    r"filename(?P<priority>\*)?=((?P<encoding>\S+)'')?(?P<filename>[^;]*)"
 )
 
 # matches os.name to known extensions that are meant *mostly* to run on it,
@@ -113,8 +113,6 @@ def is_not_compatible_to_distro(asset_ext):
     Check if the file extension is not compatible with the current distro.
     The function supports only Linux and OSX distros.
     """
-    if not sys.platform.startswith("linux") and "darwin" != sys.platform:
-        return False
     # Weeding out non-matching Linux distros
     if asset_ext != "AppImage":
         for ext, ext_distros in extension_distros.items():
