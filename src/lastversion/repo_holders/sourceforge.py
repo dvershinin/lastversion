@@ -1,7 +1,4 @@
-import datetime
 from urllib.parse import urlunparse, urlparse
-
-import feedparser
 
 from lastversion.repo_holders.base import BaseProjectHolder
 
@@ -16,7 +13,7 @@ class SourceForgeRepoSession(BaseProjectHolder):
     REPO_URL_PROJECT_OFFSET = 1
 
     def __init__(self, repo, hostname):
-        super(SourceForgeRepoSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         self.hostname = hostname
 
     @staticmethod
@@ -43,28 +40,15 @@ class SourceForgeRepoSession(BaseProjectHolder):
         return None
 
     def get_latest(self, pre_ok=False, major=None):
-        """Get the latest release."""
-        ret = None
-        # to leverage cachecontrol, we fetch the feed using requests as usual
-        # then feed the feed to feedparser as a raw string
-        # e.g. https://sourceforge.net/projects/keepass/rss?path=/
-        # TODO this could be better. Now it is actually checking versions in topmost files
-        r = self.get(
-            "https://{}/projects/{}/rss?path=/".format(self.hostname, self.repo)
+        """
+        Get the latest release.
+        E.g. https://sourceforge.net/projects/keepass/rss?path=/
+        """
+        return self.find_release_in_feed(
+            f"https://{self.hostname}/projects/{self.repo}/rss?path=/",
+            pre_ok,
+            major
         )
-        feed = feedparser.parse(r.text)
-        for tag in feed.entries:
-            tag_name = tag["title"]
-            version = self.sanitize_version(tag_name, pre_ok, major)
-            if not version:
-                continue
-            if not ret or version > ret["version"]:
-                ret = tag
-                tag["tag_name"] = tag["title"]
-                tag["version"] = version
-                # converting from struct
-                tag["tag_date"] = datetime.datetime(*tag["published_parsed"][:6])
-        return ret
 
     def release_download_url(self, release, shorter=False):
         """Get download URL for a release."""

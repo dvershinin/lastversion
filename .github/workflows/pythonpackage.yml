@@ -1,6 +1,15 @@
 name: Python package
 
-on: [push, pull_request]
+on:
+  # The following config trigger the workflow upon commits but not tags creation
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  pull_request:
+  # Ensure this workflow's jobs can be triggered from other workflows, e.g. publish
+  workflow_call:
 
 jobs:
   build:

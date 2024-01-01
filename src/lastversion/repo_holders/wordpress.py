@@ -31,7 +31,7 @@ class WordPressPluginRepoSession(BaseProjectHolder):
         return self.project
 
     def __init__(self, repo, hostname=None):
-        super(WordPressPluginRepoSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         if hostname:
             self.hostname = hostname
         else:

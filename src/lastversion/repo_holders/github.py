@@ -142,7 +142,7 @@ class GitHubRepoSession(BaseProjectHolder):
         return full_name
 
     def __init__(self, repo, hostname=DEFAULT_HOSTNAME):
-        super(GitHubRepoSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         # dict holding repo/owner to feed contents of releases' atom
         self.feed_contents = {}
         # lazy loaded dict cache of /releases response keyed by tag, only first page
@@ -178,7 +178,7 @@ class GitHubRepoSession(BaseProjectHolder):
 
     def get(self, url, **kwargs):
         """Send GET request and account for GitHub rate limits and such."""
-        r = super(GitHubRepoSession, self).get(url, **kwargs)
+        r = super().get(url, **kwargs)
         log.info("Got HTTP status code %s from %s", r.status_code, url)
         if r.status_code == 401:
             if self.api_token:

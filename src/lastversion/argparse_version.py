@@ -23,7 +23,7 @@ class VersionAction(Action):
         default=SUPPRESS,
         help="show program's version number and exit",
     ):
-        super(VersionAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             default=default,

@@ -20,7 +20,7 @@ class BitBucketRepoSession(BaseProjectHolder):
     KNOWN_REPOS_BY_NAME = {"monit": KNOWN_REPO_URLS["mmonit.com"]}
 
     def __init__(self, repo, hostname):
-        super(BitBucketRepoSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         self.hostname = hostname
         if not self.hostname:
             self.hostname = self.DEFAULT_HOSTNAME

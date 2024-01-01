@@ -12,7 +12,7 @@ class LocalVersionSession(BaseProjectHolder):
     DEFAULT_HOSTNAME = None
 
     def __init__(self, repo, hostname):
-        super(LocalVersionSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         self.hostname = hostname
 
     def get_latest(self, pre_ok=False, major=None):

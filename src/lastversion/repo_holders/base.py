@@ -5,6 +5,8 @@ import os
 import platform
 import re
 
+import datetime
+import feedparser
 import requests
 from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
@@ -14,8 +16,8 @@ from packaging.version import InvalidVersion
 from lastversion.version import Version
 from lastversion.__about__ import __version__
 
-# this class basically corresponds to something (often a website) which holds
-# projects (usually a bunch). often this is a github-like website, so we subclass session
+# This class basically corresponds to something (often a website) which holds
+# projects (usually a bunch). Often this is a github-like website, so we subclass session
 # but this also maybe something special, which either way can be used as a source of version
 # information for a project based on its URL or name (see LocalVersionSession)
 # it is instantiated with a particular project in mind/set, but also has some methods for
@@ -29,7 +31,7 @@ def matches_filter(filter_s, positive, version_s):
     """Check if version string matches a filter string.
 
     Args:
-        filter_s (str):  Filter string.
+        filter_s (str): Filter string.
         positive (bool): Whether filter is positive or negative.
         version_s (str): Version string, often a tag name.
 
@@ -298,7 +300,7 @@ class BaseProjectHolder(requests.Session):
         log.info("Sanitizing string %s as a satisfying version.", version_s)
 
         # for libssh2-x.x.x should remove project name prefix to prevent `2` going into the version
-        prefix = "{}-".format(self.name)
+        prefix = f"{self.name}-"
         if version_s.startswith(prefix):
             version_s = version_s[len(prefix) :]
             log.info(
@@ -438,3 +440,25 @@ class BaseProjectHolder(requests.Session):
         if self.feed_url:
             return self.feed_url
         return f"https://{self.hostname}/{self.repo}"
+
+    def find_release_in_feed(self, url, pre_ok=False, major=None):
+        """
+        Find release in feed.
+        To leverage cachecontrol, we fetch the feed using requests as usual,
+        then supply its text to feedparser as a raw string
+        """
+        ret = {}
+        r = self.get(url)
+        feed = feedparser.parse(r.text)
+        for tag in feed.entries:
+            tag_name = tag["title"]
+            version = self.sanitize_version(tag_name, pre_ok, major)
+            if not version:
+                continue
+            if not ret or version > ret["version"]:
+                ret = tag
+                tag["tag_name"] = tag["title"]
+                tag["version"] = version
+                # converting from struct
+                tag["tag_date"] = datetime.datetime(*tag["published_parsed"][:6])
+        return ret if ret else None
