@@ -45,9 +45,7 @@ class SourceForgeRepoSession(BaseProjectHolder):
         E.g. https://sourceforge.net/projects/keepass/rss?path=/
         """
         return self.find_release_in_feed(
-            f"https://{self.hostname}/projects/{self.repo}/rss?path=/",
-            pre_ok,
-            major
+            f"https://{self.hostname}/projects/{self.repo}/rss?path=/", pre_ok, major
         )
 
     def release_download_url(self, release, shorter=False):
