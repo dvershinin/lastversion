@@ -14,6 +14,7 @@ plugins:
   - search
   - mkdocstrings:
       handlers:
+        default_handler: python
         python:
           paths: [src]
           setup_commands:

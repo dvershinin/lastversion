@@ -1,6 +1,6 @@
 # docs/requirements.txt
 mkdocs
 mkdocs-material
-mkdocstrings
+mkdocstrings[python]
 markdown-include
 pymdown-extensions
