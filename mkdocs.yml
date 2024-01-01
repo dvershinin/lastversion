@@ -16,12 +16,9 @@ plugins:
       handlers:
         default_handler: python
         python:
-          paths: [src]
           setup_commands:
             - import sys
             - sys.path.append("docs")
-          selection:
-            new_path_syntax: yes
       watch:
         - lastversion
 nav:
