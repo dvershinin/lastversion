@@ -15,6 +15,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          paths: [src]
           setup_commands:
             - import sys
             - sys.path.append("docs")
