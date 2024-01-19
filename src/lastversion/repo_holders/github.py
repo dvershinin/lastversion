@@ -528,7 +528,7 @@ class GitHubRepoSession(BaseProjectHolder):
 
     def get_release_from_feed(self, pre_ok, major):
         """Get the latest release from the `releases.atom` feed."""
-        ret = None
+        ret = {}
         seen_semver = False
 
         feed_entries = self.get_releases_feed_entries()
@@ -592,7 +592,7 @@ class GitHubRepoSession(BaseProjectHolder):
                     tag.pop("published_parsed", None)
                     ret = tag
                     log.info("Selected version as current selection: %s.", version)
-        return ret
+        return ret if ret else None
 
     def get_latest(self, pre_ok=False, major=None):
         """

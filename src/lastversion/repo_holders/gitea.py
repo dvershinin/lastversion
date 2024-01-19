@@ -127,7 +127,7 @@ class GiteaRepoSession(BaseProjectHolder):
         return False
 
     def __init__(self, repo, hostname):
-        super(GiteaRepoSession, self).__init__(repo, hostname)
+        super().__init__(repo, hostname)
         # dict holding repo/owner to feed contents of releases' atom
         self.feed_contents = {}
         self.rate_limited_count = 0
@@ -161,7 +161,7 @@ class GiteaRepoSession(BaseProjectHolder):
 
     def get(self, url, **kwargs):
         """Send GET request and account for GitHub rate limits and such."""
-        r = super(GiteaRepoSession, self).get(url, **kwargs)
+        r = super().get(url, **kwargs)
         log.info("Got HTTP status code %s from %s", r.status_code, url)
         if r.status_code == 401:
             if self.api_token:
@@ -257,7 +257,8 @@ class GiteaRepoSession(BaseProjectHolder):
     # in order of recency, thus this is very slow
     # in: current release to be returned, output: newer release to be returned
     def find_in_tags(self, pre_ok, major):
-        ret = None
+        """Find the latest release in tags."""
+        ret = {}
         r = self.repo_query("/tags?per_page=100")
         if r.status_code != 200:
             return None
@@ -288,7 +289,7 @@ class GiteaRepoSession(BaseProjectHolder):
                     ret["tag_date"] = d
                     ret["version"] = version
                     ret["type"] = "tag"
-        return ret
+        return ret if ret else None
 
     def get_latest(self, pre_ok=False, major=None):
         """

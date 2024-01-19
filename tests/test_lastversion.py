@@ -1,3 +1,4 @@
+"""Test lastversion."""
 import os
 
 import subprocess
@@ -304,12 +305,12 @@ def test_main_url():
     """Test CLI with full URL at GitHub."""
     repo = "https://github.com/apache/incubator-pagespeed-ngx"
 
-    process = subprocess.Popen(
+    with subprocess.Popen(
         ["lastversion", repo], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    out, err = process.communicate()
+    ) as process:
+        out, err = process.communicate()
 
-    assert version.parse(out.decode("utf-8").strip()) >= version.parse("1.13.35.2")
+        assert version.parse(out.decode("utf-8").strip()) >= version.parse("1.13.35.2")
 
 
 def test_cli_format_with_sem_base():

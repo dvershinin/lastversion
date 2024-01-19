@@ -7,10 +7,11 @@ lastversion
   $ lastversion apache/incubator-pagespeed-ngx
 """
 
-from setuptools import find_packages, setup
 import io
 import os
 import re
+from setuptools import find_packages, setup
+
 
 _version_re = re.compile(r"__version__\s=\s\"(.*)\"")
 
@@ -57,7 +58,7 @@ with io.open("README.md", "r", encoding="utf-8") as fh:
 
 base_dir = os.path.join(os.path.dirname(__file__), "src")
 
-with open(os.path.join(base_dir, "lastversion", "__about__.py"), "r") as f:
+with open(os.path.join(base_dir, "lastversion", "__about__.py"), "r", encoding="utf-8") as f:
     version = _version_re.search(f.read()).group(1)
 
 setup(
@@ -102,4 +103,5 @@ setup(
         "Programming Language :: Python :: 3.12",
     ],
     python_requires='>=3.6',
+    keywords="version, release, latest, stable, pypi, github, gitlab, bitbucket, mercurial, hg, wordpress"
 )

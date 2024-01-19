@@ -1,3 +1,4 @@
+"""Test PyPi repository."""
 import os
 
 from packaging import version

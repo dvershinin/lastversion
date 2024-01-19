@@ -234,11 +234,9 @@ def latest(
         if not release:
             return None
 
-        from_type = "Located the latest release tag {} at: {}".format(
-            release["tag_name"], project.get_canonical_link()
-        )
+        from_type = f"Located the latest release tag {release['tag_name']} at: {project.get_canonical_link()}"
         if "type" in release:
-            from_type = "{} via {} mechanism".format(from_type, release["type"])
+            from_type = f"{from_type} via {release['type']} mechanism"
         log.info(from_type)
 
         version = release["version"]
@@ -357,6 +355,7 @@ def parse_version(tag):
 
 
 def get_rpm_packager():
+    """Get RPM packager name from ~/.rpmmacros"""
     try:
         rpmmacros = expanduser("~") + "/.rpmmacros"
         with open(rpmmacros) as f:
@@ -790,8 +789,8 @@ def main(argv=None):
             # extract the desired print base
             v = v.sem_extract_base(args.sem)
             if args.action == "test":
-                print("Parsed as: {}".format(v))
-                print("Stable: {}".format(not v.is_prerelease))
+                print(f"Parsed as: {v}")
+                print(f"Stable: {not v.is_prerelease}")
             else:
                 print(v)
             return sys.exit(0)

@@ -1,3 +1,4 @@
+"""Mercurial repository holder."""
 from lastversion.repo_holders.base import BaseProjectHolder
 
 

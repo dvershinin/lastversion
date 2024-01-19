@@ -1,3 +1,4 @@
+"""Factory for holders."""
 import logging
 from urllib.parse import urlparse
 from collections import OrderedDict
@@ -20,8 +21,10 @@ log = logging.getLogger(__name__)
 
 
 class HolderFactory:
-    # Holders are order in a way that the ones that can be matched by domain and can't be self-hosted go first
-    # With the last ones being dynamic (feed lookup, etc.)
+    """
+    Holders are order in a way that the ones that can be matched by domain and can't be self-hosted go first
+    With the last ones being dynamic (feed lookup, etc.)
+    """
     HOLDERS = OrderedDict(
         {
             # non self-hosted
@@ -97,6 +100,7 @@ class HolderFactory:
     def try_match_with_holder_class(
         project_hosting_name, project_hosting_class, repo, hostname
     ):
+        """Try to match a holder class with a given repo."""
         # only try if there is hostname
         if not hostname:
             return None

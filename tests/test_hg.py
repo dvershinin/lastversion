@@ -1,3 +1,4 @@
+"""Test Mercurial repositories."""
 import os
 
 from packaging import version

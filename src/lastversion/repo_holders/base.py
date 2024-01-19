@@ -45,7 +45,7 @@ def matches_filter(filter_s, positive, version_s):
         positive = not positive
         filter_s = filter_s[1:]
     if filter_s.startswith("~"):
-        filter_s = re.compile(r"{}".format(filter_s.lstrip("~")))
+        filter_s = re.compile(fr"{filter_s.lstrip('~')}")
         return positive == bool(re.search(filter_s, version_s))
     return positive == bool(filter_s in version_s)
 
@@ -53,20 +53,20 @@ def matches_filter(filter_s, positive, version_s):
 class BaseProjectHolder(requests.Session):
     """
     Generic project holder class abstracts a web-accessible project storage.
-    E.g. project on GitHub, project on Gitlab, etc.
+    E.g., project on GitHub, project on Gitlab, etc.
     A project may not have a name and be identified by a hostname only.
-    In that case the repo property is None.
+    In that case, the repo property is None.
     Either hostname and/or property have to be present
     """
 
     # List of odd repos where last char is part of version not beta level
     LAST_CHAR_FIX_REQUIRED_ON = []
 
-    # web accessible project holders may have single well-known domain usable by everyone
+    # web-accessible project holders may have a single well-known domain usable by everyone
     # in case of GitHub, that is GitHub.com, for Mercurial web gui - here isn't one, etc.
     DEFAULT_HOSTNAME = None
     SUBDOMAIN_INDICATOR = None
-    # E.g. WordPress plugin directory is only one, but Gitea and GitHub can be hosted on arbitrary domains
+    # E.g., WordPress plugin directory is only one, but Gitea and GitHub can be hosted on arbitrary domains
     CAN_BE_SELF_HOSTED = False
     KNOWN_REPO_URLS = {}
     KNOWN_REPOS_BY_NAME = {}
@@ -77,10 +77,10 @@ class BaseProjectHolder(requests.Session):
     # 0 means no project name in URI (identified by hostname), 1 means project name is first component, etc.
     # True means as many as given in URI
     REPO_URL_PROJECT_COMPONENTS = 2
-    # if URI starts with project name, 0. Otherwise, skip through this many URI dirs
+    # If URI starts with project name, 0. Otherwise, skip through this many URI dirs
 
     REPO_URL_PROJECT_OFFSET = 0
-    # When project is identified by whichever URI there is (varying number of components)
+    # When a project is identified by whichever URI there is (varying number of components)
     REPO_IS_URI = False
     RELEASE_URL_FORMAT = None
     SHORT_RELEASE_URL_FORMAT = None
@@ -98,7 +98,7 @@ class BaseProjectHolder(requests.Session):
     def __init__(self, name=None, hostname=None):
         super().__init__()
 
-        app_name = __name__.split(".")[0]
+        app_name = __name__.split(".", maxsplit=1)[0]
 
         self.cache_dir = user_cache_dir(app_name)
         log.info("Using cache directory: %s.", self.cache_dir)
@@ -122,7 +122,7 @@ class BaseProjectHolder(requests.Session):
         # identifies project on a given hostname
         # normalize repo to number of meaningful parameters
         self.repo = self.get_base_repo_from_repo_arg(name)
-        # in some case we do not specify repo, but feed is discovered, no repo is given then
+        # in some case we do not specify repo, but feed is discovered; no repo is given then
         self.feed_url = None
         self.even = False
         self.formal = False
@@ -233,7 +233,7 @@ class BaseProjectHolder(requests.Session):
             repo_components = repo_arg.split("/")
             if repo_arg and len(repo_components) == cls.REPO_URL_PROJECT_COMPONENTS:
                 return repo_arg
-            # if class has "find_repo_by_name_only" method, OK to have only one
+            # if a class has "find_repo_by_name_only" method, OK to have only one
             if len(repo_components) == 1 and hasattr(cls, "find_repo_by_name_only"):
                 return repo_arg
             if len(repo_components) < cls.REPO_URL_PROJECT_COMPONENTS:
@@ -276,6 +276,7 @@ class BaseProjectHolder(requests.Session):
         return False
 
     def matches_major_filter(self, version, major):
+        """Check if version matches major filter."""
         if (
             self.branches
             and major in self.branches
@@ -346,12 +347,12 @@ class BaseProjectHolder(requests.Session):
                     log.info("Failed to parse %s as Version.", version_s)
                     continue
                 if res:
-                    # Satisfy on the first matched version-like string, e.g. 5.2.6-3.12
+                    # Satisfy on the first matched version-like string, e.g., 5.2.6-3.12
                     break
             if not matches:
                 log.info("Did not find anything that looks like a version in the tag")
                 # As the last resort, let's try to convert underscores to dots, while stripping out
-                # any "alphanumeric_". many hg repos do this, e.g. PROJECT_1_2_3
+                # any "alphanumeric_". Many hg repos do this, e.g. PROJECT_1_2_3
                 parts = version_s.split("_")
                 if len(parts) >= 2 and parts[0].isalpha():
                     # gets list except first item, joins by dot
@@ -436,7 +437,7 @@ class BaseProjectHolder(requests.Session):
         return urls
 
     def get_canonical_link(self):
-        """Get canonical link for a project."""
+        """Get the canonical link for a project."""
         if self.feed_url:
             return self.feed_url
         return f"https://{self.hostname}/{self.repo}"
