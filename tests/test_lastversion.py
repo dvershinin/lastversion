@@ -352,7 +352,7 @@ def test_main_assets():
     )
     out, err = process.communicate()
 
-    assert "4.4.10-update.zip" in str(out)
+    assert "4.4.11-update.zip" in str(out)
 
 
 def test_tag_mess():
