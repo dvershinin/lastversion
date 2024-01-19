@@ -42,7 +42,7 @@ class SystemRepoSession(BaseProjectHolder):
                         "tag_name": pkg.evr,
                         "tag_date": datetime.datetime.fromtimestamp(pkg.buildtime),
                     }
-        return ret if ret else None
+        return ret or None
 
     def yum_get_available_version(self, pre_ok, major):
         """Get the latest release available via `yum`."""
@@ -78,7 +78,7 @@ class SystemRepoSession(BaseProjectHolder):
             version = self.sanitize_version(pkg.vr, pre_ok, major)
             if not ret or ret["version"] < version:
                 ret = {"version": version, "tag_name": pkg.vr}
-        return ret if ret else None
+        return ret or None
 
     def apt_get_available_version(self, pre_ok, major):
         """Get the latest release available via `apt`."""
@@ -100,7 +100,7 @@ class SystemRepoSession(BaseProjectHolder):
                         "tag_name": pkg_ver.version,
                         # 'tag_date': ?
                     }
-        return ret if ret else None
+        return ret or None
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""

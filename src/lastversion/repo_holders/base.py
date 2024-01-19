@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+"""The base project holder class."""
 import json
 import logging
 import os
@@ -462,4 +462,4 @@ class BaseProjectHolder(requests.Session):
                 tag["version"] = version
                 # converting from struct
                 tag["tag_date"] = datetime.datetime(*tag["published_parsed"][:6])
-        return ret if ret else None
+        return ret or None

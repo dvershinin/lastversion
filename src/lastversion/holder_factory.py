@@ -32,7 +32,7 @@ class HolderFactory:
             "sf": SourceForgeRepoSession,
             "wiki": WikipediaRepoSession,
             "helm_chart": HelmChartRepoSession,
-            # self-hosted possible but primary domain exists (or subdomain marker)
+            # self-hosted possible, but primary domain exists (or subdomain marker)
             "github": GitHubRepoSession,
             "gitlab": GitLabRepoSession,
             "bitbucket": BitBucketRepoSession,
@@ -120,10 +120,12 @@ class HolderFactory:
         return None
 
     @staticmethod
-    # go through subclasses in order to find the one that is holding a given project
-    # repo is either complete URL or a name allowing to identify a single project
     def get_instance_for_repo(repo, at=None):
-        """Find the right hosting for this repo."""
+        """
+        Find the right hosting for this repo.
+        Go through subclasses to find the one that is holding a given project.
+        The repo is either a complete URL or a name allowing to identify a single project.
+        """
         hostname = None
         # if repo is a link, get the hostname by parsing as URL
         if repo.startswith(("http:", "https:")):
@@ -138,12 +140,11 @@ class HolderFactory:
 
         holder = None
 
-        # match by default domains and known host first as this allows to skip sniffing tests
+        # match by default domains and known host first as this allows skipping of sniffing tests
         for (
             project_hosting_name,
             project_hosting_class,
         ) in HolderFactory.HOLDERS.items():
-            # TODO now easy multiple default hostnames per holder
             if project_hosting_class.is_matching_hostname(hostname):
                 return project_hosting_class(repo, hostname)
             known_repo = project_hosting_class.is_official_for_repo(repo, hostname)

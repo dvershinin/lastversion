@@ -524,7 +524,7 @@ class GitHubRepoSession(BaseProjectHolder):
         """Enrich release info with data from repo."""
         if release:
             release["install_name"] = self.name
-        return release
+        return release or None
 
     def get_release_from_feed(self, pre_ok, major):
         """Get the latest release from the `releases.atom` feed."""
@@ -592,7 +592,7 @@ class GitHubRepoSession(BaseProjectHolder):
                     tag.pop("published_parsed", None)
                     ret = tag
                     log.info("Selected version as current selection: %s.", version)
-        return ret if ret else None
+        return ret or None
 
     def get_latest(self, pre_ok=False, major=None):
         """
@@ -602,7 +602,7 @@ class GitHubRepoSession(BaseProjectHolder):
         """
         # data of selected tag, always contains ['version', 'tag_name', 'tag_date', 'type'] will
         # be returned
-        ret = None
+        ret = {}
 
         # then always get *all* tags through pagination
 

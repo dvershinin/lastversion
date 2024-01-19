@@ -96,4 +96,4 @@ class FeedRepoSession(BaseProjectHolder):
                     tag["tag_date"] = datetime.datetime(*tag["published_parsed"][:6])
                 elif "updated_parsed" in tag:
                     tag["tag_date"] = datetime.datetime(*tag["updated_parsed"][:6])
-        return ret if ret else None
+        return ret or None

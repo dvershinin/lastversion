@@ -129,7 +129,7 @@ class GitLabRepoSession(BaseProjectHolder):
             formal_release = self.get_formal_release_for_tag(ret["tag_name"])
             if formal_release:
                 ret.update(formal_release)
-        return ret if ret else None
+        return ret or None
 
     def get_assets(self, release, short_urls, assets_filter=None):
         """Get assets for a given release."""

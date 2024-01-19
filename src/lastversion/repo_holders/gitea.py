@@ -289,7 +289,7 @@ class GiteaRepoSession(BaseProjectHolder):
                     ret["tag_date"] = d
                     ret["version"] = version
                     ret["type"] = "tag"
-        return ret if ret else None
+        return ret or None
 
     def get_latest(self, pre_ok=False, major=None):
         """

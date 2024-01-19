@@ -279,7 +279,7 @@ class Version(PackagingVersion):
 
         # Epoch
         if self.epoch != 0:
-            parts.append("{0}!".format(self.epoch))
+            parts.append(f"{self.epoch}!")
 
         # Release segment
         parts.append(".".join(str(x) for x in self.release))
@@ -291,13 +291,13 @@ class Version(PackagingVersion):
         # Post-release
         if self.post is not None:
             if self.fixed_letter_post_release:
-                parts.append("{0}".format(chr(self.post)))
+                parts.append(f"{chr(self.post)}")
             else:
-                parts.append(".post{0}".format(self.post))
+                parts.append(f".post{self.post}")
 
         # Development release
         if self.dev is not None:
-            parts.append(".dev{0}".format(self.dev))
+            parts.append(f".dev{self.dev}")
 
         # Local version segment
         if self.local is not None:
