@@ -16,12 +16,12 @@ class VersionAction(Action):
 
     def __init__(self, **kwargs):
         # Set default values if not provided in kwargs
-        kwargs.setdefault('dest', SUPPRESS)
-        kwargs.setdefault('default', SUPPRESS)
-        kwargs.setdefault('nargs', 0)
-        kwargs.setdefault('help', "show program's version number and exit")
+        kwargs.setdefault("dest", SUPPRESS)
+        kwargs.setdefault("default", SUPPRESS)
+        kwargs.setdefault("nargs", 0)
+        kwargs.setdefault("help", "show program's version number and exit")
         super().__init__(**kwargs)
-        self.version = kwargs.get('version2')
+        self.version = kwargs.get("version2")
 
     def __call__(self, parser, namespace, values, option_string=None):
         version = f"%(prog)s {__version__}"

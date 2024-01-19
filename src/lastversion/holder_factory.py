@@ -25,6 +25,7 @@ class HolderFactory:
     Holders are order in a way that the ones that can be matched by domain and can't be self-hosted go first
     With the last ones being dynamic (feed lookup, etc.)
     """
+
     HOLDERS = OrderedDict(
         {
             # non self-hosted
