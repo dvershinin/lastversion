@@ -6,6 +6,7 @@ from lastversion.repo_holders.base import BaseProjectHolder
 
 class BitBucketRepoSession(BaseProjectHolder):
     """BitBucket repository session."""
+
     DEFAULT_HOSTNAME = "bitbucket.org"
     CAN_BE_SELF_HOSTED = True
     KNOWN_REPO_URLS = {

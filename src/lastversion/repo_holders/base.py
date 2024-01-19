@@ -45,7 +45,7 @@ def matches_filter(filter_s, positive, version_s):
         positive = not positive
         filter_s = filter_s[1:]
     if filter_s.startswith("~"):
-        filter_s = re.compile(fr"{filter_s.lstrip('~')}")
+        filter_s = re.compile(rf"{filter_s.lstrip('~')}")
         return positive == bool(re.search(filter_s, version_s))
     return positive == bool(filter_s in version_s)
 

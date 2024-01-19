@@ -24,4 +24,4 @@ def test_hg_nginx_source_url():
 
     result = latest(repo, "source", major="1.18.0")
 
-    assert result == 'https://nginx.org/download/nginx-1.18.0.tar.gz'
+    assert result == "https://nginx.org/download/nginx-1.18.0.tar.gz"
