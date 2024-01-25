@@ -10,6 +10,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import zipfile
+from pathlib import Path
 from urllib.parse import unquote
 
 import distro
@@ -320,55 +322,26 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def is_within_directory(directory, target):
-    """Check if the target path is within the directory path."""
-    abs_directory = os.path.abspath(directory)
-    abs_target = os.path.abspath(target)
+def check_if_tar_safe(tar_file) -> bool:
+    """CVE-2007-4559"""
+    all_members = tar_file.getmembers()
+    root_dir = Path(all_members[0].path).resolve()
+    for member in all_members:
+        if not Path(member.path).resolve().is_relative_to(root_dir):
+            return False
+    return True
 
-    prefix = os.path.commonprefix([abs_directory, abs_target])
 
-    return prefix == abs_directory
-
-
-def safe_extract(tar, path=".", members=None):
-    """Safe extract .tar.gz to workaround CVE-2007-4559. CVE-2007-4559
-
-    Args:
-        tar ():
-        path ():
-        members ():
-    """
-    for member in tar.getmembers():
-        member_path = os.path.join(path, member.name)
-        if not is_within_directory(path, member_path):
+def extract_tar(buffer, to_dir):
+    """Extract a tar archive to dir."""
+    with tarfile.open(fileobj=buffer, mode="r") as tar_file:
+        if not check_if_tar_safe(tar_file):
             raise TarPathTraversalException("Attempted Path Traversal in Tar File")
-
-    tar.extractall(path, members)
-
-
-def extract_tar(buffer, mode):
-    """Extract a tar archive while stripping the top level dir.
-
-    Args:
-        buffer ():
-        mode ():
-    """
-    smart_members = []
-    with tarfile.open(fileobj=buffer, mode=mode) as tar_file:
-        all_members = tar_file.getmembers()
-        if not all_members:
-            log.critical("No or not an archive")
-        root_dir = all_members[0].path
-        root_dir_with_slash_len = len(root_dir) + 1
-        for member in tar_file.getmembers():
-            if member.path.startswith(root_dir + "/"):
-                member.path = member.path[root_dir_with_slash_len:]
-                smart_members.append(member)
-        safe_extract(tar_file, members=smart_members)
+        tar_file.extractall(to_dir)
 
 
-def extract_file(url):
-    """Extract an archive while stripping the top level dir."""
+def extract_file(url, to_dir="."):
+    """Extract an archive from url to dir, stripping the top level dir by default."""
     if url.endswith(".7z") and not PY7ZR_AVAILABLE:
         log.critical("pip install py7zr to support .7z archives")
         return
@@ -403,15 +376,14 @@ def extract_file(url):
             buffer.seek(0)
             # Process the buffer (e.g., extract its contents)
 
-            mode = "r:gz"
-            if url.endswith(".tar.xz"):
-                mode = "r:xz"
-            elif url.endswith(".7z"):
-                if PY7ZR_AVAILABLE:
-                    with py7zr.SevenZipFile(buffer) as archive:
-                        archive.extractall()
-                return  # Exit the function after extracting
-            extract_tar(buffer, mode)
+            if url.endswith(".7z"):
+                with py7zr.SevenZipFile(buffer) as archive:
+                    archive.extractall(path=to_dir)
+            elif url.endswith(".zip"):
+                with zipfile.ZipFile(buffer) as archive:
+                    archive.extractall(path=to_dir)
+            else:
+                extract_tar(buffer, to_dir=to_dir)
     except KeyboardInterrupt:
         pbar.close()
         log.warning("Cancelled")
