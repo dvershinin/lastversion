@@ -322,10 +322,10 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def check_if_tar_safe(tar_file) -> bool:
+def check_if_tar_safe(tar_file, to_dir) -> bool:
     """CVE-2007-4559"""
     all_members = tar_file.getmembers()
-    root_dir = Path(all_members[0].path).resolve()
+    root_dir = Path(to_dir).resolve()
     for member in all_members:
         if not Path(member.path).resolve().is_relative_to(root_dir):
             return False
@@ -335,7 +335,7 @@ def check_if_tar_safe(tar_file) -> bool:
 def extract_tar(buffer, to_dir):
     """Extract a tar archive to dir."""
     with tarfile.open(fileobj=buffer, mode="r") as tar_file:
-        if not check_if_tar_safe(tar_file):
+        if not check_if_tar_safe(tar_file, to_dir):
             raise TarPathTraversalException("Attempted Path Traversal in Tar File")
         tar_file.extractall(to_dir)
 
