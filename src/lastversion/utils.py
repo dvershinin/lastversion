@@ -17,8 +17,7 @@ from urllib.parse import unquote
 import distro
 import requests
 import tqdm
-
-from .exceptions import TarPathTraversalException
+from lastversion.exceptions import TarPathTraversalException
 
 PY7ZR_AVAILABLE = False
 try:
@@ -322,25 +321,76 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def check_if_tar_safe(tar_file, to_dir) -> bool:
+def check_if_tar_safe(tar_file: tarfile.TarFile, to_dir) -> bool:
     """CVE-2007-4559"""
-    all_members = tar_file.getmembers()
-    root_dir = Path(to_dir).resolve()
+    all_members = tar_file.getnames()
+    root_dir = Path(all_members[0]).parent.resolve()
     for member in all_members:
-        if not Path(member.path).resolve().is_relative_to(root_dir):
+        if not Path(member).resolve().is_relative_to(root_dir):
             return False
     return True
 
 
-def extract_tar(buffer, to_dir):
-    """Extract a tar archive to dir."""
-    with tarfile.open(fileobj=buffer, mode="r") as tar_file:
-        if not check_if_tar_safe(tar_file, to_dir):
-            raise TarPathTraversalException("Attempted Path Traversal in Tar File")
-        tar_file.extractall(to_dir)
+def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
+    """Extract a tar/zip archive to dir.
+    If archive has only one top dir, it will be stripped.
+    """
+
+    def extract_archive(file: zipfile.ZipFile | tarfile.TarFile):
+        def get_contents(x) -> list:
+            return getattr(x, "getmembers", getattr(x, "infolist", None))()
+
+        def getname(x) -> str:
+            return getattr(x, "name", getattr(x, "filename", None))
+
+        def is_dir(x) -> bool:
+            return getattr(x, "isdir", getattr(x, "is_dir", None))()
+
+        contents = get_contents(file)
+        assert contents, "Empty archive"
+        top_dir = Path(getname(contents[0])).resolve()
+        only_one_top_dir = True
+        if not is_dir(contents[0]):
+            only_one_top_dir = False
+        if only_one_top_dir:
+            for item in contents[1:]:
+                if not Path(getname(item)).resolve().parent.is_relative_to(top_dir):
+                    only_one_top_dir = False
+                    break
+        log.info(f"only one top dir: {only_one_top_dir}")
+        if only_one_top_dir:
+            for item in contents[1:]:
+                new_path = str(Path(getname(item)).resolve().relative_to(top_dir))
+                if getattr(item, "name", False):
+                    item.name = new_path
+                elif getattr(item, "filename", False):
+                    item.filename = new_path
+                file.extract(item, to_dir)
+        else:
+            file.extractall(path=to_dir)
+
+    try:
+        with tarfile.open(fileobj=buffer, mode="r") as file:
+            if not check_if_tar_safe(file, to_dir):
+                raise TarPathTraversalException("Attempted Path Traversal in Tar File")
+            extract_archive(file)
+    except tarfile.ReadError:
+        with zipfile.ZipFile(buffer, "r") as file:
+            extract_archive(file)
 
 
-def extract_file(url, to_dir="."):
+def extract_7z(buffer: io.BytesIO, to_dir):
+    """Extract a 7z archive to dir.
+    py7zr maybe hard to strip the top level dir.
+    """
+    if not PY7ZR_AVAILABLE:
+        log.critical("pip install py7zr to support .7z archives")
+        return
+    with py7zr.SevenZipFile(buffer) as file:
+        file.extractall(path=to_dir)
+
+
+def extract_file(url: str, to_dir="."):
     """Extract an archive from url to dir, stripping the top level dir by default."""
     if url.endswith(".7z") and not PY7ZR_AVAILABLE:
         log.critical("pip install py7zr to support .7z archives")
@@ -377,13 +427,9 @@ def extract_file(url, to_dir="."):
             # Process the buffer (e.g., extract its contents)
 
             if url.endswith(".7z"):
-                with py7zr.SevenZipFile(buffer) as archive:
-                    archive.extractall(path=to_dir)
-            elif url.endswith(".zip"):
-                with zipfile.ZipFile(buffer) as archive:
-                    archive.extractall(path=to_dir)
+                extract_7z(buffer, to_dir=to_dir)
             else:
-                extract_tar(buffer, to_dir=to_dir)
+                extract_tar_and_zip(buffer, to_dir=to_dir)
     except KeyboardInterrupt:
         pbar.close()
         log.warning("Cancelled")

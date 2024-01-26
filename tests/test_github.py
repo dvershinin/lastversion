@@ -74,7 +74,8 @@ def test_github_extract_wordpress():
         with TemporaryDirectory() as tmp_dir:
             os.chdir(tmp_dir)
             main(["extract", repo])
-            assert os.path.exists("WordPress-6.3.1")
+            assert os.path.exists("index.php")
+            assert os.path.exists("wp-config-sample.php")
 
 
 def test_github_search_python():
