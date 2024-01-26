@@ -327,7 +327,9 @@ def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
     all_members = tar_file.getnames()
     root_dir = Path(all_members[0]).parent.resolve()
     for member in all_members:
-        if not Path(member).resolve().is_relative_to(root_dir):
+        member_path = Path(member).resolve()
+        # Check if the member path resolves within the root directory
+        if os.path.commonpath([member_path, root_dir]) != str(root_dir):
             return False
     return True
 
@@ -355,7 +357,9 @@ def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
             only_one_top_dir = False
         if only_one_top_dir:
             for item in contents[1:]:
-                if not Path(getname(item)).resolve().parent.is_relative_to(top_dir):
+                item_path = Path(getname(item)).resolve()
+                # Check if the item path resolves within the top directory
+                if os.path.commonpath([item_path, top_dir]) != str(top_dir):
                     only_one_top_dir = False
                     break
         log.info("only one top dir: %s", only_one_top_dir)
