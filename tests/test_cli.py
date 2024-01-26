@@ -1,6 +1,8 @@
 """Test CLI functions."""
+import os
 import subprocess
 import sys
+import tempfile
 
 from packaging import version
 
@@ -92,6 +94,22 @@ def test_cli_gt_stable_vs_rc(capsys):
 
     captured = capsys.readouterr()
     assert "2.41.0" == captured.out.rstrip()
+    assert not exit_code  # Check the exit code is correct
+
+
+def test_unzip_osx_bundle(capsys):
+    """Test that OSX bundles are unzipped and .app is not stripped."""
+    with captured_exit_code() as get_exit_code:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            # Set the temp directory as the current working directory
+            os.chdir(tmpdirname)
+            main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer"])
+            # Assert that MinimalMIDIPlayer.app exists and is a directory
+            assert os.path.isdir("MinimalMIDIPlayer.app")
+            # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
+            assert os.path.isfile("MinimalMIDIPlayer.app/Contents/Info.plist")
+    exit_code = get_exit_code()
+
     assert not exit_code  # Check the exit code is correct
 
 
