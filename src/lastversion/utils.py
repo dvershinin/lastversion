@@ -353,7 +353,8 @@ def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
         assert contents, "Empty archive"
         top_dir = Path(getname(contents[0])).resolve()
         only_one_top_dir = True
-        if not is_dir(contents[0]):
+        # If the directory is .app, it's a macOS app bundle, don't strip it
+        if not is_dir(contents[0]) or top_dir.name.endswith(".app"):
             only_one_top_dir = False
         if only_one_top_dir:
             for item in contents[1:]:
