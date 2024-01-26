@@ -12,6 +12,7 @@ import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import Union
 from urllib.parse import unquote
 
 import distro
@@ -321,7 +322,7 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def check_if_tar_safe(tar_file: tarfile.TarFile, to_dir) -> bool:
+def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
     """CVE-2007-4559"""
     all_members = tar_file.getnames()
     root_dir = Path(all_members[0]).parent.resolve()
@@ -333,10 +334,10 @@ def check_if_tar_safe(tar_file: tarfile.TarFile, to_dir) -> bool:
 
 def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
     """Extract a tar/zip archive to dir.
-    If archive has only one top dir, it will be stripped.
+    If the archive has only one top dir, it will be stripped.
     """
 
-    def extract_archive(file: zipfile.ZipFile | tarfile.TarFile):
+    def extract_archive(archive_file: Union[zipfile.ZipFile, tarfile.TarFile]):
         def get_contents(x) -> list:
             return getattr(x, "getmembers", getattr(x, "infolist", None))()
 
@@ -346,7 +347,7 @@ def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
         def is_dir(x) -> bool:
             return getattr(x, "isdir", getattr(x, "is_dir", None))()
 
-        contents = get_contents(file)
+        contents = get_contents(archive_file)
         assert contents, "Empty archive"
         top_dir = Path(getname(contents[0])).resolve()
         only_one_top_dir = True
@@ -357,7 +358,7 @@ def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
                 if not Path(getname(item)).resolve().parent.is_relative_to(top_dir):
                     only_one_top_dir = False
                     break
-        log.info(f"only one top dir: {only_one_top_dir}")
+        log.info("only one top dir: %s", only_one_top_dir)
         if only_one_top_dir:
             for item in contents[1:]:
                 new_path = str(Path(getname(item)).resolve().relative_to(top_dir))
@@ -365,13 +366,13 @@ def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
                     item.name = new_path
                 elif getattr(item, "filename", False):
                     item.filename = new_path
-                file.extract(item, to_dir)
+                archive_file.extract(item, to_dir)
         else:
-            file.extractall(path=to_dir)
+            archive_file.extractall(path=to_dir)
 
     try:
         with tarfile.open(fileobj=buffer, mode="r") as file:
-            if not check_if_tar_safe(file, to_dir):
+            if not check_if_tar_safe(file):
                 raise TarPathTraversalException("Attempted Path Traversal in Tar File")
             extract_archive(file)
     except tarfile.ReadError:
