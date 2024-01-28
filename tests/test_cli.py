@@ -18,14 +18,14 @@ def test_cli_format_devel():
     Examples:
       * `lastversion test 'blah-1.2.3-devel' # > 1.2.3.dev0`
     """
-    process = subprocess.Popen(
+    with subprocess.Popen(
         ["lastversion", "format", "blah-1.2.3-devel"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
-    out, err = process.communicate()
+    ) as process:
+        out, _ = process.communicate()
 
-    assert version.parse(out.decode("utf-8").strip()) == version.parse("1.2.3.dev0")
+        assert version.parse(out.decode("utf-8").strip()) == version.parse("1.2.3.dev0")
 
 
 def test_cli_format_no_clear():
@@ -35,16 +35,15 @@ def test_cli_format_no_clear():
     Examples:
         * `lastversion test '1.2.x' # > False (no clear version)`
     """
-    process = subprocess.Popen(
+    with subprocess.Popen(
         ["lastversion", "format", "1.2.x"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
+    ) as process:
+        process.communicate()
 
-    process.communicate()
-
-    # exit code should be 1
-    assert process.returncode == 1
+        # exit code should be 1
+        assert process.returncode == 1
 
 
 def test_cli_format_rc1():
@@ -54,14 +53,14 @@ def test_cli_format_rc1():
     Examples:
         * `lastversion test '1.2.3-rc1' # > 1.2.3rc1`
     """
-    process = subprocess.Popen(
+    with subprocess.Popen(
         ["lastversion", "format", "1.2.3-rc1"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
-    out, err = process.communicate()
+    ) as process:
+        out, _ = process.communicate()
 
-    assert version.parse(out.decode("utf-8").strip()) == version.parse("1.2.3-rc1")
+        assert version.parse(out.decode("utf-8").strip()) == version.parse("1.2.3-rc1")
 
 
 def test_cli_format_rc_with_garbage(capsys):
@@ -99,8 +98,8 @@ def test_cli_gt_stable_vs_rc(capsys):
 
 def test_cli_gt_first_arg_is_repo(capsys):
     """First repo is arg having a number."""
-    with (captured_exit_code() as get_exit_code):
-        main(["https://github.com/Pisex/cs2-bans", "-gt",  "2.5.2"])
+    with captured_exit_code() as get_exit_code:
+        main(["https://github.com/Pisex/cs2-bans", "-gt", "2.5.2"])
     exit_code = get_exit_code()
 
     captured = capsys.readouterr()
@@ -108,13 +107,15 @@ def test_cli_gt_first_arg_is_repo(capsys):
     assert not exit_code  # Check the exit code is correct
 
 
-def test_unzip_osx_bundle_strip(capsys):
+def test_unzip_osx_bundle_strip(capsys):  # pylint: disable=unused-argument
     """Test that ZIP files with single top level directory are stripped."""
     with captured_exit_code() as get_exit_code:
         with tempfile.TemporaryDirectory() as tmp_dir_name:
             # Set the temp directory as the current working directory
             os.chdir(tmp_dir_name)
-            main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"])
+            main(
+                ["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"]
+            )
             # Assert that MinimalMIDIPlayer.app exists and is a directory
             assert os.path.isdir("Contents")
             # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
@@ -124,7 +125,7 @@ def test_unzip_osx_bundle_strip(capsys):
     assert not exit_code  # Check the exit code is correct
 
 
-def test_unzip_osx_bundle(capsys):
+def test_unzip_osx_bundle(capsys):  # pylint: disable=unused-argument
     """Test that OSX bundles are unzipped and .app is not stripped."""
     with captured_exit_code() as get_exit_code:
         with tempfile.TemporaryDirectory() as tmp_dir_name:
@@ -146,6 +147,7 @@ def test_cli_get_assets(capsys):
         with captured_exit_code() as get_exit_code:
             main(["--assets", "https://github.com/lastversion-test-repos/OneDriveGUI"])
         exit_code = get_exit_code()
+        assert not exit_code  # Check the exit code is correct
 
         captured = capsys.readouterr()
         assert ".AppImage" in captured.out
