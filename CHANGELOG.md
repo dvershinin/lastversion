@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.0] - 2024-01-29
+### Fixed
+* Improved and added zip support in extract command by @lxl66566
+* The `-gt` CLI did not recognize first argument as repo in some cases
+
 ## [3.4.6] - 2023-12-26
 ### Fixed
 * Looking at more tags in GitLab API to fix #135
