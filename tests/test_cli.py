@@ -99,8 +99,8 @@ def test_cli_gt_stable_vs_rc(capsys):
 
 def test_cli_gt_first_arg_is_repo(capsys):
     """First repo is arg having a number."""
-    with (captured_exit_code() as get_exit_code):
-        main(["https://github.com/Pisex/cs2-bans", "-gt",  "2.5.2"])
+    with captured_exit_code() as get_exit_code:
+        main(["https://github.com/Pisex/cs2-bans", "-gt", "2.5.2"])
     exit_code = get_exit_code()
 
     captured = capsys.readouterr()
@@ -114,7 +114,9 @@ def test_unzip_osx_bundle_strip(capsys):
         with tempfile.TemporaryDirectory() as tmp_dir_name:
             # Set the temp directory as the current working directory
             os.chdir(tmp_dir_name)
-            main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"])
+            main(
+                ["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"]
+            )
             # Assert that MinimalMIDIPlayer.app exists and is a directory
             assert os.path.isdir("Contents")
             # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
