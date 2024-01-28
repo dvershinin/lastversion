@@ -12,12 +12,12 @@ import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Union
 from urllib.parse import unquote
 
 import distro
 import requests
 import tqdm
+
 from lastversion.exceptions import TarPathTraversalException
 
 PY7ZR_AVAILABLE = False
@@ -334,31 +334,57 @@ def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
     return True
 
 
-def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
+def extract_tar(buffer: io.BytesIO, to_dir):
     """Extract a tar/zip archive to dir.
     If the archive has only one top dir, it will be stripped.
     """
 
-    def extract_archive(archive_file: Union[zipfile.ZipFile, tarfile.TarFile]):
-        def get_contents(x) -> list:
-            return getattr(x, "getmembers", getattr(x, "infolist", None))()
+    archive_file: tarfile.TarFile
+    with tarfile.open(fileobj=buffer, mode="r") as archive_file:
+        if not check_if_tar_safe(archive_file):
+            raise TarPathTraversalException("Attempted Path Traversal in Tar File")
 
-        def getname(x) -> str:
-            return getattr(x, "name", getattr(x, "filename", None))
-
-        def is_dir(x) -> bool:
-            return getattr(x, "isdir", getattr(x, "is_dir", None))()
-
-        contents = get_contents(archive_file)
-        assert contents, "Empty archive"
-        top_dir = Path(getname(contents[0])).resolve()
+        contents: list[tarfile.TarInfo] = archive_file.getmembers()
+        assert contents, "Empty TAR archive"
+        top_dir = Path(contents[0].name).resolve()
         only_one_top_dir = True
         # If the directory is .app, it's a macOS app bundle, don't strip it
-        if not is_dir(contents[0]) or top_dir.name.endswith(".app"):
+        if not contents[0].isdir() or top_dir.name.endswith(".app"):
             only_one_top_dir = False
         if only_one_top_dir:
             for item in contents[1:]:
-                item_path = Path(getname(item)).resolve()
+                item_path = Path(item.name).resolve()
+                # Check if the item path resolves within the top directory
+                if os.path.commonpath([item_path, top_dir]) != str(top_dir):
+                    only_one_top_dir = False
+                    break
+
+        log.info("only one top dir: %s", only_one_top_dir)
+        if only_one_top_dir:
+            for item in contents[1:]:
+                item.path = str(Path(item.name).resolve().relative_to(top_dir))
+                archive_file.extract(item, to_dir)
+        else:
+            archive_file.extractall(path=to_dir)
+
+
+def extract_zip(buffer: io.BytesIO, to_dir):
+    """
+    Extract a tar/zip archive to dir.
+    If the archive has only one top dir, it will be stripped.
+    """
+    archive_file: zipfile.ZipFile
+    with zipfile.ZipFile(buffer, "r") as archive_file:
+        contents = archive_file.infolist()
+        assert contents, "Empty archive"
+        top_dir = Path(contents[0].filename).resolve()
+        only_one_top_dir = True
+        # If the directory is .app, it's a macOS app bundle, don't strip it
+        if not contents[0].is_dir() or top_dir.name.endswith(".app"):
+            only_one_top_dir = False
+        if only_one_top_dir:
+            for item in contents[1:]:
+                item_path = Path(item.filename).resolve()
                 # Check if the item path resolves within the top directory
                 if os.path.commonpath([item_path, top_dir]) != str(top_dir):
                     only_one_top_dir = False
@@ -366,27 +392,18 @@ def extract_tar_and_zip(buffer: io.BytesIO, to_dir):
         log.info("only one top dir: %s", only_one_top_dir)
         if only_one_top_dir:
             for item in contents[1:]:
-                new_path = str(Path(getname(item)).resolve().relative_to(top_dir))
-                if getattr(item, "name", False):
-                    item.name = new_path
-                elif getattr(item, "filename", False):
-                    item.filename = new_path
+                new_path = str(Path(item.filename).resolve().relative_to(top_dir))
+                if item.is_dir():
+                    new_path += "/"
+                item.filename = new_path
                 archive_file.extract(item, to_dir)
         else:
             archive_file.extractall(path=to_dir)
 
-    try:
-        with tarfile.open(fileobj=buffer, mode="r") as file:
-            if not check_if_tar_safe(file):
-                raise TarPathTraversalException("Attempted Path Traversal in Tar File")
-            extract_archive(file)
-    except tarfile.ReadError:
-        with zipfile.ZipFile(buffer, "r") as file:
-            extract_archive(file)
-
 
 def extract_7z(buffer: io.BytesIO, to_dir):
-    """Extract a 7z archive to dir.
+    """
+    Extract a 7z archive to dir.
     py7zr maybe hard to strip the top level dir.
     """
     if not PY7ZR_AVAILABLE:
@@ -434,8 +451,10 @@ def extract_file(url: str, to_dir="."):
 
             if url.endswith(".7z"):
                 extract_7z(buffer, to_dir=to_dir)
+            elif url.endswith(".zip"):
+                extract_zip(buffer, to_dir=to_dir)
             else:
-                extract_tar_and_zip(buffer, to_dir=to_dir)
+                extract_tar(buffer, to_dir=to_dir)
     except KeyboardInterrupt:
         pbar.close()
         log.warning("Cancelled")

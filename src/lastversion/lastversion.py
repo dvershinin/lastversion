@@ -348,7 +348,17 @@ def check_version(value):
 
 
 def parse_version(tag):
-    """Parse version to Version object."""
+    """
+    Parse version to a Version object.
+    Argument may not be a version but a URL or a repo name, in which case return False
+    E.g., used in lastversion repo-name -gt 1.2.3 (and repo-name is passed here as tag)
+    """
+    # If a URL is passed
+    if tag.startswith(("http://", "https://")):
+        return False
+    # If a repo name is passed, e.g. "mautic/mautic"
+    if "/" in tag and " " not in tag:
+        return False
     h = TestProjectHolder()
     v = h.sanitize_version(tag, pre_ok=True)
     return v

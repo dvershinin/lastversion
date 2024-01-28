@@ -97,12 +97,39 @@ def test_cli_gt_stable_vs_rc(capsys):
     assert not exit_code  # Check the exit code is correct
 
 
+def test_cli_gt_first_arg_is_repo(capsys):
+    """First repo is arg having a number."""
+    with (captured_exit_code() as get_exit_code):
+        main(["https://github.com/Pisex/cs2-bans", "-gt",  "2.5.2"])
+    exit_code = get_exit_code()
+
+    captured = capsys.readouterr()
+    assert version.parse(captured.out.rstrip()) >= version.parse("2.5.3")
+    assert not exit_code  # Check the exit code is correct
+
+
+def test_unzip_osx_bundle_strip(capsys):
+    """Test that ZIP files with single top level directory are stripped."""
+    with captured_exit_code() as get_exit_code:
+        with tempfile.TemporaryDirectory() as tmp_dir_name:
+            # Set the temp directory as the current working directory
+            os.chdir(tmp_dir_name)
+            main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"])
+            # Assert that MinimalMIDIPlayer.app exists and is a directory
+            assert os.path.isdir("Contents")
+            # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
+            assert os.path.isfile("Contents/Info.plist")
+    exit_code = get_exit_code()
+
+    assert not exit_code  # Check the exit code is correct
+
+
 def test_unzip_osx_bundle(capsys):
     """Test that OSX bundles are unzipped and .app is not stripped."""
     with captured_exit_code() as get_exit_code:
-        with tempfile.TemporaryDirectory() as tmpdirname:
+        with tempfile.TemporaryDirectory() as tmp_dir_name:
             # Set the temp directory as the current working directory
-            os.chdir(tmpdirname)
+            os.chdir(tmp_dir_name)
             main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer"])
             # Assert that MinimalMIDIPlayer.app exists and is a directory
             assert os.path.isdir("MinimalMIDIPlayer.app")
