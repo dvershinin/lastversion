@@ -712,6 +712,13 @@ The `lastversion.latest` function accepts 3 arguments
 You can also use `lastversion` directly in your GitHub action workflows, 
 with [`lastversion-action`](https://github.com/dvershinin/lastversion-action).
 
+## Feature Requests and Enhancements
+
+Only features that are essential to GitHub releases are prioritized. If your issue or suggested feature is outside the current focus, here's how you can help make it happen:
+
+- **Contribute**: We encourage you to submit a pull request with your proposed changes or enhancement.
+- **Donate**: If you'd like to see a feature developed but cannot contribute code, consider [making a donation](https://github.com/sponsors/dvershinin). Your donations help us allocate resources to work on additional features and improvements.
+
 ## Sponsored Message
 
 **GetPageSpeed RPM Repository**: Enhance your server performance with our NGINX modules and performance tools. Visit [GetPageSpeed.com](https://www.getpagespeed.com/) to learn more and subscribe for access.

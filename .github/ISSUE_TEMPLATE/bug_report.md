@@ -23,6 +23,17 @@ What output you expect to receive, e.g. correct version in your opinion.
 
 What output does `lastversion` give when being run?
 
-### Support This Project
+**Current scope and support**
 
-:heart: Love this project? Consider supporting us by becoming a GitHub Sponsor. GitHub Sponsors get priority attention to their issues and requests. [Click here to sponsor](https://github.com/sponsors/dvershinin).
+Thank you for submitting this issue/request! 🌟
+
+Currently, my focus is on maintaining and enhancing features critical to GitHub releases. 
+Fetching a release version from other sources is not a priority at the moment, neither supplementary feature like
+zipball/tarball download, etc.
+
+If your particular issue/feature/enhancement falls outside those priorities, and you believe this feature is important and would like to see it developed sooner, there are a few ways to help:
+
+- **Contribute:** We welcome pull requests!
+- **Donate:** If you're not able to contribute code but still want to support the addition of this feature, consider making a donation. Donations help prioritize and fund development efforts on features outside my current scope. [Donate here](https://github.com/sponsors/dvershinin).
+
+Your support is greatly appreciated, and any contribution, be it code or donation, helps make `lastversion` better for everyone. 🚀
