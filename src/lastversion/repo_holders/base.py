@@ -392,7 +392,7 @@ class BaseProjectHolder(requests.Session):
 
         fmt = (
             self.SHORT_RELEASE_URL_FORMAT
-            if shorter and self.SHORT_RELEASE_URL_FORMAT
+            if (shorter or "/" in release["tag_name"]) and self.SHORT_RELEASE_URL_FORMAT
             else self.RELEASE_URL_FORMAT
         )
 
