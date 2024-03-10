@@ -33,6 +33,7 @@ class Version(PackagingVersion):
         (re.compile(r"-early-access-(\d+)"), "-alpha\\1"),
         (re.compile(r"-pre-(\d+)"), "-pre\\1"),
         (re.compile(r"-beta[-.]rc(\d+)"), "-beta\\1"),
+        (re.compile(r"^pre-(.*)"), "\\1-pre0"),
     ]
 
     part_to_pypi_dict = {
