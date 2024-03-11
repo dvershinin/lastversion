@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.1] - 2024-03-10
+### Fixed
+* Fixed source tarball link for releases which have slash in tag names
+* Improved detection of pre-releases
+
 ## [3.5.0] - 2024-01-29
 ### Fixed
 * Improved and added zip support in extract command by @lxl66566
