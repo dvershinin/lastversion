@@ -1,4 +1,5 @@
 """Test GitHub projects."""
+
 import os
 from tempfile import TemporaryDirectory
 
