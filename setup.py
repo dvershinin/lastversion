@@ -48,7 +48,7 @@ docs_requires = [
     "mkdocs==1.5.3",
     "mkdocs-material==9.5.3",
     "mkdocstrings[python]",
-    "markdown-include"
+    "markdown-include",
 ]
 
 with io.open("README.md", "r", encoding="utf-8") as fh:
@@ -56,7 +56,9 @@ with io.open("README.md", "r", encoding="utf-8") as fh:
 
 base_dir = os.path.join(os.path.dirname(__file__), "src")
 
-with open(os.path.join(base_dir, "lastversion", "__about__.py"), "r", encoding="utf-8") as f:
+with open(
+    os.path.join(base_dir, "lastversion", "__about__.py"), "r", encoding="utf-8"
+) as f:
     version = _version_re.search(f.read()).group(1)
 
 setup(
@@ -68,8 +70,8 @@ setup(
     description="A CLI tool to find the latest stable version of an arbitrary project",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    package_dir={'': 'src'},
-    packages=find_packages(where='src'),
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     zip_safe=False,
     license="BSD",
     install_requires=install_requires,
@@ -100,6 +102,6 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
     ],
-    python_requires='>=3.6',
-    keywords="version, release, latest, stable, pypi, github, gitlab, bitbucket, mercurial, hg, wordpress"
+    python_requires=">=3.6",
+    keywords="version, release, latest, stable, pypi, github, gitlab, bitbucket, mercurial, hg, wordpress",
 )
