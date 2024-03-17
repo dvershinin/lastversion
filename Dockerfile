@@ -5,7 +5,7 @@ FROM python:3.9-alpine
 WORKDIR /app
 
 # Copy the source code into the container
-COPY . .
+COPY src setup.py setup.cfg MANIFEST.in README.md ./
 
 # Install the application and its dependencies
 RUN pip install -e .
