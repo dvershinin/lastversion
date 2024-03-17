@@ -27,7 +27,6 @@ class Version(PackagingVersion):
     post_pattern = re.compile(r"^p(\d+)$")
 
     regex_dashed_substitutions = [
-        (re.compile(r"-devel$"), "-dev0"),
         (re.compile(r"-p(\d+)$"), "-post\\1"),
         (re.compile(r"-preview-(\d+)"), "-pre\\1"),
         (re.compile(r"-early-access-(\d+)"), "-alpha\\1"),
@@ -42,6 +41,9 @@ class Version(PackagingVersion):
         "dev": "dev0",
         "alpha": "a0",
         "beta": "b0",
+        "rc": "rc0",
+        "preview": "rc0",
+        "pre": "rc0",
     }
 
     def fix_letter_post_release(self, match):
