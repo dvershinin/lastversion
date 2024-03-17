@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.2] - 2024-03-17
+### Fixed
+* Additional beta detection for GitHub projects
+
 ## [3.5.1] - 2024-03-10
 ### Fixed
 * Fixed source tarball link for releases which have slash in tag names
