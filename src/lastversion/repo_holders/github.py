@@ -344,7 +344,7 @@ class GitHubRepoSession(BaseProjectHolder):
                 log.info("query returned non 200 response code %s", r.status_code)
                 return ret
             j = r.json()
-            if "errors" in j and j["errors"][0]["type"] == "NOT_FOUND":
+            if "errors" in j and j["errors"][0].get("type") == "NOT_FOUND":
                 raise BadProjectError(f"No such project found on GitHub: {self.repo}")
             if not j["data"]["repository"]["tags"]["edges"]:
                 log.info("No tags in GraphQL response: %s", r.text)
@@ -478,7 +478,7 @@ class GitHubRepoSession(BaseProjectHolder):
             # authorization header may cause a false positive 200 response with an empty feed!
             "Authorization": "",
         }
-        r = self.get(
+        r = super().get(
             f"https://{self.hostname}/{self.repo}/releases.atom", headers=headers
         )
         # API requests are varied by cookie, we don't want serializer for cache fail because of that
