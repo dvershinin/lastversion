@@ -97,7 +97,7 @@ class BaseProjectHolder(requests.Session):
 
     def __init__(self, name=None, hostname=None):
         super().__init__()
-
+        self.mount("https://", requests.adapters.HTTPAdapter(max_retries=5))
         app_name = __name__.split(".", maxsplit=1)[0]
 
         self.cache_dir = user_cache_dir(app_name)

@@ -97,3 +97,10 @@ def test_github_not_formal_filter():
     repo = "https://github.com/lastversion-test-repos/cadvisor"
     output = latest(repo, formal=False)
     assert output == version.parse("0.48.1")
+
+
+def test_github_pre_in_front_is_not_stable():
+    """Test a GitHub project with a pre-release version."""
+    repo = "https://github.com/lastversion-test-repos/tailscale"
+    output = latest(repo)
+    assert output == version.parse("1.62.0")
