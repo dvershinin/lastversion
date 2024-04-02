@@ -1,4 +1,5 @@
 """Gitea repository session class."""
+
 import json
 import logging
 import math
@@ -356,7 +357,9 @@ class GiteaRepoSession(BaseProjectHolder):
         """
         official_repo = f"{repo}/{repo}"
         log.info("Checking existence of %s", official_repo)
-        r = self.get_feed_response(f"https://{self.hostname}/{official_repo}/releases.atom")
+        r = self.get_feed_response(
+            f"https://{self.hostname}/{official_repo}/releases.atom"
+        )
         # API requests are varied by cookie, we don't want serializer for
         # cache fail because of that
         self.cookies.clear()
