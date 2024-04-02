@@ -472,18 +472,10 @@ class GitHubRepoSession(BaseProjectHolder):
         """
         if self.repo in self.feed_contents:
             return self.feed_contents[self.repo]
-        headers = {
-            "Accept": "*/*",
-            # private repos do not have releases.atom to begin with,
-            # authorization header may cause a false positive 200 response with an empty feed!
-            "Authorization": "",
-        }
-        r = super().get(
-            f"https://{self.hostname}/{self.repo}/releases.atom", headers=headers
+        feed_response = self.get_feed_response(
+            url=f"https://{self.hostname}/{self.repo}/releases.atom"
         )
-        # API requests are varied by cookie, we don't want serializer for cache fail because of that
-        self.cookies.clear()
-        if r.status_code == 404 and not rename_checked:
+        if feed_response.status_code == 404 and not rename_checked:
             # #44: in some network locations, GitHub returns 404 (as opposed to a 301 redirect) for the renamed
             # repositories /releases.atom. When we get a 404, we lazily load repo info via API, and hopefully
             # get redirect there as well as the new repo full name
@@ -499,9 +491,9 @@ class GitHubRepoSession(BaseProjectHolder):
                     self.repo = repo_data["full_name"]
                     # request the feed from the new location
                     return self.get_releases_feed_contents(rename_checked=False)
-        if r.status_code == 200:
-            self.feed_contents[self.repo] = r.text
-            return r.text
+        if feed_response.status_code == 200:
+            self.feed_contents[self.repo] = feed_response.text
+            return feed_response.text
         return None
 
     def get_releases_feed_entries(self):
@@ -701,9 +693,9 @@ class GitHubRepoSession(BaseProjectHolder):
         """
         official_repo = f"{repo}/{repo}"
         log.info("Checking existence of %s", official_repo)
-        r = self.get(f"https://{self.hostname}/{official_repo}/releases.atom")
-        # API requests are varied by cookie, we don't want serializer for cache fail because of that
-        self.cookies.clear()
+        r = self.get_feed_response(
+            url=f"https://{self.hostname}/{official_repo}/releases.atom"
+        )
         if r.status_code == 200:
             self.feed_contents[official_repo] = r.text
             return official_repo

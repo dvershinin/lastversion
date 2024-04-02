@@ -442,6 +442,25 @@ class BaseProjectHolder(requests.Session):
             return self.feed_url
         return f"https://{self.hostname}/{self.repo}"
 
+    def get_feed_response(self, url):
+        """
+        Get feed response.
+        Ensures that the same `Accept` header is used for all feed requests.
+        Clears cookies after request to ensure cache-ability of further requests.
+        """
+        headers = {
+            "Accept": "*/*",
+            # private repos do not have releases.atom to begin with,
+            # authorization header may cause a false positive 200 response with an empty feed!
+            "Authorization": "",
+        }
+        response = self.get(
+            url, headers=headers
+        )
+        # API requests are varied by cookie, we don't want serializer for cache fail because of that
+        self.cookies.clear()
+        return response
+
     def find_release_in_feed(self, url, pre_ok=False, major=None):
         """
         Find release in feed.

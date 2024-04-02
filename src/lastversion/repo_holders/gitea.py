@@ -156,7 +156,9 @@ class GiteaRepoSession(BaseProjectHolder):
                 else:
                     return
 
-    def get_rate_limit_url(self):
+    @property
+    def rate_limit_url(self):
+        """Get the rate limit URL."""
         return f"{self.api_base}/rate_limit"
 
     def get(self, url, **kwargs):
@@ -211,7 +213,7 @@ class GiteaRepoSession(BaseProjectHolder):
                 )
             return self.get(url)
 
-        if r.status_code == 403 and url != self.get_rate_limit_url():
+        if r.status_code == 403 and url != self.rate_limit_url:
             self.rate_limited_count = 0
         return r
 
@@ -354,7 +356,7 @@ class GiteaRepoSession(BaseProjectHolder):
         """
         official_repo = f"{repo}/{repo}"
         log.info("Checking existence of %s", official_repo)
-        r = self.get(f"https://{self.hostname}/{official_repo}/releases.atom")
+        r = self.get_feed_response(f"https://{self.hostname}/{official_repo}/releases.atom")
         # API requests are varied by cookie, we don't want serializer for
         # cache fail because of that
         self.cookies.clear()
