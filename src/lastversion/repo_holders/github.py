@@ -1,4 +1,5 @@
 """GitHub repository session class."""
+
 import logging
 from urllib.parse import unquote
 
