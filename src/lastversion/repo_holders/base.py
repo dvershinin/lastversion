@@ -467,6 +467,7 @@ class BaseProjectHolder(requests.Session):
         then supply its text to feedparser as a raw string
         """
         ret = {}
+        log.debug("Requesting %s", url)
         r = self.get(url)
         feed = feedparser.parse(r.text)
         for tag in feed.entries:
