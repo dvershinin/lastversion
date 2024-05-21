@@ -1,4 +1,5 @@
 """Test lastversion."""
+
 import os
 
 import subprocess
