@@ -308,7 +308,7 @@ def test_main_url():
     with subprocess.Popen(
         ["lastversion", repo], stdout=subprocess.PIPE, stderr=subprocess.PIPE
     ) as process:
-        out, err = process.communicate()
+        out, _ = process.communicate()
 
         assert version.parse(out.decode("utf-8").strip()) >= version.parse("1.13.35.2")
 
@@ -317,42 +317,42 @@ def test_cli_format_with_sem_base():
     """Test formatting arbitrary version string with semantic level extraction."""
     repo = "mysqld  Ver 5.6.51-91.0 for Linux on x86_64 (Percona Server (GPL), Release 91.0, Revision b59139e)"
 
-    process = subprocess.Popen(
+    with subprocess.Popen(
         ["lastversion", "--sem", "major", "format", repo],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
-    out, err = process.communicate()
+    ) as process:
+        out, _ = process.communicate()
 
-    assert out.decode("utf-8").strip() == "5"
+        assert out.decode("utf-8").strip() == "5"
 
 
 def test_cli_get_tag():
     """Test CLI with full URL at GitHub, get tag as a result."""
     repo = "https://github.com/lastversion-test-repos/Tasmota"
 
-    process = subprocess.Popen(
+    with subprocess.Popen(
         ["lastversion", repo, "--format", "tag"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
-    out, err = process.communicate()
+    ) as process:
+        out, _ = process.communicate()
 
-    assert out.decode("utf-8").strip() == "v11.0.0"
+        assert out.decode("utf-8").strip() == "v11.0.0"
 
 
 def test_main_assets():
     """Test CLI with --format assets."""
     repo = "https://github.com/mautic/mautic"
 
-    process = subprocess.Popen(
-        ["lastversion", repo, "--format", "assets", "--major", "4"],
+    with subprocess.Popen(
+        ["lastversion", repo, "--format", "assets", "--major", "4.4.11"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
-    out, err = process.communicate()
+    ) as process:
+        out, _ = process.communicate()
 
-    assert "4.4.11-update.zip" in str(out)
+        assert "4.4.11-update.zip" in str(out)
 
 
 def test_tag_mess():
@@ -472,18 +472,21 @@ def test_tags_only_repo():
 
 
 def test_only_arg_again():
+    """Test only arg with chart."""
     repo = "https://github.com/lastversion-test-repos/autoscaler/tags"
     v = latest(repo, only="chart")
     assert v == version.parse("9.16.0")
 
 
 def test_only_arg_negated():
+    """Test only arg with negation."""
     repo = "https://github.com/lastversion-test-repos/autoscaler/tags"
     v = latest(repo, only="!chart")
     assert v == version.parse("1.23.0")
 
 
 def test_dict_no_license():
+    """Test dict output without license."""
     repo = "https://github.com/lastversion-test-repos/nginx_ajp_module"
     release = latest(repo, output_format="dict")
     assert release["version"] == version.parse("0.3.2")
