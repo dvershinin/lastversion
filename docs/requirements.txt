@@ -4,3 +4,4 @@ mkdocs-material
 mkdocstrings[crystal,python]
 markdown-include
 pymdown-extensions
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
