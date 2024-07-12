@@ -46,6 +46,15 @@ class Version(PackagingVersion):
         "pre": "rc0",
     }
 
+    @staticmethod
+    def special_cases_transformation(version):
+        """
+        Special cases for version transformation.
+        " SP-" => ".post" (a Service Pack version is a post release)
+        """
+        version = version.replace(" SP-", ".post")
+        return version
+
     def fix_letter_post_release(self, match):
         """Fix letter post release"""
         self.fixed_letter_post_release = True
@@ -151,6 +160,7 @@ class Version(PackagingVersion):
         """
         self.fixed_letter_post_release = False
 
+        version = self.special_cases_transformation(version)
         # Join status with its number, e.g., preview-3 -> pre3
         version = self.join_dashed_number_status(version)
         version = self.filter_relevant_parts(version)
@@ -304,6 +314,6 @@ class Version(PackagingVersion):
 
         # Local version segment
         if self.local is not None:
-            parts.append("+{0}".format(self.local))
+            parts.append(f"+{self.local}")
 
         return "".join(parts)

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.3] - 2024-07-12
+### Fixed
+* Added a special case of normalizing service pack versions, e.g. `15 SP6` to `15.post6`
+
 ## [3.5.2] - 2024-03-17
 ### Fixed
 * Additional beta detection for GitHub projects
@@ -86,7 +90,7 @@ All notable changes to this project will be documented in this file.
 
 ## [3.0.0] - 2023-06-22
 ### Changed
-* Python 2 no longer supported
+* Python 2 is no longer supported
 ### Fixed
 * Wrong version parsing with number in name #102
 * 90+ versions that look like dates triggered pre-release detection
@@ -241,7 +245,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.4.0] - 2021-06-27
 ### Added
-* Now it's easy get OS versions. Just run `lastversion ubuntu` or something
+* Now it's easy to get OS versions. Just run `lastversion ubuntu` or something
 
 ## [1.3.5] - 2021-06-09
 ### Added
@@ -253,7 +257,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 * Arbitrary versions comparison in CLI: `lastversion 1.2.3 -gt 1.2.4`
 * `lastversion --version` reports available updates for `lastversion`
-* Clean up cancelled download on Ctrl+C
+* Clean up canceled download on Ctrl+C
 
 ## [1.3.3] - 2021-02-03
 ### Added
