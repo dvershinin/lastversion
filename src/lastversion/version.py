@@ -1,4 +1,5 @@
 """Version class for lastversion"""
+
 import re
 from datetime import datetime
 
