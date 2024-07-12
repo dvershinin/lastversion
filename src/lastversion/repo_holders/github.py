@@ -265,108 +265,73 @@ class GitHubRepoSession(BaseProjectHolder):
         return None
 
     def find_in_tags_via_graphql(self, ret, pre_ok, major):
-        """GraphQL allows for faster search across many tags.
-        We aggregate the highest semantic version among batches of 100 records.
-        In this way --major filtering results in much fewer requests compared to traditional API
-        use.
-
-        Args:
-            ret (dict): currently selected release object
-            pre_ok (bool): whether betas are acceptable
-            major (str): the major filter
-
-        Returns: currently selected release object
-
-        """
         query_fmt = """
-        {
+        query ($owner: String!, $name: String!, $after: String) {
           rateLimit {
             cost
             remaining
           }
-          repository(owner: "%s", name: "%s") {
-            tags: refs(refPrefix: "refs/tags/", first: 100, after: "%s",
-              orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {
+          repository(owner: $owner, name: $name) {
+            tags: refs(refPrefix: "refs/tags/", first: 100, after: $after, orderBy: {field: TAG_COMMIT_DATE, direction: DESC}) {
               edges {
-                cursor,
+                cursor
                 node {
-                  ...refInfo
+                  name
+                  target {
+                    ... on Commit {
+                      author {
+                        date
+                      }
+                    }
+                    ... on Tag {
+                      tagger {
+                        date
+                      }
+                    }
+                  }
                 }
               }
             }
           }
         }
-
-        fragment refInfo on Ref {
-          name
-          target {
-            sha: oid
-            commitResourcePath
-            __typename
-            ... on Tag {
-              target {
-                ... on Commit {
-                  ...commitInfo
-                }
-              }
-              tagger {
-                name
-                email
-                date
-              }
-            }
-            ... on Commit {
-              ...commitInfo
-            }
-          }
-        }
-
-        fragment commitInfo on Commit {
-          zipballUrl
-          tarballUrl
-          author {
-            name
-            email
-            date
-          }
-        }
-
         """
+
         cursor = ""
         log.info("Using graphql queries...")
+        owner, name = self.repo.split("/")
         while True:
-            # testing on php/php-src
-            owner, name = self.repo.split("/")
-            query = query_fmt % (owner, name, cursor)
-            log.info("Running query %s", query)
-            r = self.post(f"{self.api_base}/graphql", json={"query": query})
+            variables = {"owner": owner, "name": name, "after": cursor}
+            response = self.post(
+                f"{self.api_base}/graphql",
+                json={"query": query_fmt, "variables": variables},
+            )
             log.info('Requested graphql with cursor "%s"', cursor)
-            if r.status_code != 200:
-                log.info("query returned non 200 response code %s", r.status_code)
+            if response.status_code != 200:
+                log.info(
+                    "Query returned non-200 response code %s", response.status_code
+                )
                 return ret
-            j = r.json()
-            if "errors" in j and j["errors"][0].get("type") == "NOT_FOUND":
+            data = response.json()
+            if "errors" in data and data["errors"][0].get("type") == "NOT_FOUND":
                 raise BadProjectError(f"No such project found on GitHub: {self.repo}")
-            if not j["data"]["repository"]["tags"]["edges"]:
-                log.info("No tags in GraphQL response: %s", r.text)
+            edges = data["data"]["repository"]["tags"]["edges"]
+            if not edges:
+                log.info("No tags in GraphQL response: %s", response.text)
                 break
-            for edge in j["data"]["repository"]["tags"]["edges"]:
+            for edge in edges:
                 node = edge["node"]
                 cursor = edge["cursor"]
                 tag_name = node["name"]
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
                     continue
-                if "tagger" in node["target"]:
-                    # use date of annotated tag as it better corresponds to
-                    # "release date"
-                    log.info("Using annotated tag date")
-                    d = node["target"]["tagger"]["date"]
-                else:
-                    # using commit date because the tag is not annotated
-                    log.info("Using commit date")
-                    d = node["target"]["author"]["date"]
-                tag_date = parser.parse(d)
+                # use date of annotated tag as it better corresponds to
+                # "release date" otherwise using commit date because the tag is not annotated
+                tag_date = parser.parse(
+                    node["target"]["tagger"]["date"]
+                    if "tagger" in node["target"]
+                    else node["target"]["author"]["date"]
+                )
                 if ret and tag_date + timedelta(days=365) < ret["tag_date"]:
                     log.info("The version %s is newer, but is too old!", version)
                     break
