@@ -1,4 +1,5 @@
 """Test GitLab support."""
+
 import os
 
 from packaging import version
