@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.4] - 2024-07-27
+### Fixed
+* Introduced timeout of 30 seconds for HTTP requests to avoid hanging on slow connections
+
 ## [3.5.3] - 2024-07-12
 ### Fixed
 * Added a special case of normalizing service pack versions, e.g. `15 SP6` to `15.post6`

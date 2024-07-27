@@ -88,6 +88,7 @@ class BaseProjectHolder(requests.Session):
 
     # Instance of project holder itself uniquely identifies a project (noname)
     REPO_IS_HOLDER = False
+    DEFAULT_TIMEOUT = 30  # default timeout in seconds
 
     @property
     def name(self):
@@ -120,13 +121,18 @@ class BaseProjectHolder(requests.Session):
         self.hostname = hostname
         if not self.hostname and self.DEFAULT_HOSTNAME:
             self.hostname = self.DEFAULT_HOSTNAME
-        # identifies project on a given hostname
+        # identifies a project on a given hostname
         # normalize repo to number of meaningful parameters
         self.repo = self.get_base_repo_from_repo_arg(name)
         # in some case we do not specify repo, but feed is discovered; no repo is given then
         self.feed_url = None
         self.even = False
         self.formal = False
+
+    def request(self, *args, **kwargs):
+        """Set default timeout for requests."""
+        kwargs.setdefault("timeout", self.DEFAULT_TIMEOUT)
+        return super().request(*args, **kwargs)
 
     def get_name_cache(self):
         """Return name cache from file."""
@@ -228,7 +234,7 @@ class BaseProjectHolder(requests.Session):
             return repo_arg
         if not repo_arg and cls.REPO_URL_PROJECT_COMPONENTS > 0:
             raise ValueError(
-                f"Repo arg {repo_arg} does not have enouh URI components ({cls.REPO_URL_PROJECT_COMPONENTS}) for {cls.__name__}"
+                f"Repo arg {repo_arg} does not have enough URI components ({cls.REPO_URL_PROJECT_COMPONENTS}) for {cls.__name__}"
             )
         if cls.REPO_URL_PROJECT_COMPONENTS >= 1:
             repo_components = repo_arg.split("/")
@@ -301,7 +307,7 @@ class BaseProjectHolder(requests.Session):
         """
         log.info("Sanitizing string %s as a satisfying version.", version_s)
 
-        # for libssh2-x.x.x should remove project name prefix to prevent `2` going into the version
+        # for `libssh2-x.x.x` should remove project name prefix to prevent `2` going into the version
         prefix = f"{self.name}-"
         if version_s.startswith(prefix):
             version_s = version_s[len(prefix) :]
