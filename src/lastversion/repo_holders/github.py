@@ -360,20 +360,25 @@ class GitHubRepoSession(BaseProjectHolder):
                 if "tagger" in node["target"]:
                     # use date of annotated tag as it better corresponds to
                     # "release date"
-                    log.info("Using annotated tag date")
                     d = node["target"]["tagger"]["date"]
+                    log.info("Using annotated tag date %s", d)
                 else:
                     # using commit date because the tag is not annotated
-                    log.info("Using commit date")
                     d = node["target"]["author"]["date"]
+                    log.info("Using commit date %s", d)
                 tag_date = parser.parse(d)
                 if ret and tag_date + timedelta(days=365) < ret["tag_date"]:
                     log.info("The version %s is newer, but is too old!", version)
                     break
-                if not ret or version > ret["version"] or tag_date > ret["tag_date"]:
+                if (
+                    not ret
+                    or version >= ret["version"]
+                    or (tag_date - ret["tag_date"]) > timedelta(hours=1)
+                ):
                     # we always want to return formal release if it exists,
                     # because it has useful data grab formal release via APi
-                    # to check for pre-release mark
+                    # to check for pre-release
+                    # >= case is when we have release from atom but update with tag date from API
                     formal_release = self.get_formal_release_for_tag(tag_name)
                     if formal_release:
                         ret = self.set_matching_formal_release(
@@ -387,6 +392,9 @@ class GitHubRepoSession(BaseProjectHolder):
                                 "version": version,
                                 "type": "graphql",
                             }
+                            log.info(
+                                "Selected version as current selection: %s.", version
+                            )
             if ret:
                 break
         return ret
