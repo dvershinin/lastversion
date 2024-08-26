@@ -660,7 +660,18 @@ class GitHubRepoSession(BaseProjectHolder):
     def set_matching_formal_release(
         self, ret, formal_release, version, pre_ok, data_type="release"
     ):
-        """Set the current release selection to this formal release if matching conditions."""
+        """Set the current release selection to this formal release if matching conditions.
+
+        Args:
+            ret:
+            formal_release:
+            version:
+            pre_ok:
+            data_type:
+        """
+        if formal_release.get("draft"):
+            log.info("Skipping this release due to draft status.")
+            return ret
         if not pre_ok and formal_release["prerelease"]:
             log.info(
                 "Found formal release for this tag which is unwanted "
