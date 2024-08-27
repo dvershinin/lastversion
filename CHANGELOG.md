@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.5] - 2024-08-27
+### Fixed
+* Fixed some GitHub API nuances and incorrect versions returned #168
+
 ## [3.5.4] - 2024-07-27
 ### Fixed
 * Introduced timeout of 30 seconds for HTTP requests to avoid hanging on slow connections

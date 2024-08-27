@@ -1,4 +1,5 @@
 """Test GitHub projects."""
+
 import os
 from tempfile import TemporaryDirectory
 
@@ -104,3 +105,10 @@ def test_github_pre_in_front_is_not_stable():
     repo = "https://github.com/lastversion-test-repos/tailscale"
     output = latest(repo)
     assert output == version.parse("1.62.0")
+
+
+def test_github_tag_name_prefixed():
+    """Test a GitHub project with a tag name prefixed with repo name and digit."""
+    repo = "https://github.com/lastversion-test-repos/hdf5"
+    output = latest(repo)
+    assert output == version.parse("1.14.4.3")

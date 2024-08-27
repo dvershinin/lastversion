@@ -298,6 +298,20 @@ class BaseProjectHolder(requests.Session):
             return True
         return False
 
+    def remove_prefix(self, version_s):
+        """Remove project name prefix from version string."""
+        prefixes = (f"{self.name}-", f"{self.name}_")
+        for prefix in prefixes:
+            if version_s.startswith(prefix):
+                version_s = version_s[len(prefix) :]
+                log.info(
+                    "Removed project name prefix '%s', working now on string '%s'",
+                    prefix,
+                    version_s,
+                )
+                break
+        return version_s
+
     def sanitize_version(self, version_s, pre_ok=False, major=None):
         """
         Extract a version from tag name; that satisfies this holder's filters, etc.
@@ -308,12 +322,7 @@ class BaseProjectHolder(requests.Session):
         log.info("Sanitizing string %s as a satisfying version.", version_s)
 
         # for `libssh2-x.x.x` should remove project name prefix to prevent `2` going into the version
-        prefix = f"{self.name}-"
-        if version_s.startswith(prefix):
-            version_s = version_s[len(prefix) :]
-            log.info(
-                "Removed project name prefix, working now on string '%s'", version_s
-            )
+        version_s = self.remove_prefix(version_s)
 
         res = None
 

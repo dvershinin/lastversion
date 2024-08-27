@@ -1,20 +1,19 @@
 """GitHub repository session class."""
 
 import logging
-from urllib.parse import unquote
-
 import math
 import os
 import re
 import time
 from datetime import datetime
 from datetime import timedelta
+from urllib.parse import unquote
 
 import feedparser
 from dateutil import parser
 
-from lastversion.repo_holders.base import BaseProjectHolder
 from lastversion.exceptions import ApiCredentialsError, BadProjectError
+from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
@@ -538,6 +537,7 @@ class GitHubRepoSession(BaseProjectHolder):
                 # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
                 tag_name = tag["link"].split("/")[-1]
                 tag_name = unquote(tag_name)
+
                 log.info("Checking tag %s", tag_name)
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
@@ -546,8 +546,12 @@ class GitHubRepoSession(BaseProjectHolder):
                 if version.is_semver():
                     seen_semver = True
                 comparable = ret and ret["version"].is_semver() == version.is_semver()
-                if not comparable:
-                    log.info("Tag %s is not comparable to current selection", tag_name)
+                if ret and not comparable:
+                    log.info(
+                        "Tag %s is not comparable to current selection %s",
+                        tag_name,
+                        ret["tag_name"],
+                    )
                 # current tag and chosen tag are only comparable if they are both same semver or not
                 if comparable and ret["version"] > version:
                     log.info(
@@ -568,7 +572,7 @@ class GitHubRepoSession(BaseProjectHolder):
                         tag_name,
                     )
                     continue
-                if ret and tag_date + timedelta(days=365) < ret["tag_date"]:
+                if ret and tag_date + timedelta(days=30) < ret["tag_date"]:
                     log.info("The version %s is newer, but is too old!", version)
                     break
                 # we always want to return formal release if it exists, because it has useful data
@@ -698,6 +702,11 @@ class GitHubRepoSession(BaseProjectHolder):
                     log.info("Desired asset not found in the release.")
                     return ret
         formal_release["tag_date"] = parser.parse(formal_release["published_at"])
+        # if created_at is newer than published_at, use it
+        if formal_release.get("created_at"):
+            created_at = parser.parse(formal_release["created_at"])
+            if created_at > formal_release["tag_date"]:
+                formal_release["tag_date"] = created_at
         formal_release["version"] = version
         formal_release["type"] = data_type
         log.info(
