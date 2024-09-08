@@ -90,6 +90,8 @@ class BaseProjectHolder(requests.Session):
     REPO_IS_HOLDER = False
     DEFAULT_TIMEOUT = 30  # default timeout in seconds
 
+    CACHE_DISABLED = False
+
     @property
     def name(self):
         """Get project name, useful in URLs for assets, etc."""
@@ -102,13 +104,18 @@ class BaseProjectHolder(requests.Session):
         self.mount("https://", requests.adapters.HTTPAdapter(max_retries=5))
         app_name = __name__.split(".", maxsplit=1)[0]
 
-        self.cache_dir = user_cache_dir(app_name)
-        log.info("Using cache directory: %s.", self.cache_dir)
-        self.cache = FileCache(self.cache_dir)
-        cache_adapter = CacheControlAdapter(cache=self.cache)
-        # noinspection HttpUrlsUsage
-        self.mount("http://", cache_adapter)
-        self.mount("https://", cache_adapter)
+        self.cache_dir = None
+        self.cache = None
+        if not self.CACHE_DISABLED:
+            self.cache_dir = user_cache_dir(app_name)
+            log.info("Using cache directory: %s.", self.cache_dir)
+            self.cache = FileCache(self.cache_dir)
+            cache_adapter = CacheControlAdapter(cache=self.cache)
+            # noinspection HttpUrlsUsage
+            self.mount("http://", cache_adapter)
+            self.mount("https://", cache_adapter)
+        else:
+            log.info("Cache is disabled for this holder.")
 
         self.names_cache_filename = f"{self.cache_dir}/repos.json"
 
@@ -136,7 +143,7 @@ class BaseProjectHolder(requests.Session):
 
     def get_name_cache(self):
         """Return name cache from file."""
-        if not os.path.exists(self.names_cache_filename):
+        if self.CACHE_DISABLED or not os.path.exists(self.names_cache_filename):
             return {}
         try:
             with open(self.names_cache_filename, "r", encoding="utf-8") as reader:
@@ -148,6 +155,8 @@ class BaseProjectHolder(requests.Session):
 
     def update_name_cache(self, cache_data):
         """Update name cache file with new data."""
+        if self.CACHE_DISABLED:
+            return
         try:
             ensure_directory_exists(self.cache_dir)
             with open(self.names_cache_filename, "w", encoding="utf-8") as writer:

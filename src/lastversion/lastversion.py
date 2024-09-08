@@ -23,6 +23,7 @@ from pathlib import Path
 import yaml
 from packaging.version import InvalidVersion
 
+from lastversion.repo_holders.base import BaseProjectHolder
 from lastversion.repo_holders.test import TestProjectHolder
 from lastversion.repo_holders.github import TOKEN_PRO_TIP
 from lastversion.holder_factory import HolderFactory
@@ -723,6 +724,12 @@ def main(argv=None):
         action="store_true",
         help="Automatically answer yes for all questions",
     )
+    parser.add_argument(
+        "--no-cache",
+        dest="no_cache",
+        action="store_true",
+        help="Do not use cache for HTTP requests",
+    )
     parser.add_argument("--version", action=VersionAction)
     parser.set_defaults(
         validate=True,
@@ -741,6 +748,8 @@ def main(argv=None):
         even=False,
     )
     args = parser.parse_args(argv)
+
+    BaseProjectHolder.CACHE_DISABLED = args.no_cache
 
     if args.repo == "self":
         args.repo = __self__
