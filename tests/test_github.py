@@ -112,3 +112,12 @@ def test_github_tag_name_prefixed():
     repo = "https://github.com/lastversion-test-repos/hdf5"
     output = latest(repo)
     assert output == version.parse("1.14.4.3")
+
+
+def test_github_nginx_source_url():
+    """Test NGINX."""
+    repo = "https://nginx.org/"
+
+    result = latest(repo, "source", major="1.18.0")
+
+    assert result == "https://nginx.org/download/nginx-1.18.0.tar.gz"

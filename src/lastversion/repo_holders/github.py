@@ -78,6 +78,10 @@ class GitHubRepoSession(BaseProjectHolder):
         },
     }
 
+    KNOWN_REPO_URLS = {
+        "nginx.org": KNOWN_REPOS_BY_NAME["nginx"],
+    }
+
     """
     The last alphanumeric after digits is part of version scheme, not beta level.
     E.g. 1.1.1b is not beta. Hard-coding such odd repos is required.

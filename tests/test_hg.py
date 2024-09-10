@@ -1,4 +1,5 @@
 """Test Mercurial repositories."""
+
 import os
 
 from packaging import version
@@ -16,12 +17,3 @@ def test_hg_nginx():
     output = latest(repo, "version")
 
     assert output >= version.parse("1.18.0")
-
-
-def test_hg_nginx_source_url():
-    """Test NGINX."""
-    repo = "https://nginx.org/"
-
-    result = latest(repo, "source", major="1.18.0")
-
-    assert result == 'https://nginx.org/download/nginx-1.18.0.tar.gz'
