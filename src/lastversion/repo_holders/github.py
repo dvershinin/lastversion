@@ -67,6 +67,15 @@ class GitHubRepoSession(BaseProjectHolder):
         "cmake": {"repo": "kitware/cmake"},
         "kodi": {"repo": "xbmc/xbmc"},
         "quictls": {"repo": "quictls/openssl"},
+        "nginx": {
+            "repo": "nginx/nginx",
+            "branches": {
+                "stable": "\\.\\d?[02468]\\.",
+                "mainline": "\\.\\d?[13579]\\.",
+            },
+            # get URL from website instead of GitHub because it is "prepared" source
+            "release_url_format": "https://nginx.org/download/{name}-{version}.{ext}",
+        },
     }
 
     """

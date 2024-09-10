@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.6] - 2024-09-08
+### Fixed
+* Known NGINX repo has been moved to GitHub
+
 ## [3.5.5] - 2024-08-27
 ### Fixed
 * Fixed some GitHub API nuances and incorrect versions returned #168

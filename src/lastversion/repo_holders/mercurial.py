@@ -1,24 +1,12 @@
 """Mercurial repository holder."""
+
 from lastversion.repo_holders.base import BaseProjectHolder
 
 
 class MercurialRepoSession(BaseProjectHolder):
+    """Mercurial repository holder."""
     CAN_BE_SELF_HOSTED = True
     REPO_URL_PROJECT_COMPONENTS = 1
-    KNOWN_REPO_URLS = {
-        "nginx.org": {
-            "repo": "nginx",
-            "hostname": "hg.nginx.org",
-            "branches": {
-                "stable": "\\.\\d?[02468]\\.",
-                "mainline": "\\.\\d?[13579]\\.",
-            },
-            # get URL from website instead of hg. because it is "prepared" source
-            "release_url_format": "https://nginx.org/download/{name}-{version}.{ext}",
-        }
-    }
-
-    KNOWN_REPOS_BY_NAME = {"nginx": KNOWN_REPO_URLS["nginx.org"]}
 
     # http://hg.nginx.org/nginx/archive/release-1.19.2.tar.gz
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
