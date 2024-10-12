@@ -162,6 +162,7 @@ class GitHubRepoSession(BaseProjectHolder):
         self.formal_releases_by_tag = None
         self.rate_limited_count = 0
         self.api_token = None
+        self.seen_semver = False
         for var_name in self.TOKEN_ENV_VARS:
             token = os.getenv(var_name)
             if token:
@@ -369,6 +370,8 @@ class GitHubRepoSession(BaseProjectHolder):
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
                     continue
+                if self.semver_check_skip(version, ret):
+                    continue
                 if "tagger" in node["target"]:
                     # use date of annotated tag as it better corresponds to
                     # "release date"
@@ -539,10 +542,38 @@ class GitHubRepoSession(BaseProjectHolder):
             release["install_name"] = self.name
         return release or None
 
+    def semver_check_skip(self, version, selected_release):
+        """Should we skip this version from being selected based on semver."""
+        if version.is_semver():
+            self.seen_semver = True
+        comparable = (
+            selected_release
+            and selected_release["version"].is_semver() == version.is_semver()
+        )
+        if selected_release and not comparable:
+            log.info(
+                "Version %s is not comparable to current selection %s",
+                version,
+                selected_release["tag_name"],
+            )
+        # current tag and chosen tag are only comparable if they are both same semver or not
+        if comparable and selected_release["version"] > version:
+            log.info(
+                "Version %s is not newer than we already found",
+                version,
+            )
+            return True
+        # if we have seen a semver tag, then any non-semver can be discarded
+        if self.seen_semver and not version.is_semver():
+            log.info(
+                "Version %s is not a semver and we already found a semver", version
+            )
+            return True
+        return False
+
     def get_release_from_feed(self, pre_ok, major):
         """Get the latest release from the `releases.atom` feed."""
         ret = {}
-        seen_semver = False
 
         feed_entries = self.get_releases_feed_entries()
         if feed_entries:
@@ -556,27 +587,7 @@ class GitHubRepoSession(BaseProjectHolder):
                 if not version:
                     log.info("We did not find a valid version in %s tag", tag_name)
                     continue
-                if version.is_semver():
-                    seen_semver = True
-                comparable = ret and ret["version"].is_semver() == version.is_semver()
-                if ret and not comparable:
-                    log.info(
-                        "Tag %s is not comparable to current selection %s",
-                        tag_name,
-                        ret["tag_name"],
-                    )
-                # current tag and chosen tag are only comparable if they are both same semver or not
-                if comparable and ret["version"] > version:
-                    log.info(
-                        "Tag %s does not contain newer version than we already found",
-                        tag_name,
-                    )
-                    continue
-                # if we have seen a semver tag, then any non-semver can be discarded
-                if seen_semver and not version.is_semver():
-                    log.info(
-                        "Tag %s is not a semver and we already found a semver", tag_name
-                    )
+                if self.semver_check_skip(version, ret):
                     continue
                 tag_date = parser.parse(tag["updated"])
                 if ret and ret["version"] == version and ret["tag_date"] >= tag_date:
