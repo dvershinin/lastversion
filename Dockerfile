@@ -1,8 +1,9 @@
 # Use a lightweight base image with Python and pip installed
 FROM python:3.9-alpine
 
-RUN addgroup -S lastversion \
-    && adduser -S lastversion -G lastversion
+# Using "lastversion" user as provided by some linter was a mistake and causes issues with GitHub actions being ran as "runner"
+# and lastversion running as a different user and being unable to work with workspace files for extracting to its directory
+# USER root
 
 # Set the working directory to /app
 WORKDIR /app
@@ -13,8 +14,6 @@ COPY setup.py README.md ./
 
 # Install the application and its dependencies
 RUN pip install -e .
-
-USER lastversion
 
 # Set the entrypoint to the command that runs your application
 ENTRYPOINT ["lastversion"]
