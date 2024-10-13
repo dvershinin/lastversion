@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-20.04
     container: getpagespeed/rpmbuilder:centos-8
     steps:
-    - name: Download a single artifact
+    - name: Download brotli.spec artifact
       uses: actions/download-artifact@v3
       with:
         name: brotli.spec
@@ -109,8 +109,8 @@ jobs:
     runs-on: ubuntu-20.04
     container: getpagespeed/rpmbuilder:centos-8
     steps:
-    - name: Download a single artifact
-      uses: actions/download-artifact@v4.1.7
+    - name: Download nginx-module-immutable.spec artifact
+      uses: actions/download-artifact@v3
       with:
         name: nginx-module-immutable.spec
     - name: Build updated spec
