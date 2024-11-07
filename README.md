@@ -48,14 +48,10 @@ In general, quite many project authors complicate finding the latest version by:
 
 There is no consistency in human beings.
 
-To deal with all this mess and simply get a well-formatted, last *stable* version (or download
+To deal with all this mess and get a well-formatted, last *stable* version (or download
  URL!) on the command line, you can use `lastversion`.
 
-Its primary use is for build systems - whenever you want to watch specific projects for released
-versions to build packages automatically.
-Or otherwise require getting the latest version in your automation scripts.
-
-[Like I do](https://www.getpagespeed.com/redhat)
+`lastversion` is particularly useful in automated build systems where tracking the latest release versions is essential.
 
 `lastversion` does a little bit of AI to detect if releasers mistakenly filed a beta version as a 
 stable release.
@@ -719,9 +715,10 @@ Only features that are essential to GitHub releases are prioritized. If your iss
 - **Contribute**: We encourage you to submit a pull request with your proposed changes or enhancement.
 - **Donate**: If you'd like to see a feature developed but cannot contribute code, consider [making a donation](https://github.com/sponsors/dvershinin). Your donations help us allocate resources to work on additional features and improvements.
 
-## Sponsored Message
+## Project Independence
 
-**GetPageSpeed RPM Repository**: Enhance your server performance with our NGINX modules and performance tools. Visit [GetPageSpeed.com](https://www.getpagespeed.com/) to learn more and subscribe for access.
+**lastversion** is an independent open-source project maintained by contributors. It is not affiliated with any commercial entities.
 
+---
 
-[![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/dvershinin/lastversion/?ref=repository-badge)
+*This project is developed using [JetBrains](https://www.jetbrains.com/) tools.*
