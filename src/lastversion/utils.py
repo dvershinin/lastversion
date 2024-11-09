@@ -1,4 +1,5 @@
 """Utility functions for lastversion."""
+
 import errno
 import io
 import logging
@@ -37,6 +38,8 @@ try:
     RPM_AVAILABLE = True
 except ImportError:
     pass
+
+DOWNLOAD_TIMEOUT = 30
 
 log = logging.getLogger(__name__)
 content_disposition_regex = re.compile(
@@ -282,7 +285,7 @@ def download_file(url, local_filename=None):
         local_filename = url.split("/")[-1]
     try:
         # Note that the stream=True parameter below
-        with requests.get(url, stream=True, timeout=5) as response:
+        with requests.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT) as response:
             response.raise_for_status()
             if "." not in local_filename and "Content-Disposition" in response.headers:
                 disp_filename = get_content_disposition_filename(response)
@@ -419,7 +422,7 @@ def extract_file(url: str, to_dir="."):
         log.critical("pip install py7zr to support .7z archives")
         return
     try:
-        with requests.get(url, stream=True, timeout=5) as response:
+        with requests.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT) as response:
             response.raise_for_status()
             # Download the file in chunks and save it to a memory buffer
             # content-length may be empty, default to 0

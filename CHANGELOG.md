@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.7] - 2024-11-07
+### Fixed
+* Raised files download timeout to 30 seconds
+
 ## [3.5.6] - 2024-09-08
 ### Fixed
 * Known NGINX repo has been moved to GitHub
