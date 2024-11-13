@@ -21,7 +21,8 @@ install_requires = [
     # https://github.com/ionrock/cachecontrol/issues/137
     "requests>=2.6.1",
     "packaging",
-    "cachecontrol[filecache]",
+    "cachecontrol[filecache]==0.12.14; python_version < '3.7'",
+    "cachecontrol[filecache]; python_version >= '3.7'",
     "appdirs",
     "feedparser",
     "python-dateutil",
