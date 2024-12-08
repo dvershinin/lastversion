@@ -82,7 +82,7 @@ lastversion format "mysqld  Ver 5.6.51-91.0 for Linux"
 Supported:
 
 * CentOS/RHEL 7, 8, 9 including clones like AlmaLinux and Rocky Linux
-* Amazon Linux 2
+* Amazon Linux 2, Amazon Linux 2023
 * Fedora Linux
 
 ```bash

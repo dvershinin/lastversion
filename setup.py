@@ -21,6 +21,8 @@ install_requires = [
     # https://github.com/ionrock/cachecontrol/issues/137
     "requests>=2.6.1",
     "packaging",
+    # to properly resolve to the right supported cachecontrol version, use latest pip on Python 3.6
+    # can be achieved by creating virtualenv directly by virtualenv-3.6 command or upgrading pip in the virtualenv
     "cachecontrol[filecache]",
     "appdirs",
     "feedparser",

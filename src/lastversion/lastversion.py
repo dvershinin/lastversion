@@ -19,6 +19,7 @@ import shlex
 import sys
 from os.path import expanduser
 from pathlib import Path
+from urllib.parse import urlparse
 
 import yaml
 from packaging.version import InvalidVersion
@@ -46,6 +47,23 @@ FAILS_SEM_ERR_FMT = (
 
 
 # noinspection GrazieInspection
+def find_preferred_url(spec_urls):
+    """
+    Given a list of URLs of a project, return preferred one that might lead to version info.
+    Basically returns the first URL that matches a handler by matching its primary domain.
+    """
+    # TODO: use rpmspec --parse if failed to get lastversion_repo inside spec (includes macro)
+    for url in spec_urls:
+        # parse URL and get domain
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        # enumerate holders, and see if any of them can handle this domain
+        for holder in HolderFactory.HOLDERS.values():
+            if holder.DEFAULT_HOSTNAME and holder.DEFAULT_HOSTNAME == hostname:
+                return url
+    return spec_urls[0] if spec_urls else None
+
+
 def get_repo_data_from_spec(rpmspec_filename):
     """
     Extracts repo data and CLI args from .spec file
@@ -69,7 +87,7 @@ def get_repo_data_from_spec(rpmspec_filename):
         upstream_name = None
         current_version = None
         spec_repo = None
-        spec_url = None
+        spec_urls = []
         for line in f.readlines():
             if line.startswith("%global lastversion_repo"):
                 spec_repo = shlex.split(line)[2].strip()
@@ -80,9 +98,12 @@ def get_repo_data_from_spec(rpmspec_filename):
             elif line.startswith("Name:"):
                 name = line.split("Name:")[1].strip()
             elif line.startswith("URL:"):
-                spec_url = line.split("URL:")[1].strip()
-            elif line.startswith("Source0:") and not spec_url:
-                spec_url = line.split("Source0:")[1].strip()
+                # append to spec_urls
+                spec_urls.append(line.split("URL:")[1].strip())
+            elif line.startswith("Source0:"):
+                source0 = line.split("Source0:")[1].strip()
+                if source0.startswith("https://") or source0.startswith("http://"):
+                    spec_urls.append(source0)
             elif line.startswith("%global upstream_version "):
                 current_version = shlex.split(line)[2].strip()
                 # influences %spec_tag to use %upstream_version instead of %version
@@ -118,13 +139,14 @@ def get_repo_data_from_spec(rpmspec_filename):
             repo_data["name"] = name
             repo_data["spec_name"] = "%{name}"
 
-        repo = spec_url
         if upstream_github:
             repo = f"{upstream_github}/{repo_data['name']}"
             log.info("Discovered GitHub repo %s from .spec file", repo)
         elif spec_repo:
             repo = spec_repo
             log.info("Discovered explicit repo %s from .spec file", repo)
+        else:
+            repo = find_preferred_url(spec_urls)
 
         if not repo:
             log.critical(
