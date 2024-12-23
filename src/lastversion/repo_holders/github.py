@@ -76,6 +76,15 @@ class GitHubRepoSession(BaseProjectHolder):
             # get URL from website instead of GitHub because it is "prepared" source
             "release_url_format": "https://nginx.org/download/{name}-{version}.{ext}",
         },
+        "freenginx": {
+            "repo": "freenginx/nginx",
+            "branches": {
+                "stable": "\\.\\d?[02468]\\.",
+                "mainline": "\\.\\d?[13579]\\.",
+            },
+            # get URL from website instead of GitHub because it is "prepared" source
+            "release_url_format": "https://freenginx.org/download/freenginx-{version}.{ext}",
+        },
     }
 
     KNOWN_REPO_URLS = {

@@ -1,4 +1,5 @@
 """Test CLI functions."""
+
 import os
 import subprocess
 import sys
@@ -6,7 +7,7 @@ import tempfile
 
 from packaging import version
 
-from lastversion import main
+from lastversion.cli import main
 from .helpers import captured_exit_code
 
 

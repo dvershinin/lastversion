@@ -3,6 +3,6 @@
 skips: ['B105', B404', 'B603']
 # Do not check paths including `/tests/`:
 # they use `assert`, leading to B101 false positives.
-# also we do not need check security issues in tests
+# also we do not need to check security issues in tests
 exclude_dirs:
     - '/tests/'

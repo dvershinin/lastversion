@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 
 from packaging import version
 
-from lastversion import main
+from lastversion.cli import main
 from lastversion.lastversion import latest
 from tests.helpers import captured_exit_code
 

@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 
 
 def matches_filter(filter_s, positive, version_s):
-    """Check if version string matches a filter string.
+    """Check if a version string matches a filter string.
 
     Args:
         filter_s (str): Filter string.

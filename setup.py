@@ -80,7 +80,7 @@ setup(
     },
     tests_require=tests_requires,
     include_package_data=True,
-    entry_points={"console_scripts": ["lastversion = lastversion:main"]},
+    entry_points={"console_scripts": ["lastversion = lastversion.cli:main"]},
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
