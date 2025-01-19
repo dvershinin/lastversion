@@ -58,16 +58,14 @@ Click `Execute` to verify results and copy Markdown or desired format.
 ### 2. Production-Ready Commercial API on RapidAPI
 
 Subscribe to the commercial API on RapidAPI for higher rate limits, guaranteed performance, or advanced features:
-- [LastVersion API on RapidAPI](https://rapidapi.com/ciapnz/api/lastversion)
+ [lastversion API on RapidAPI](https://rapidapi.com/ciapnz/api/lastversion)
 
-For **production** use, higher rate limits, guaranteed performance, or advanced features, check out our hosted API on RapidAPI:
-- Flexible Endpoints: Fetch just the `version`, list of `assets`, or full release details via different routes.
-- Scalable Billing Plans: **Start free**, upgrade as your usage grows.
+Users of the lastversion API on RapidAPI benefit from:
 
-**Why RapidAPI?**  
-- Easier Integration: The platform handles billing, usage metrics, and rate limiting in a clear manner.  
-- Global Infrastructure: Your requests route quickly from anywhere in the world.  
-- Stable for Production: More robust than the free endpoint, guaranteed uptime, and no 2-hour forced cache if you need fresh data.
+* Higher rate limits and guaranteed performance
+* Flexible Endpoints: Fetch just the `version`, list of `assets`, or full release details via different routes.
+* Scalable Billing Plans: **Start free**, upgrade as your usage grows.
+* Stability for Production: guaranteed uptime and no 2-hour forced cache if you need fresh data.
 
 Secure your requests with API Keys provided by RapidAPI.
 
@@ -85,7 +83,7 @@ The `project_id` can be a single identifier like `linux` or `nginx` or a GitHub 
 
 **Example Requests**:
 
-Fetch Nginx Latest Version (GET):
+Fetch NGINX Latest Version (GET):
 
 ```
 curl -X GET "https://lastversion.p.rapidapi.com/release?project=nginx" \
@@ -138,7 +136,7 @@ curl -X GET "https://lastversion.p.rapidapi.com/release?project=WordPress/WordPr
 
 Response will include `version:` field as well as a lot of other useful information about the latest release.
 
-Fetch downoad URL of latest WordPress:
+Fetch the downoad URL of latest WordPress:
 
 ```
 curl -X GET "https://lastversion.p.rapidapi.com/source?project=WordPress/WordPress" \
