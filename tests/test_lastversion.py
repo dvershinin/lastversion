@@ -1,4 +1,5 @@
 """Test lastversion."""
+
 import os
 
 import subprocess
@@ -102,7 +103,7 @@ def test_grafana():
     """Test Grafana at GitHub."""
     repo = "grafana/grafana"
 
-    output = latest(repo)
+    output = latest(repo, exclude="lib")
 
     assert output >= version.parse("6.2.2")
 
