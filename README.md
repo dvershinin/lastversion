@@ -708,6 +708,18 @@ The `lastversion.latest` function accepts 3 arguments
 You can also use `lastversion` directly in your GitHub action workflows, 
 with [`lastversion-action`](https://github.com/dvershinin/lastversion-action).
 
+## Hosted API Option
+
+Prefer a hosted, no-install solution for getting the latest versions?  
+Check out the [lastversion API on RapidAPI](https://rapidapi.com/ciapnz/api/lastversion). 
+
+**Highlights:**
+- **No Installation Needed**: Access the latest release info of any project from any environment—CI/CD pipelines, serverless functions, or front-end code—without installing `lastversion`.
+- **Multiple Endpoints**: Fetch just the version, assets, or the full release details with flexible JSON responses.
+- **Commercial Support**: For users who need a quick, fully hosted solution (or can’t install on certain systems), the API may be more convenient.
+
+*Of course, the open-source CLI remains free and fully featured. This API is an optional hosted service.*
+
 ## Feature Requests and Enhancements
 
 Only features that are essential to GitHub releases are prioritized. If your issue or suggested feature is outside the current focus, here's how you can help make it happen:
