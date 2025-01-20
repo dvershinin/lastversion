@@ -74,12 +74,18 @@ Secure your requests with API Keys provided by RapidAPI.
 
 📌 **Endpoints**
 
-* `/version?project=project_id` returns only the version string, corresponding to the latest release
-* `/source?project=project_id` returns URL to download source tarball corresponding to the latest release
-* `/release?project=project_id` returns various information about the latest release with mandatory `version` field
-* `/assets?project=project_id` returns URLs corresponding to downloadable executable or other assets for the latest release
+* `/version?project=project_id` returns JSON with the version string, corresponding to the latest release
+* `/source?project=project_id` returns JSON with URL to download source tarball corresponding to the latest release
+* `/assets?project=project_id` returns JSON URLs corresponding to downloadable executable or other assets for the latest release
+* `/release?project=project_id` returns JSON with various information about the latest release with mandatory `version` field
 
 The `project_id` can be a single identifier like `linux` or `nginx` or a GitHub repository name, or you can even supply a URL where a project is hosted.
+
+📌 **Text Endpoints**
+
+* `/text/version?project=project_id` returns only text with the version string, corresponding to the latest release.
+* `/text/source?project=project_id` returns only text with the URL to download source tarball corresponding to the latest release
+* `/text/assets?project=project_id` returns only text with URLs corresponding to downloadable executable or other assets for the latest release
 
 **Example Requests**:
 
@@ -101,13 +107,13 @@ Response:
 }
 ```
 
-If you want to get just the version, use the `/version` endpoint URL.
+If you want to get just the version, use the `/text/version` endpoint URL.
 
 
 Fetch Linux Latest Version (GET) with Version Only:
 
 ```
-curl -X GET "https://lastversion.p.rapidapi.com/version?project=torvalds/linux" \
+curl -X GET "https://lastversion.p.rapidapi.com/text/version?project=torvalds/linux" \
      -H "X-RapidAPI-Key: YOUR_RAPIDAPI_KEY" \
      -H "X-RapidAPI-Host: lastversion.p.rapidapi.com"
 ```
@@ -119,7 +125,7 @@ Every endpoint supports `major` parameter, allowing you to answer questions like
 &gt; What was the last 4.x Linux version?
 
 ```
-curl -X GET "https://lastversion.p.rapidapi.com/version?project=torvalds/linux&major=4" \
+curl -X GET "https://lastversion.p.rapidapi.com/text/version?project=torvalds/linux&major=4" \
      -H "X-RapidAPI-Key: YOUR_RAPIDAPI_KEY" \
      -H "X-RapidAPI-Host: lastversion.p.rapidapi.com"
 ```
@@ -136,7 +142,7 @@ curl -X GET "https://lastversion.p.rapidapi.com/release?project=WordPress/WordPr
 
 Response will include `version:` field as well as a lot of other useful information about the latest release.
 
-Fetch the downoad URL of latest WordPress:
+Fetch download URL of the latest WordPress:
 
 ```
 curl -X GET "https://lastversion.p.rapidapi.com/source?project=WordPress/WordPress" \
@@ -151,5 +157,5 @@ The creative and useful application of this API is in fact unlimited, when you p
 For example, download the latest WordPress release:
 
 ```bash
-wget $(curl -X GET "https://lastversion.p.rapidapi.com/source?project=WordPress/WordPress" -H "X-RapidAPI-Key: YOUR_RAPIDAPI_KEY" -H "X-RapidAPI-Host: lastversion.p.rapidapi.com")
+wget $(curl -X GET "https://lastversion.p.rapidapi.com/text/source?project=WordPress/WordPress" -H "X-RapidAPI-Key: YOUR_RAPIDAPI_KEY" -H "X-RapidAPI-Host: lastversion.p.rapidapi.com")
 ```
