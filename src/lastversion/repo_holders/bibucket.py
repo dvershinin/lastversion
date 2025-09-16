@@ -1,4 +1,5 @@
 """BitBucket repository session."""
+
 import logging
 from dateutil import parser
 
@@ -10,6 +11,7 @@ log = logging.getLogger(__name__)
 
 class BitBucketRepoSession(BaseProjectHolder):
     """BitBucket repository session."""
+
     DEFAULT_HOSTNAME = "bitbucket.org"
     CAN_BE_SELF_HOSTED = True
     KNOWN_REPO_URLS = {
@@ -38,7 +40,7 @@ class BitBucketRepoSession(BaseProjectHolder):
                 f"https://api.bitbucket.org/2.0/repositories/{self.repo}/downloads"
             )
             response.raise_for_status()
-            
+
             # Check if response is valid JSON
             try:
                 data = response.json()
@@ -46,7 +48,7 @@ class BitBucketRepoSession(BaseProjectHolder):
                 # If downloads API returns HTML error (free plan), fall back to tags
                 log.info("Downloads API not available, falling back to tags API")
                 return self._get_latest_from_tags(pre_ok, major)
-            
+
             if data.get("values"):
                 release = data["values"][0]
                 version = self.sanitize_version(release["name"], pre_ok, major)
@@ -56,7 +58,7 @@ class BitBucketRepoSession(BaseProjectHolder):
                 return release
         except Exception as e:
             log.info("Downloads API failed: %s, falling back to tags API", e)
-        
+
         # Fall back to tags API
         return self._get_latest_from_tags(pre_ok, major)
 
@@ -65,38 +67,38 @@ class BitBucketRepoSession(BaseProjectHolder):
         # Get all tags with pagination
         all_tags = []
         next_url = f"https://api.bitbucket.org/2.0/repositories/{self.repo}/refs/tags?pagelen=100"
-        
+
         while next_url:
             response = self.get(next_url)
             response.raise_for_status()
-            
+
             try:
                 data = response.json()
             except ValueError as e:
                 raise BadProjectError(f"Invalid JSON response from BitBucket API: {e}")
-            
+
             if not data.get("values"):
                 break
-                
+
             all_tags.extend(data["values"])
-            
+
             # Check if there are more pages
             next_url = data.get("next")
-        
+
         if not all_tags:
             raise BadProjectError(f"No tags found for repository {self.repo}")
-        
+
         # Find the latest valid version from all tags
         latest_release = None
         latest_version = None
-        
+
         for tag in all_tags:
             tag_name = tag["name"]
             version = self.sanitize_version(tag_name, pre_ok, major)
-            
+
             if not version:
                 continue
-                
+
             if latest_version is None or version > latest_version:
                 latest_version = version
                 latest_release = {
@@ -104,10 +106,10 @@ class BitBucketRepoSession(BaseProjectHolder):
                     "version": version,
                     "tag_name": tag_name,
                     "tag_date": parser.parse(tag["target"]["date"]),
-                    "created_on": tag["target"]["date"]
+                    "created_on": tag["target"]["date"],
                 }
-        
+
         if not latest_release:
             raise BadProjectError(f"No valid versions found for repository {self.repo}")
-        
+
         return latest_release
