@@ -119,7 +119,8 @@ class BaseProjectHolder(requests.Session):
 
         self.names_cache_filename = f"{self.cache_dir}/repos.json"
 
-        self.headers.update({"User-Agent": f"{app_name}/{__version__}"})
+        self.user_agent = f"{app_name}/{__version__}"
+        self.headers.update({"User-Agent": self.user_agent})
         log.info("Created instance of %s", type(self).__name__)
         self.branches = None
         self.only = None

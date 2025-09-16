@@ -1,7 +1,8 @@
 """FeedRepoSession class."""
+
 import datetime
 import logging
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 import feedparser
 
@@ -37,6 +38,9 @@ class FeedRepoSession(BaseProjectHolder):
         self.home_soup = html
         feed_urls = html.findAll("link", rel="alternate")
 
+        base_tag = html.find("base", href=True)
+        base_url = urljoin(site, base_tag["href"]) if base_tag else site
+
         for f in feed_urls:
             t = f.get("type", None)
             if not t:
@@ -44,18 +48,16 @@ class FeedRepoSession(BaseProjectHolder):
             if "rss" in t or "xml" in t:
                 href = f.get("href", None)
                 if href:
-                    possible_feeds.append(href)
-        parsed_url = urlparse(site)
-        base = f"{parsed_url.scheme}://{parsed_url.hostname}"
+                    possible_feeds.append(urljoin(base_url, href))
         a_tags = html.findAll("a")
         for a in a_tags:
             href = a.get("href", None)
             if not href:
                 continue
             if "xml" in href or "rss" in href or "feed" in href:
-                possible_feeds.append(base + "/" + href.lstrip("/"))
+                possible_feeds.append(urljoin(base_url, href))
         for url in list(set(possible_feeds)):
-            f = feedparser.parse(url)
+            f = feedparser.parse(url, agent=self.user_agent)
             if len(f.entries) > 0 and url not in result:
                 result.append(url)
         return result
