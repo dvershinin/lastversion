@@ -12,6 +12,9 @@ import requests
 from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
 from cachecontrol.caches.file_cache import FileCache
+from lockfile import LockError
+from lockfile.linklockfile import LinkLockFile
+from lockfile.mkdirlockfile import MkdirLockFile
 from packaging.version import InvalidVersion
 
 from lastversion.version import Version
@@ -27,6 +30,62 @@ from lastversion.utils import asset_does_not_belong_to_machine, ensure_directory
 
 log = logging.getLogger(__name__)
 
+
+def _safe_open_write(filename, fmode):
+    """Open a file for secure write, mirroring CacheControl's behavior without
+    relying on its private API.
+    """
+    flags = os.O_WRONLY
+    flags |= os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    if hasattr(os, "O_BINARY"):
+        flags |= os.O_BINARY
+    try:
+        os.remove(filename)
+    except (IOError, OSError):
+        pass
+    fd = os.open(filename, flags, fmode)
+    try:
+        return os.fdopen(fd, "wb")
+    except Exception:
+        os.close(fd)
+        raise
+
+
+class TimedMkdirLockFile(MkdirLockFile):
+    """Mkdir-based lock with a finite default timeout to avoid hangs."""
+
+    def __init__(self, path, threaded=True, timeout=None):
+        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+
+
+class TimedLinkLockFile(LinkLockFile):
+    """Link-based lock with a finite default timeout to avoid hangs."""
+
+    def __init__(self, path, threaded=True, timeout=None):
+        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+
+
+class SafeFileCache(FileCache):
+    """FileCache that avoids hanging on lock acquisition by timing out and
+    skipping cache writes on lock errors.
+    """
+
+    def _write(self, path, data: bytes):
+        # Ensure directory exists
+        try:
+            os.makedirs(os.path.dirname(path), self.dirmode)
+        except (IOError, OSError):
+            pass
+
+        try:
+            with self.lock_class(path) as lock:
+                with _safe_open_write(lock.path, self.filemode) as fh:
+                    fh.write(data)
+        except LockError as exc:
+            # Do not fail requests on cache lock issues; just skip caching
+            log.debug("Cache write skipped due to lock error: %s", exc)
 
 def matches_filter(filter_s, positive, version_s):
     """Check if a version string matches a filter string.
@@ -109,7 +168,9 @@ class BaseProjectHolder(requests.Session):
         if not self.CACHE_DISABLED:
             self.cache_dir = user_cache_dir(app_name)
             log.info("Using cache directory: %s.", self.cache_dir)
-            self.cache = FileCache(self.cache_dir)
+            # Use a lock with a finite timeout to avoid rare hangs on cache writes
+            lock_cls = TimedLinkLockFile if hasattr(os, "link") else TimedMkdirLockFile
+            self.cache = SafeFileCache(self.cache_dir, lock_class=lock_cls)
             cache_adapter = CacheControlAdapter(cache=self.cache)
             # noinspection HttpUrlsUsage
             self.mount("http://", cache_adapter)

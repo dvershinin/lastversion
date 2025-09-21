@@ -1,5 +1,16 @@
 test:
-	pytest -v -n auto
+	@if [ -f ~/.secrets ]; then \
+		echo "Sourcing ~/.secrets..."; \
+		. ~/.secrets; \
+	fi; \
+	if [ -z "$$GITHUB_API_TOKEN" ]; then \
+		echo "Error: GITHUB_API_TOKEN is not set. Please set it in ~/.secrets or environment."; \
+		exit 1; \
+	fi; \
+	if [ -f ${HOME}/.virtualenvs/lastversion/bin/python ]; then \
+		source ${HOME}/.virtualenvs/lastversion/bin/activate; \
+	fi; \
+	timeout 600 python -m pytest -v -n auto
 
 publish: clean
 	python setup.py sdist bdist_wheel

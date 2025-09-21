@@ -1,0 +1,11 @@
+---
+description: Python interpreter and tooling (Always)
+globs:
+  alwaysApply: true
+---
+
+- Use the Python interpreter at `${env:HOME}/.virtualenvs/lastversion/bin/python` for all Python execution in this workspace.
+- When running tests, use: `${env:HOME}/.virtualenvs/lastversion/bin/python -m pytest` (not bare `pytest`).
+- When invoking scripts or modules (formatters, linters, CLI tools), call them via the interpreter: `${env:HOME}/.virtualenvs/lastversion/bin/python -m <module>`.
+- Prefer this interpreter for local runs, CI, and any automation unless explicitly overridden.
+- Source `~/.secrets` prior to running tests, as this file contains the required API tokens.
