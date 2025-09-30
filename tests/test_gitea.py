@@ -22,4 +22,3 @@ def test_codeberg_repo():
     # Forgejo should have versions, just check it's valid
     assert v is not None
     assert isinstance(v, version.Version)
-
