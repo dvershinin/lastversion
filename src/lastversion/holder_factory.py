@@ -4,6 +4,7 @@ import logging
 from urllib.parse import urlparse
 from collections import OrderedDict
 from lastversion.repo_holders.bibucket import BitBucketRepoSession
+from lastversion.repo_holders.codeberg import CodebergRepoSession
 from lastversion.repo_holders.feed import FeedRepoSession
 from lastversion.repo_holders.github import GitHubRepoSession
 from lastversion.repo_holders.gitlab import GitLabRepoSession
@@ -40,8 +41,8 @@ class HolderFactory:
             "bitbucket": BitBucketRepoSession,
             "pip": PypiRepoSession,
             "hg": MercurialRepoSession,
+            "codeberg": CodebergRepoSession,
             "gitea": GiteaRepoSession,
-            "codeberg": GiteaRepoSession,
             # misc
             "website-feed": FeedRepoSession,
             "local": LocalVersionSession,

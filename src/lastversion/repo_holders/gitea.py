@@ -46,8 +46,8 @@ class GiteaRepoSession(BaseProjectHolder):
 
     DEFAULT_HOSTNAME = "gitea.com"
     CAN_BE_SELF_HOSTED = True
-    # Known Gitea instances
-    KNOWN_GITEA_HOSTS = ["codeberg.org"]
+    # Known Gitea instances (excluding Codeberg which has its own holder)
+    KNOWN_GITEA_HOSTS = []
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
     2) likely has been accessed by someone in CDN and thus faster
