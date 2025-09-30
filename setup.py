@@ -80,7 +80,9 @@ setup(
     },
     tests_require=tests_requires,
     include_package_data=True,
-    entry_points={"console_scripts": ["lastversion = lastversion.cli:main_with_bulk_support"]},
+    entry_points={
+        "console_scripts": ["lastversion = lastversion.cli:main_with_bulk_support"]
+    },
     classifiers=[
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",

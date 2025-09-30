@@ -30,17 +30,18 @@ from lastversion.version import Version
 def main_with_bulk_support(argv=None):
     """
     Wrapper that handles bulk input via -i/--input option.
-    
+
     Args:
         argv: List of arguments
     """
     # Check if -i/--input is in the arguments
     if argv is None:
         import sys as _sys
+
         argv = _sys.argv[1:]
-    
+
     # Check for --help to add our custom option
-    if '--help' in argv or '-h' in argv:
+    if "--help" in argv or "-h" in argv:
         # Let main handle help but we'll add a note about -i
         try:
             main(argv)
@@ -48,31 +49,39 @@ def main_with_bulk_support(argv=None):
             # Print additional help for -i option
             print("\nBulk processing option:")
             print("  -i FILE, --input FILE")
-            print("                        Read repository list from file, one repository per line")
-            print("                        Lines starting with '#' are treated as comments")
+            print(
+                "                        Read repository list from file, one repository per line"
+            )
+            print(
+                "                        Lines starting with '#' are treated as comments"
+            )
             raise
-    
+
     input_file = None
     input_file_idx = None
-    
+
     # Find -i or --input in argv
     for i, arg in enumerate(argv):
-        if arg == '-i' or arg == '--input':
+        if arg == "-i" or arg == "--input":
             if i + 1 < len(argv):
                 input_file = argv[i + 1]
                 input_file_idx = i
                 break
-        elif arg.startswith('--input='):
-            input_file = arg.split('=', 1)[1]
+        elif arg.startswith("--input="):
+            input_file = arg.split("=", 1)[1]
             input_file_idx = i
             break
-    
+
     if input_file:
         # Bulk mode: read repos from file and process each
         repos = []
         try:
-            with open(input_file, 'r', encoding='utf-8') as f:
-                repos = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+            with open(input_file, "r", encoding="utf-8") as f:
+                repos = [
+                    line.strip()
+                    for line in f
+                    if line.strip() and not line.strip().startswith("#")
+                ]
         except FileNotFoundError:
             log.critical(f"Input file not found: {input_file}")
             sys.exit(1)
@@ -81,19 +90,19 @@ def main_with_bulk_support(argv=None):
             log.critical(f"Error reading input file: {e}")
             sys.exit(1)
             return  # In case sys.exit is mocked
-        
+
         if not repos:
             log.critical("No repositories found in input file")
             sys.exit(1)
             return  # In case sys.exit is mocked
-        
+
         # Remove -i/--input and its value from argv
         new_argv = list(argv)
-        if argv[input_file_idx].startswith('--input='):
+        if argv[input_file_idx].startswith("--input="):
             del new_argv[input_file_idx]
         else:
-            del new_argv[input_file_idx:input_file_idx+2]
-        
+            del new_argv[input_file_idx : input_file_idx + 2]
+
         # Process each repo
         exit_code = 0
         for repo in repos:
@@ -104,7 +113,7 @@ def main_with_bulk_support(argv=None):
             except SystemExit as e:
                 if e.code and e.code != 0:
                     exit_code = e.code
-        
+
         sys.exit(exit_code)
     else:
         # Normal mode: just call main
