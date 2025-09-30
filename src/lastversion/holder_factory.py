@@ -132,9 +132,14 @@ class HolderFactory:
         # if repo is a link, get the hostname by parsing as URL
         if repo.startswith(("http:", "https:")):
             parsed = urlparse(repo)
-            # Use netloc (hostname:port) instead of just hostname to preserve port information
-            # for self-hosted instances with non-standard ports
-            hostname = parsed.netloc if parsed.port else parsed.hostname
+            # Use netloc (hostname:port) to preserve port information for self-hosted instances
+            # Only include port if it's non-standard (not 80 for http, not 443 for https)
+            is_standard_https = parsed.scheme == 'https' and parsed.port == 443
+            is_standard_http = parsed.scheme == 'http' and parsed.port == 80
+            if parsed.port and not (is_standard_https or is_standard_http):
+                hostname = parsed.netloc
+            else:
+                hostname = parsed.hostname
             repo = parsed.path.lstrip("/")
             if not repo:
                 repo = None
