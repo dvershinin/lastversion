@@ -137,29 +137,43 @@ class GitLabRepoSession(BaseProjectHolder):
         packages_urls = []
         version = release.get("tag_name", "")
         if not version:
+            log.debug("No tag_name in release, skipping package lookup")
             return packages_urls
 
-        # Query packages for this project
-        r = self.repo_query("/packages", params={"per_page": 100})
-        if r.status_code == 200:
-            packages = r.json()
-            for package in packages:
-                # Match packages with the release version
-                if package.get("version") == version:
-                    package_files = package.get("package_files", [])
-                    for package_file in package_files:
-                        file_name = package_file.get("file_name", "")
-                        if file_name:
-                            # Build package download URL
-                            package_name = package.get("name", "")
-                            package_type = package.get("package_type", "generic")
-                            url = f"{self.api_base}/projects/{self.repo.replace('/', '%2F')}/packages/{package_type}/{package_name}/{version}/{file_name}"
-                            packages_urls.append({"name": file_name, "url": url})
+        try:
+            # Query packages for this project
+            r = self.repo_query("/packages", params={"per_page": 100})
+            if r.status_code == 200:
+                packages = r.json()
+                for package in packages:
+                    # Match packages with the release version
+                    if package.get("version") == version:
+                        package_files = package.get("package_files", [])
+                        for package_file in package_files:
+                            file_name = package_file.get("file_name", "")
+                            if file_name:
+                                # Build package download URL
+                                package_name = package.get("name", "")
+                                package_type = package.get("package_type", "generic")
+                                url = f"{self.api_base}/projects/{self.repo.replace('/', '%2F')}/packages/{package_type}/{package_name}/{version}/{file_name}"
+                                packages_urls.append({"name": file_name, "url": url})
+            else:
+                log.debug(
+                    "Packages API returned status %s, no packages will be included",
+                    r.status_code,
+                )
+        except Exception as e:
+            log.debug("Error fetching packages: %s", e)
 
         return packages_urls
 
     def get_assets(self, release, short_urls, assets_filter=None):
-        """Get assets for a given release."""
+        """Get assets for a given release.
+
+        This method now includes both traditional release assets (from release.assets.links)
+        and GitLab packages (from the packages API), addressing the issue where
+        packages were not being parsed by lastversion.
+        """
         urls = []
         assets = release.get("assets", {}).get("links", [])
 
@@ -198,9 +212,14 @@ class GitLabRepoSession(BaseProjectHolder):
         """Get release download URL."""
         if shorter:
             log.info("Shorter URLs are not supported for GitLab yet")
+
+        tag = release.get("tag_name")
+        if not tag:
+            log.warning("Release has no tag_name, cannot generate download URL")
+            return ""
+
         # https://gitlab.com/onedr0p/sonarr-episode-prune/-/archive/v3.0.0/sonarr-episode-prune-v3.0.0.tar.gz
         ext = "zip" if os.name == "nt" else "tar.gz"
-        tag = release["tag_name"]
         url_format = "https://{}/{}/-/archive/{}/{}-{}.{}"
         return url_format.format(
             self.hostname, self.repo, tag, self.repo.split("/")[1], tag, ext
