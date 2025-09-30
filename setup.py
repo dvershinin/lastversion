@@ -77,6 +77,7 @@ setup(
         "tests": install_requires + tests_requires,
         "docs": docs_requires,
         "build": install_requires + tests_requires + docs_requires,
+        "truststore": ["truststore"],
     },
     tests_require=tests_requires,
     include_package_data=True,
