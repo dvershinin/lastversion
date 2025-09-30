@@ -58,14 +58,18 @@ class TimedMkdirLockFile(MkdirLockFile):
     """Mkdir-based lock with a finite default timeout to avoid hangs."""
 
     def __init__(self, path, threaded=True, timeout=None):
-        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+        super().__init__(
+            path, threaded=threaded, timeout=5 if timeout is None else timeout
+        )
 
 
 class TimedLinkLockFile(LinkLockFile):
     """Link-based lock with a finite default timeout to avoid hangs."""
 
     def __init__(self, path, threaded=True, timeout=None):
-        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+        super().__init__(
+            path, threaded=threaded, timeout=5 if timeout is None else timeout
+        )
 
 
 class SafeFileCache(FileCache):
@@ -87,6 +91,7 @@ class SafeFileCache(FileCache):
         except LockError as exc:
             # Do not fail requests on cache lock issues; just skip caching
             log.debug("Cache write skipped due to lock error: %s", exc)
+
 
 def matches_filter(filter_s, positive, version_s):
     """Check if a version string matches a filter string.
@@ -354,7 +359,7 @@ class BaseProjectHolder(requests.Session):
         if not cls.DEFAULT_HOSTNAME and not cls.SUBDOMAIN_INDICATOR:
             return False
         # Strip port from hostname for comparison (e.g., 'gitlab.example.com:9000' -> 'gitlab.example.com')
-        hostname_without_port = hostname.split(':')[0]
+        hostname_without_port = hostname.split(":")[0]
         if cls.DEFAULT_HOSTNAME == hostname_without_port:
             return True
         if cls.SUBDOMAIN_INDICATOR and hostname_without_port.startswith(
