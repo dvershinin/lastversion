@@ -26,6 +26,8 @@ A tiny command-line utility that helps to answer a simple question:
 *   BitBucket
 *   PyPI
 *   Mercurial
+*   Gitea
+*   Codeberg
 *   SourceForge
 *   Wikipedia
 *   WordPress plugin directory
@@ -138,7 +140,7 @@ usage: lastversion [-h] [--pre] [--sem {major,minor,patch,any}] [-v]
                    [--assets] [--source] [-gt VER] [-b MAJOR] [--only REGEX]
                    [--exclude REGEX] [--filter REGEX] [--having-asset [ASSET]]
                    [-su] [--even]
-                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea}]
+                   [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea,codeberg}]
                    [-y] [--version]
                    [{get,download,extract,unzip,test,format,install,update-spec}]
                    <repo URL or string>
@@ -181,7 +183,7 @@ optional arguments:
   --having-asset [ASSET]
                         Only consider releases with this asset
   -su, --shorter-urls   A tiny bit shorter URLs produced
-  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea}
+  --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea,codeberg}
                         If the repo argument is one word, specifies where to
                         look up the project. The default is via internal
                         lookup or GitHub Search
@@ -701,7 +703,7 @@ The `lastversion.latest` function accepts 3 arguments
  `dict` to return a dictionary as described above
 *   `pre_ok`, boolean for whether to include pre-releases as potential versions
 *   `at`, specifies project location when using one-word repo names, one of 
- `github`, `gitlab`, `bitbucket`, `pip`, `hg`, `sf`, `website-feed`, `local`
+ `github`, `gitlab`, `bitbucket`, `pip`, `hg`, `sf`, `website-feed`, `local`, `gitea`, `codeberg`
 
 ## Using in Continuous Integration
 

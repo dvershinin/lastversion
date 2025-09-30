@@ -46,6 +46,8 @@ class GiteaRepoSession(BaseProjectHolder):
 
     DEFAULT_HOSTNAME = "gitea.com"
     CAN_BE_SELF_HOSTED = True
+    # Known Gitea instances
+    KNOWN_GITEA_HOSTS = ["codeberg.org"]
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
     2) likely has been accessed by someone in CDN and thus faster
@@ -108,6 +110,19 @@ class GiteaRepoSession(BaseProjectHolder):
                 f"No project found on GitHub for search query: {repo}"
             )
         return full_name
+
+    @classmethod
+    def is_matching_hostname(cls, hostname):
+        """Check if given hostname matches to Gitea hosting domains."""
+        if not hostname:
+            return None
+        # Check default hostname
+        if cls.DEFAULT_HOSTNAME == hostname:
+            return True
+        # Check known Gitea instances
+        if hostname in cls.KNOWN_GITEA_HOSTS:
+            return True
+        return False
 
     def is_instance(self):
         """

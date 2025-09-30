@@ -39,6 +39,7 @@ class HolderFactory:
             "pip": PypiRepoSession,
             "hg": MercurialRepoSession,
             "gitea": GiteaRepoSession,
+            "codeberg": GiteaRepoSession,
             # misc
             "website-feed": FeedRepoSession,
             "local": LocalVersionSession,
