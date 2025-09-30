@@ -1,4 +1,5 @@
 """GitLab repo session."""
+
 import logging
 import os
 import platform
@@ -154,20 +155,20 @@ class GitLabRepoSession(BaseProjectHolder):
                             package_type = package.get("package_type", "generic")
                             url = f"{self.api_base}/projects/{self.repo.replace('/', '%2F')}/packages/{package_type}/{package_name}/{version}/{file_name}"
                             packages_urls.append({"name": file_name, "url": url})
-        
+
         return packages_urls
 
     def get_assets(self, release, short_urls, assets_filter=None):
         """Get assets for a given release."""
         urls = []
         assets = release.get("assets", {}).get("links", [])
-        
+
         # Also get packages for this release
         packages = self.get_packages_for_release(release)
-        
+
         # Combine assets and packages
         all_assets = assets + packages
-        
+
         arch_matched_assets = []
         if not assets_filter and platform.machine() in ["x86_64", "AMD64"]:
             for asset in all_assets:
