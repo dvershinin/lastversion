@@ -159,7 +159,7 @@ def test_cli_bulk_input_nonexistent_file(capsys):
     with captured_exit_code() as get_exit_code:
         main(["-i", "/tmp/nonexistent_file_12345.txt"])
     exit_code = get_exit_code()
-    
+
     captured = capsys.readouterr()
     assert exit_code == 1
     assert "Input file not found" in captured.err
@@ -167,18 +167,17 @@ def test_cli_bulk_input_nonexistent_file(capsys):
 
 def test_cli_bulk_input_mutual_exclusion(capsys):
     """Test that repo and -i/--input are mutually exclusive."""
-    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as f:
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
         f.write("nginx/nginx\n")
         temp_file = f.name
-    
+
     try:
         with captured_exit_code() as get_exit_code:
             main(["get", "nginx/nginx", "-i", temp_file])
         exit_code = get_exit_code()
-        
+
         captured = capsys.readouterr()
         assert exit_code == 2  # argparse error
         assert "Cannot specify both" in captured.err
     finally:
         os.unlink(temp_file)
-
