@@ -5,7 +5,7 @@ from lastversion.repo_holders.gitea import GiteaRepoSession
 
 class CodebergRepoSession(GiteaRepoSession):
     """A class to represent a Codeberg project holder.
-    
+
     Codeberg.org is a well-known Gitea instance, so we inherit from GiteaRepoSession
     and just override the default hostname.
     """
