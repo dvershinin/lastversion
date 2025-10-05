@@ -649,7 +649,10 @@ class GitHubRepoSession(BaseProjectHolder):
 
                 log.info("Checking tag %s", tag_name)
                 if prefer_update and not self.is_update_style_tag(tag_name):
-                    log.info("Skipping non update-style tag %s due to repo preference", tag_name)
+                    log.info(
+                        "Skipping non update-style tag %s due to repo preference",
+                        tag_name,
+                    )
                     continue
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
@@ -732,11 +735,15 @@ class GitHubRepoSession(BaseProjectHolder):
         # Prefer update-style tags in formal releases if they dominate
         prefer_update = False
         if self.formal_releases_by_tag:
-            prefer_update = self.detect_prefer_update_style(list(self.formal_releases_by_tag.keys()))
+            prefer_update = self.detect_prefer_update_style(
+                list(self.formal_releases_by_tag.keys())
+            )
         for tag_name in self.formal_releases_by_tag:
             release = self.formal_releases_by_tag[tag_name]
             if prefer_update and not self.is_update_style_tag(tag_name):
-                log.info("Skipping non update-style tag %s due to repo preference", tag_name)
+                log.info(
+                    "Skipping non update-style tag %s due to repo preference", tag_name
+                )
                 continue
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
