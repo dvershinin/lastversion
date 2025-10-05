@@ -121,3 +121,10 @@ def test_github_nginx_source_url():
     result = latest(repo, "source", major="1.18.0")
 
     assert result == "https://nginx.org/download/nginx-1.18.0.tar.gz"
+
+
+def test_github_temurin8_latest_tag():
+    """Test Adoptium Temurin 8 latest tag."""
+    repo = "https://github.com/adoptium/temurin8-binaries"
+    output = latest(repo, output_format="tag")
+    assert output == "jdk8u462-b08"

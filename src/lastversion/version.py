@@ -53,6 +53,27 @@ class Version(PackagingVersion):
         " SP-" => ".post" (a Service Pack version is a post release)
         """
         version = version.replace(" SP-", ".post")
+
+        # Normalize generic update-style patterns like "8u462-b08" -> "8.462.post8"
+        # Works regardless of vendor prefix/suffix (e.g., jdk8u462-b08, openjdk8u352-b01, 7u80-b15)
+        def _u_style_sub(match):
+            major = match.group("major")
+            update = match.group("update")
+            build = match.group("build")
+            if build is not None:
+                try:
+                    build_int = int(build)
+                except ValueError:
+                    build_int = None
+                if build_int is not None and build_int >= 0:
+                    return f"{major}.{update}.post{build_int}"
+            return f"{major}.{update}"
+
+        version = re.sub(
+            r"(?i)(?P<major>\d{1,3})u(?P<update>\d{1,4})(?:[-_.]?b(?P<build>\d{1,3}))?",
+            _u_style_sub,
+            version,
+        )
         return version
 
     def fix_letter_post_release(self, match):

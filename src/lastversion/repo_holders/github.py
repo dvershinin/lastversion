@@ -109,6 +109,42 @@ class GitHubRepoSession(BaseProjectHolder):
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}/{name}-{tag}.{ext}"
     SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
+    def is_update_style_tag(self, tag_name):
+        """Return True if tag name looks like an update-style tag (e.g., 8u462-b08)."""
+        try:
+            return bool(re.search(r"(?i)\b\d{1,3}u\d{1,4}\b", tag_name or ""))
+        except TypeError:
+            return False
+
+    def detect_prefer_update_style(self, names):
+        """Decide whether update-style tags should be preferred for this repo.
+
+        Preference is enabled if update-style tags are the majority among provided names
+        and there are at least 2 such tags to avoid flukes.
+        """
+        filtered = [n for n in (names or []) if n]
+        if not filtered:
+            return False
+        update_count = sum(1 for n in filtered if self.is_update_style_tag(n))
+        # Prefer update-style if any such tags exist among recent names
+        return update_count > 0
+
+    def detect_dominant_major_from_names(self, names, pre_ok=False):
+        """Detect the most frequent major version among provided tag names.
+
+        Returns the major as a string or None if it cannot be determined.
+        """
+        counts = {}
+        for name in names or []:
+            v = self.sanitize_version(name, pre_ok=True)
+            if not v:
+                continue
+            counts[v.major] = counts.get(v.major, 0) + 1
+        if not counts:
+            return None
+        dominant = max(counts, key=counts.get)
+        return str(dominant)
+
     def api_search_repo(self, name):
         """API search for a repository
 
@@ -356,6 +392,7 @@ class GitHubRepoSession(BaseProjectHolder):
         """
         cursor = ""
         log.info("Using graphql queries...")
+        preferred_update = None
         while True:
             # testing on php/php-src
             owner, name = self.repo.split("/")
@@ -372,10 +409,16 @@ class GitHubRepoSession(BaseProjectHolder):
             if not j["data"]["repository"]["tags"]["edges"]:
                 log.info("No tags in GraphQL response: %s", r.text)
                 break
-            for edge in j["data"]["repository"]["tags"]["edges"]:
+            edges = j["data"]["repository"]["tags"]["edges"]
+            if preferred_update is None:
+                names = [edge["node"]["name"] for edge in edges]
+                preferred_update = self.detect_prefer_update_style(names)
+            for edge in edges:
                 node = edge["node"]
                 cursor = edge["cursor"]
                 tag_name = node["name"]
+                if preferred_update and not self.is_update_style_tag(tag_name):
+                    continue
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
                     continue
@@ -466,8 +509,15 @@ class GitHubRepoSession(BaseProjectHolder):
             r = self.get(r.links["next"]["url"])
             tags.extend(r.json())
 
+        # Prefer update-style tags if they dominate in tags
+        prefer_update = False
+        if tags:
+            names = [t["name"] for t in tags]
+            prefer_update = self.detect_prefer_update_style(names)
         for t in tags:
             tag_name = t["name"]
+            if prefer_update and not self.is_update_style_tag(tag_name):
+                continue
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue
@@ -586,12 +636,21 @@ class GitHubRepoSession(BaseProjectHolder):
 
         feed_entries = self.get_releases_feed_entries()
         if feed_entries:
+            # Prefer update-style tags if they are the dominant scheme
+            try:
+                names = [unquote(e["link"].split("/")[-1]) for e in feed_entries]
+            except Exception:
+                names = [e.get("title") for e in feed_entries]
+            prefer_update = self.detect_prefer_update_style(names)
             for tag in feed_entries:
                 # https://github.com/apache/incubator-pagespeed-ngx/releases/tag/v1.13.35.2-stable
                 tag_name = tag["link"].split("/")[-1]
                 tag_name = unquote(tag_name)
 
                 log.info("Checking tag %s", tag_name)
+                if prefer_update and not self.is_update_style_tag(tag_name):
+                    log.info("Skipping non update-style tag %s due to repo preference", tag_name)
+                    continue
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
                     log.info("We did not find a valid version in %s tag", tag_name)
@@ -670,8 +729,15 @@ class GitHubRepoSession(BaseProjectHolder):
         # due to the limited nature of data inside it
 
         self.ensure_formal_releases_fetched()
+        # Prefer update-style tags in formal releases if they dominate
+        prefer_update = False
+        if self.formal_releases_by_tag:
+            prefer_update = self.detect_prefer_update_style(list(self.formal_releases_by_tag.keys()))
         for tag_name in self.formal_releases_by_tag:
             release = self.formal_releases_by_tag[tag_name]
+            if prefer_update and not self.is_update_style_tag(tag_name):
+                log.info("Skipping non update-style tag %s due to repo preference", tag_name)
+                continue
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:
                 continue
