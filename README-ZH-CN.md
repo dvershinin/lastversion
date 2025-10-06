@@ -19,6 +19,8 @@
 *   BitBucket
 *   PyPI
 *   Mercurial
+*   Gitea
+*   Codeberg
 *   SourceForge
 *   Wikipedia
 *   任何以 RSS/ATOM 订阅方式发布软件网站。

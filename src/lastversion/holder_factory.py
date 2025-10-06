@@ -1,8 +1,10 @@
 """Factory for holders."""
+
 import logging
 from urllib.parse import urlparse
 from collections import OrderedDict
 from lastversion.repo_holders.bibucket import BitBucketRepoSession
+from lastversion.repo_holders.codeberg import CodebergRepoSession
 from lastversion.repo_holders.feed import FeedRepoSession
 from lastversion.repo_holders.github import GitHubRepoSession
 from lastversion.repo_holders.gitlab import GitLabRepoSession
@@ -25,6 +27,7 @@ class HolderFactory:
     Holders are order in a way that the ones that can be matched by domain and can't be self-hosted go first
     With the last ones being dynamic (feed lookup, etc.)
     """
+
     HOLDERS = OrderedDict(
         {
             # non self-hosted
@@ -38,6 +41,7 @@ class HolderFactory:
             "bitbucket": BitBucketRepoSession,
             "pip": PypiRepoSession,
             "hg": MercurialRepoSession,
+            "codeberg": CodebergRepoSession,
             "gitea": GiteaRepoSession,
             # misc
             "website-feed": FeedRepoSession,
