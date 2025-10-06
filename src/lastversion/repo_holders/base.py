@@ -16,6 +16,7 @@ from lockfile import LockError
 from lockfile.linklockfile import LinkLockFile
 from lockfile.mkdirlockfile import MkdirLockFile
 from packaging.version import InvalidVersion
+from urllib.parse import urlparse
 
 from lastversion.version import Version
 from lastversion.__about__ import __version__
@@ -57,14 +58,18 @@ class TimedMkdirLockFile(MkdirLockFile):
     """Mkdir-based lock with a finite default timeout to avoid hangs."""
 
     def __init__(self, path, threaded=True, timeout=None):
-        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+        super().__init__(
+            path, threaded=threaded, timeout=5 if timeout is None else timeout
+        )
 
 
 class TimedLinkLockFile(LinkLockFile):
     """Link-based lock with a finite default timeout to avoid hangs."""
 
     def __init__(self, path, threaded=True, timeout=None):
-        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+        super().__init__(
+            path, threaded=threaded, timeout=5 if timeout is None else timeout
+        )
 
 
 class SafeFileCache(FileCache):
@@ -86,6 +91,7 @@ class SafeFileCache(FileCache):
         except LockError as exc:
             # Do not fail requests on cache lock issues; just skip caching
             log.debug("Cache write skipped due to lock error: %s", exc)
+
 
 def matches_filter(filter_s, positive, version_s):
     """Check if a version string matches a filter string.
@@ -281,13 +287,26 @@ class BaseProjectHolder(requests.Session):
         hostname = None
         # return repo modified to result of extraction
         if cls.is_link(repo):
-            # parse hostname for passing to whatever holder selected
-            url_parts = repo.split("/")
-            hostname = url_parts[2]
-            offset = 3 + cls.REPO_URL_PROJECT_OFFSET
-            repo = "/".join(
-                url_parts[offset : offset + cls.REPO_URL_PROJECT_COMPONENTS]
-            )
+            # Use proper URL parsing to handle ports correctly
+            parsed = urlparse(repo)
+            # Use netloc (hostname:port) to preserve port information for self-hosted instances
+            # Only include port if it's non-standard (not 80 for http, not 443 for https)
+            is_standard_https = parsed.scheme == "https" and parsed.port == 443
+            is_standard_http = parsed.scheme == "http" and parsed.port == 80
+            if parsed.port and not (is_standard_https or is_standard_http):
+                hostname = parsed.netloc
+            else:
+                hostname = parsed.hostname
+            # Extract the repo path from the URL
+            path_parts = parsed.path.lstrip("/").split("/")
+            offset = cls.REPO_URL_PROJECT_OFFSET
+            # Handle unlimited components (GitLab case where REPO_URL_PROJECT_COMPONENTS = True)
+            if cls.REPO_URL_PROJECT_COMPONENTS is True:
+                repo = "/".join(path_parts[offset:])
+            else:
+                repo = "/".join(
+                    path_parts[offset : offset + cls.REPO_URL_PROJECT_COMPONENTS]
+                )
         return hostname, repo
 
     @classmethod
@@ -345,9 +364,11 @@ class BaseProjectHolder(requests.Session):
         # Hosting does not have domains defined
         if not cls.DEFAULT_HOSTNAME and not cls.SUBDOMAIN_INDICATOR:
             return False
-        if cls.DEFAULT_HOSTNAME == hostname:
+        # Strip port from hostname for comparison (e.g., 'gitlab.example.com:9000' -> 'gitlab.example.com')
+        hostname_without_port = hostname.split(":")[0]
+        if cls.DEFAULT_HOSTNAME == hostname_without_port:
             return True
-        if cls.SUBDOMAIN_INDICATOR and hostname.startswith(
+        if cls.SUBDOMAIN_INDICATOR and hostname_without_port.startswith(
             cls.SUBDOMAIN_INDICATOR + "."
         ):
             return True
