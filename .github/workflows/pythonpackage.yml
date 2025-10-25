@@ -12,13 +12,28 @@ on:
   workflow_call:
 
 jobs:
+
+  py36:
+    runs-on: ubuntu-latest
+    container: python:3.6
+    steps:
+      - uses: actions/checkout@v4
+      - run: python --version
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e .[test]
+      - run: pytest -q
+      - name: Test with pytest
+        run: |
+          pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-3.6.xml
+        env:
+          LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
   build:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       max-parallel: 7
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.13"]
 
     steps:
     - uses: actions/checkout@v3
