@@ -339,7 +339,8 @@ class GitHubRepoSession(BaseProjectHolder):
         # Prefer API-first for non-public GitHub (Enterprise/self-hosted)
         if self.hostname != self.DEFAULT_HOSTNAME:
             r = self.repo_query(
-                f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"}
+                f"/contents/{path}?ref={tag}",
+                headers={"Accept": "application/vnd.github.raw"},
             )
             if r.status_code == 200 and r.text and r.text.strip():
                 return r.text
@@ -351,7 +352,8 @@ class GitHubRepoSession(BaseProjectHolder):
                 return rr.text
             # API fallback with raw Accept
             r = self.repo_query(
-                f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"}
+                f"/contents/{path}?ref={tag}",
+                headers={"Accept": "application/vnd.github.raw"},
             )
             if r.status_code == 200 and r.text and r.text.strip():
                 return r.text
@@ -692,7 +694,10 @@ class GitHubRepoSession(BaseProjectHolder):
 
                 log.info("Checking tag %s", tag_name)
                 if prefer_update and not self.is_update_style_tag(tag_name):
-                    log.info("Skipping non update-style tag %s due to repo preference", tag_name)
+                    log.info(
+                        "Skipping non update-style tag %s due to repo preference",
+                        tag_name,
+                    )
                     continue
                 version = self.sanitize_version(tag_name, pre_ok, major)
                 if not version:
@@ -775,11 +780,15 @@ class GitHubRepoSession(BaseProjectHolder):
         # Prefer update-style tags in formal releases if they dominate
         prefer_update = False
         if self.formal_releases_by_tag:
-            prefer_update = self.detect_prefer_update_style(list(self.formal_releases_by_tag.keys()))
+            prefer_update = self.detect_prefer_update_style(
+                list(self.formal_releases_by_tag.keys())
+            )
         for tag_name in self.formal_releases_by_tag:
             release = self.formal_releases_by_tag[tag_name]
             if prefer_update and not self.is_update_style_tag(tag_name):
-                log.info("Skipping non update-style tag %s due to repo preference", tag_name)
+                log.info(
+                    "Skipping non update-style tag %s due to repo preference", tag_name
+                )
                 continue
             version = self.sanitize_version(tag_name, pre_ok, major)
             if not version:

@@ -1,4 +1,5 @@
 """GitLab repo session."""
+
 import logging
 import os
 import platform

@@ -117,5 +117,3 @@ def generate_changelog(raw_notes: str, context: dict) -> Optional[List[str]]:
         return None
     except Exception:
         return None
-
-
