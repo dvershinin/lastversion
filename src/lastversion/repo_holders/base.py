@@ -151,6 +151,44 @@ class BaseProjectHolder(requests.Session):
 
     CACHE_DISABLED = False
 
+    # Conventional changelog file candidates to try at a tag
+    CHANGELOG_CANDIDATES = [
+        "CHANGELOG.md",
+        "CHANGELOG",
+        "CHANGES.md",
+        "CHANGES",
+        "NEWS.md",
+        "NEWS",
+        "docs/CHANGELOG.md",
+        "docs/CHANGES.md",
+        "docs/NEWS.md",
+    ]
+
+    def repo_changelog(self, tag):
+        """Default: no changelog retrieval; subclasses may override."""
+        return None
+
+    def repo_changelog_path(self, tag):
+        """Default: no changelog path; subclasses may override to return (text, path)."""
+        return None, None
+
+    def collect_release_notes(self, tag, release):
+        """Collect release notes text and provenance.
+
+        Returns:
+            (text, source): text string or None; source is 'release_body' or a filename path
+        """
+        try:
+            text = release.get("body") or release.get("description")
+            if text:
+                return text, "release_body"
+            text, path = self.repo_changelog_path(tag)
+            if text:
+                return text, path
+        except Exception:
+            return None, None
+        return None, None
+
     @property
     def name(self):
         """Get project name, useful in URLs for assets, etc."""

@@ -181,3 +181,28 @@ class GitLabRepoSession(BaseProjectHolder):
         if response.status_code == 200:
             return {"text": response.text}
         return None
+
+    def repo_changelog(self, tag):
+        """Try to fetch a conventional CHANGELOG/CHANGES/NEWS file at a tag."""
+        for path in BaseProjectHolder.CHANGELOG_CANDIDATES:
+            text = self.fetch_text_file_at_tag(tag, path)
+            if text:
+                return text
+        return None
+
+    def fetch_text_file_at_tag(self, tag: str, path: str) -> str:
+        """Fetch text file via GitLab raw endpoint; set Accept for plain text."""
+        response = self.get(
+            f"https://{self.hostname}/{self.repo}/-/raw/{tag}/{path}?ref_type=tags",
+            headers={"Accept": "text/plain, */*"},
+        )
+        if response.status_code == 200 and response.text and response.text.strip():
+            return response.text
+        return None
+
+    def repo_changelog_path(self, tag):
+        for path in BaseProjectHolder.CHANGELOG_CANDIDATES:
+            text = self.fetch_text_file_at_tag(tag, path)
+            if text:
+                return text, path
+        return None, None

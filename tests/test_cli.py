@@ -11,6 +11,15 @@ from lastversion.cli import main
 from .helpers import captured_exit_code
 
 
+def test_cli_help_contains_changelog_flag():
+    with subprocess.Popen(
+        ["lastversion", "--help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ) as process:
+        out, _ = process.communicate()
+        help_text = out.decode("utf-8", errors="ignore")
+        assert "--changelog" in help_text
+
+
 def test_cli_format_devel():
     """
     Test that the CLI formatting returns the correct version for a devel

@@ -1,6 +1,7 @@
 """Test GitHub projects."""
 
 import os
+import re
 from tempfile import TemporaryDirectory
 
 from packaging import version
@@ -127,4 +128,9 @@ def test_github_temurin8_latest_tag():
     """Test Adoptium Temurin 8 latest tag."""
     repo = "https://github.com/adoptium/temurin8-binaries"
     output = latest(repo, output_format="tag")
-    assert output == "jdk8u462-b08"
+    # Tag should follow update-style format like jdk8u472-b08 and move forward over time
+    assert re.match(r"^jdk8u\d+-b\d+$", output)
+    m = re.match(r"^jdk8u(\d+)-b(\d+)$", output)
+    assert m is not None
+    update_num = int(m.group(1))
+    assert update_num >= 462

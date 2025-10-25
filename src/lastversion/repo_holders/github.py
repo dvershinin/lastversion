@@ -297,10 +297,10 @@ class GitHubRepoSession(BaseProjectHolder):
         url = f"{self.api_base}/rate_limit"
         return self.get(url)
 
-    def repo_query(self, uri):
+    def repo_query(self, uri, headers=None):
         """API query for a repository"""
         url = f"{self.api_base}/repos/{self.repo}{uri}"
-        return self.get(url)
+        return self.get(url, headers=headers)
 
     def repo_license(self, tag):
         """API query for a repository's LICENSE"""
@@ -321,6 +321,49 @@ class GitHubRepoSession(BaseProjectHolder):
         if r.status_code == 200:
             return r.json()
         return None
+
+    def repo_changelog(self, tag):
+        """Try to fetch a conventional CHANGELOG/CHANGES/NEWS file at a tag.
+
+        Returns:
+            str or None: The changelog text if found.
+        """
+        for path in BaseProjectHolder.CHANGELOG_CANDIDATES:
+            text = self.fetch_text_file_at_tag(tag, path)
+            if text:
+                return text
+        return None
+
+    def fetch_text_file_at_tag(self, tag: str, path: str) -> str:
+        """Fetch a text file content at a given tag using raw-first, API fallback."""
+        # Prefer API-first for non-public GitHub (Enterprise/self-hosted)
+        if self.hostname != self.DEFAULT_HOSTNAME:
+            r = self.repo_query(
+                f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"}
+            )
+            if r.status_code == 200 and r.text and r.text.strip():
+                return r.text
+        else:
+            # Raw-first for public GitHub
+            raw_url = f"https://raw.githubusercontent.com/{self.repo}/{tag}/{path}"
+            rr = self.get(raw_url, headers={"Accept": "*/*"})
+            if rr.status_code == 200 and rr.text and rr.text.strip():
+                return rr.text
+            # API fallback with raw Accept
+            r = self.repo_query(
+                f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"}
+            )
+            if r.status_code == 200 and r.text and r.text.strip():
+                return r.text
+        return None
+
+    def repo_changelog_path(self, tag):
+        """Return (text, path) for the first matching changelog-like file at tag."""
+        for path in BaseProjectHolder.CHANGELOG_CANDIDATES:
+            text = self.fetch_text_file_at_tag(tag, path)
+            if text:
+                return text, path
+        return None, None
 
     def find_in_tags_via_graphql(self, ret, pre_ok, major):
         """GraphQL allows for faster search across many tags.

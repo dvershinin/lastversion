@@ -138,6 +138,7 @@ usage: lastversion [-h] [--pre] [--sem {major,minor,patch,any}] [-v]
                    [--assets] [--source] [-gt VER] [-b MAJOR] [--only REGEX]
                    [--exclude REGEX] [--filter REGEX] [--having-asset [ASSET]]
                    [-su] [--even]
+                   [--changelog]
                    [--at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local,helm_chart,wiki,system,wp,gitea}]
                    [-y] [--version]
                    [{get,download,extract,unzip,test,format,install,update-spec}]
@@ -187,6 +188,7 @@ optional arguments:
                         lookup or GitHub Search
   -y, --assumeyes       Automatically answer yes for all questions
   --version             show program's version number and exit
+  --changelog           Generate RPM %changelog entry (1–7 concise bullets)
 ```
 
 The `--format` will affect what kind of information from the last release and in which format will

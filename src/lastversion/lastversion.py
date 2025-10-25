@@ -25,6 +25,7 @@ from packaging.version import InvalidVersion
 
 from lastversion.repo_holders.test import TestProjectHolder
 from lastversion.holder_factory import HolderFactory
+from lastversion.ai import generate_changelog
 from lastversion.version import Version
 from lastversion.spdx_id_to_rpmspec import rpmspec_licenses
 from lastversion.utils import (
@@ -181,6 +182,7 @@ def latest(
     exclude=None,
     even=False,
     formal=False,
+    changelog=False,
 ):
     r"""Find the latest release version for a project.
 
@@ -206,6 +208,7 @@ def latest(
         exclude (str): Only consider releases NOT containing this text/regular expression.
         even (bool): Consider as stable only releases with even minor component, e.g. 1.2.3
         formal (bool): Consider as stable only releases with formal tags set up in Web UI
+        changelog (bool): Populate release["changelog"] using upstream notes (if True)
 
     Examples:
         Find the latest version of Mautic, it is OK to consider betas.
@@ -291,6 +294,22 @@ def latest(
                 release["license"] = project.repo_license(tag)
             if hasattr(project, "repo_readme"):
                 release["readme"] = project.repo_readme(tag)
+            if changelog:
+                text, source = project.collect_release_notes(tag, release)
+                if text:
+                    context = {
+                        "repo": project.get_canonical_link(),
+                        "tag": tag,
+                        "version": str(release["version"]),
+                        "source": release.get("source"),
+                    }
+                    try:
+                        bullets = generate_changelog(text, context)
+                        if bullets:
+                            release["changelog"] = bullets
+                            release["changelog_source"] = source
+                    except Exception:
+                        pass
             release.update(repo_data)
             try:
                 release["assets"] = project.get_assets(
@@ -394,7 +413,33 @@ def get_rpm_packager():
     return None
 
 
-def update_spec(repo, res, sem="minor"):
+def build_changelog_bullets(res, repo_arg):
+    """Build changelog bullets for a release dict using upstream notes and OpenAI.
+
+    Returns:
+        list[str] or None
+    """
+    try:
+        raw_notes = res.get("body") or res.get("description")
+    except AttributeError:
+        raw_notes = None
+
+    if not raw_notes:
+        return None
+
+    try:
+        context = {
+            "repo": res.get("from"),
+            "tag": res.get("tag_name"),
+            "version": str(res.get("version")),
+            "source": res.get("source"),
+        }
+        return generate_changelog(raw_notes, context)
+    except Exception:
+        return None
+
+
+def update_spec(repo, res, sem="minor", changelog: bool = False):
     print(res["version"])
     if "current_version" not in res or res["current_version"] < res["version"]:
         log.info("Updating spec %s with semantic %s", repo, sem)
@@ -449,8 +494,21 @@ def update_spec(repo, res, sem="minor"):
                 now = datetime.utcnow()
                 today = now.strftime("%a %b %d %Y")
                 out.append(ln.rstrip())
-                out.append(f"* {today} {packager}")
-                out.append(f"- upstream release v{res['version']}")
+                # RPM guideline: include Version-Release in header (Release resets to 1 on bump)
+                out.append(f"* {today} {packager} - {str(res['version'])}-1")
+                bullets = None
+                if isinstance(res, dict):
+                    existing = res.get("changelog")
+                    if isinstance(existing, list) and existing:
+                        bullets = [str(b).strip() for b in existing if str(b).strip()]
+                if changelog and not bullets:
+                    bullets = build_changelog_bullets(res, repo)
+
+                if bullets:
+                    for b in bullets:
+                        out.append(f"- {b}")
+                else:
+                    out.append(f"- upstream release v{res['version']}")
                 out.append("\n")
             elif ln.startswith("Release:"):
                 release_tag_regex = r"^Release:(\s+)(\S+)"

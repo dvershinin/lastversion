@@ -20,7 +20,12 @@ from lastversion import check_version, latest
 from lastversion.argparse_version import VersionAction
 from lastversion.exceptions import ApiCredentialsError, BadProjectError
 from lastversion.holder_factory import HolderFactory
-from lastversion.lastversion import log, parse_version, update_spec, install_release
+from lastversion.lastversion import (
+    log,
+    parse_version,
+    update_spec,
+    install_release,
+)
 from lastversion.repo_holders.base import BaseProjectHolder
 from lastversion.repo_holders.github import TOKEN_PRO_TIP
 from lastversion.utils import download_file, extract_file
@@ -207,6 +212,12 @@ def main(argv=None):
         action="store_true",
         help="Do not use cache for HTTP requests",
     )
+    parser.add_argument(
+        "--changelog",
+        dest="changelog",
+        action="store_true",
+        help="Generate RPM %%changelog entry (1–7 concise bullets)",
+    )
     parser.add_argument("--version", action=VersionAction)
     parser.set_defaults(
         validate=True,
@@ -223,6 +234,7 @@ def main(argv=None):
         at=None,
         having_asset=None,
         even=False,
+        changelog=False,
     )
     args = parser.parse_args(argv)
 
@@ -346,7 +358,8 @@ def main(argv=None):
             having_asset=args.having_asset,
             exclude=args.exclude,
             even=args.even,
-            formal=args.formal,
+                formal=args.formal,
+                changelog=args.changelog,
         )
     except (ApiCredentialsError, BadProjectError) as error:
         log.critical(str(error))
@@ -359,8 +372,13 @@ def main(argv=None):
         sys.exit(4)
 
     if res:
+        # If user requested --changelog, prefer bullets from result dict
+        if args.format in ["dict", "json"] and args.changelog and isinstance(res, dict):
+            if not res.get("changelog"):
+                # Ensure at least a minimal fallback is present
+                res["changelog"] = [f"upstream release v{res.get('version')}"]
         if args.action == "update-spec":
-            return update_spec(args.repo, res, sem=args.sem)
+            return update_spec(args.repo, res, sem=args.sem, changelog=args.changelog)
         if args.action == "download":
             # download command
             if args.format == "source":
