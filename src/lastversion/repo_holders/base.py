@@ -7,14 +7,12 @@ import platform
 import re
 
 import datetime
+import time
 import feedparser
 import requests
 from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
 from cachecontrol.caches.file_cache import FileCache
-from lockfile import LockError
-from lockfile.linklockfile import LinkLockFile
-from lockfile.mkdirlockfile import MkdirLockFile
 from packaging.version import InvalidVersion
 
 from lastversion.version import Version
@@ -53,18 +51,41 @@ def _safe_open_write(filename, fmode):
         raise
 
 
-class TimedMkdirLockFile(MkdirLockFile):
-    """Mkdir-based lock with a finite default timeout to avoid hangs."""
+class LockAcquireTimeout(Exception):
+    """Raised when an internal lock cannot be acquired within timeout."""
+
+
+class InternalTimedDirLock:
+    """Simple directory-based lock with timeout, no external dependencies.
+
+    This lock attempts to `mkdir` a lock directory next to the target file path.
+    Creation is atomic across processes. It retries until the timeout is reached.
+    """
 
     def __init__(self, path, threaded=True, timeout=None):
-        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+        # `path` is the target data file path to be protected
+        self.path = path
+        self._lock_path = f"{path}.lock"
+        self._timeout = 5 if timeout is None else timeout
 
+    def __enter__(self):
+        deadline = time.time() + self._timeout
+        while True:
+            try:
+                os.mkdir(self._lock_path)
+                break
+            except FileExistsError:
+                if time.time() >= deadline:
+                    raise LockAcquireTimeout(f"Failed to acquire lock for {self.path}")
+                time.sleep(0.1)
+        return self
 
-class TimedLinkLockFile(LinkLockFile):
-    """Link-based lock with a finite default timeout to avoid hangs."""
-
-    def __init__(self, path, threaded=True, timeout=None):
-        super().__init__(path, threaded=threaded, timeout=5 if timeout is None else timeout)
+    def __exit__(self, exc_type, exc, tb):
+        try:
+            os.rmdir(self._lock_path)
+        except Exception:
+            pass
+        return False
 
 
 class SafeFileCache(FileCache):
@@ -83,7 +104,7 @@ class SafeFileCache(FileCache):
             with self.lock_class(path) as lock:
                 with _safe_open_write(lock.path, self.filemode) as fh:
                     fh.write(data)
-        except LockError as exc:
+        except LockAcquireTimeout as exc:
             # Do not fail requests on cache lock issues; just skip caching
             log.debug("Cache write skipped due to lock error: %s", exc)
 
@@ -207,7 +228,7 @@ class BaseProjectHolder(requests.Session):
             self.cache_dir = user_cache_dir(app_name)
             log.info("Using cache directory: %s.", self.cache_dir)
             # Use a lock with a finite timeout to avoid rare hangs on cache writes
-            lock_cls = TimedLinkLockFile if hasattr(os, "link") else TimedMkdirLockFile
+            lock_cls = InternalTimedDirLock
             self.cache = SafeFileCache(self.cache_dir, lock_class=lock_cls)
             cache_adapter = CacheControlAdapter(cache=self.cache)
             # noinspection HttpUrlsUsage

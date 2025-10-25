@@ -9,3 +9,5 @@ globs:
 - When invoking scripts or modules (formatters, linters, CLI tools), call them via the interpreter: `${env:HOME}/.virtualenvs/lastversion/bin/python -m <module>`.
 - Prefer this interpreter for local runs, CI, and any automation unless explicitly overridden.
 - Source `~/.secrets` prior to running tests, as this file contains the required API tokens.
+- Run pylint via the interpreter before commits/PRs: `${env:HOME}/.virtualenvs/lastversion/bin/python -m pylint src tests`.
+- Use project-local config if present (e.g., `pyproject.toml` or `pylintrc`).
