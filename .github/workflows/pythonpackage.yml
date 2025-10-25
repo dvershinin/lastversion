@@ -28,6 +28,30 @@ jobs:
           pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-3.6.xml
         env:
           LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
+
+      - name: Update .spec files
+        run: |
+          # ensure changelog is generated
+          echo "%packager Dick Solomon <info@example.com>" >> ~/.rpmmacros
+          cd tests
+          lastversion brotli.spec
+          lastversion nginx-module-immutable.spec
+          if lastversion libmozjpeg.spec; then
+            exit 1
+          fi
+          rm -rf libmozjpeg.spec
+        env:
+          LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
+      - name: 'Upload brotli.spec artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: brotli.spec
+          path: tests/brotli.spec
+      - name: 'Upload nginx-module-immutable.spec artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nginx-module-immutable.spec
+          path: tests/nginx-module-immutable.spec
   build:
 
     runs-on: ubuntu-latest
@@ -83,32 +107,9 @@ jobs:
         bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
       env:
         CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
-    - name: Update .spec files
-      run: |
-        # ensure changelog is generated
-        echo "%packager Dick Solomon <info@example.com>" >> ~/.rpmmacros
-        cd tests
-        lastversion brotli.spec
-        lastversion nginx-module-immutable.spec
-        if lastversion libmozjpeg.spec; then
-          exit 1
-        fi
-        rm -rf libmozjpeg.spec
-      env:
-        LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
-    - name: 'Upload brotli.spec artifact'
-      uses: actions/upload-artifact@v4
-      with:
-        name: brotli.spec
-        path: tests/brotli.spec
-    - name: 'Upload nginx-module-immutable.spec artifact'
-      uses: actions/upload-artifact@v4
-      with:
-        name: nginx-module-immutable.spec
-        path: tests/nginx-module-immutable.spec
   build-brotli-rpm:
-    needs: build
-    runs-on: ubuntu-20.04
+    needs: py36
+    runs-on: ubuntu-latest
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download brotli.spec artifact
@@ -121,8 +122,8 @@ jobs:
         mv *.spec /sources/
         build
   build-nginx-module-immutable-rpm:
-    needs: build
-    runs-on: ubuntu-20.04
+    needs: py36
+    runs-on: ubuntu-latest
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download nginx-module-immutable.spec artifact
