@@ -19,9 +19,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python --version
-      - run: python -m pip install --upgrade pip
-      - run: pip install -e .[test]
-      - run: pytest -q
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[tests]
       - name: Test with pytest
         run: |
           pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-3.6.xml
@@ -96,12 +97,12 @@ jobs:
       env:
         LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
     - name: 'Upload brotli.spec artifact'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: brotli.spec
         path: tests/brotli.spec
     - name: 'Upload nginx-module-immutable.spec artifact'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: nginx-module-immutable.spec
         path: tests/nginx-module-immutable.spec
@@ -111,7 +112,7 @@ jobs:
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download brotli.spec artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: brotli.spec
     - name: Build updated spec
@@ -125,7 +126,7 @@ jobs:
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download nginx-module-immutable.spec artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: nginx-module-immutable.spec
     - name: Build updated spec
