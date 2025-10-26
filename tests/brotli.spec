@@ -3,6 +3,7 @@
 #############################################
 %global lastversion_tag x
 %global lastversion_dir x
+%global lastversion_formal 1
 ############################################
 
 %if 0%{?rhel} > 7

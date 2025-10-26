@@ -111,6 +111,16 @@ def get_repo_data_from_spec(rpmspec_filename):
                 repo_data["having_asset"] = shlex.split(line)[2].strip()
             elif line.startswith("%global lastversion_major"):
                 repo_data["major"] = shlex.split(line)[2].strip()
+            elif line.startswith("%global lastversion_formal"):
+                value = shlex.split(line)[2].strip()
+                low = value.lower()
+                if low in ["1", "true", "yes", "on"]:
+                    repo_data["formal"] = True
+                elif low in ["0", "false", "no", "off"]:
+                    repo_data["formal"] = False
+                else:
+                    # Any non-empty string defaults to True for safety
+                    repo_data["formal"] = bool(value)
 
         if not current_version:
             log.critical(
@@ -247,7 +257,7 @@ def latest(
         project.set_exclude(exclude)
         project.set_having_asset(repo_data.get("having_asset", having_asset))
         project.set_even(even)
-        project.set_formal(formal)
+        project.set_formal(repo_data.get("formal", formal))
         release = project.get_latest(pre_ok=pre_ok, major=repo_data.get("major", major))
 
         # bail out, found nothing that looks like a release
