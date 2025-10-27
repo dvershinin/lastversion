@@ -8,6 +8,14 @@ __author__ = "Danila Vershinin"
 
 import logging
 
+# try to use truststore if available
+try:
+    import truststore
+
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
+
 from .lastversion import check_version, has_update, latest
 
 __all__ = ["check_version", "has_update", "latest"]
