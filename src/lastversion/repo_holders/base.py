@@ -108,6 +108,7 @@ class SafeFileCache(FileCache):
             # Do not fail requests on cache lock issues; just skip caching
             log.debug("Cache write skipped due to lock error: %s", exc)
 
+
 def matches_filter(filter_s, positive, version_s):
     """Check if a version string matches a filter string.
 
