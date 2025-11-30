@@ -37,7 +37,7 @@ The header of the .spec file must have the following macros defined:
 The `%upstream_github` is static and defines the owner of a GitHub repository, e.g. for `google/brotli` repository, you will have:
 
 ```rpmspec
-%global upstream_github brotli
+%global upstream_github google
 ```
 
 `lastversion` constructs the complete GitHub repo name by looking at the values of the `upstream_github` macro and the `Name:` tag.
