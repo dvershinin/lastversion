@@ -2,4 +2,4 @@
 
 from lastversion import cli
 
-cli.main()
+cli.main_with_bulk_support()
