@@ -92,6 +92,14 @@ non_amd64_markers = [
     "armv7hl",
 ]
 
+# Markers indicating x86_64/amd64 architecture
+x86_64_markers = [
+    "x86_64",
+    "x86-64",
+    "amd64",
+    "x64",
+]
+
 
 def is_file_ext_not_compatible_with_os(file_ext):
     """
@@ -131,16 +139,31 @@ def is_not_compatible_to_distro(asset_ext):
 
 
 def is_not_compatible_bitness(asset_name):
-    """Check if an asset has words that show it's not meant for 64-bit OS"""
-    if platform.machine() not in ["x86_64", "AMD64"]:
-        return False
-    for non_amd64_word in non_amd64_markers:
-        regex = re.compile(rf"\b{non_amd64_word}\b", flags=re.IGNORECASE)
-        if regex.search(asset_name):
-            return True
+    """Check if an asset has words that show it's not meant for this machine's arch.
+
+    On x86_64/AMD64: filters out arm/aarch64/32-bit assets
+    On aarch64/arm64: filters out x86_64/amd64 assets
+    """
+    machine = platform.machine()
+
+    # On x86_64, filter out non-x86_64 assets
+    if machine in ["x86_64", "AMD64"]:
+        for non_amd64_word in non_amd64_markers:
+            regex = re.compile(rf"\b{non_amd64_word}\b", flags=re.IGNORECASE)
+            if regex.search(asset_name):
+                return True
+        # Also check for armNN patterns
         regex = re.compile(r"\barm\d+\b", flags=re.IGNORECASE)
         if regex.search(asset_name):
             return True
+
+    # On aarch64/arm64, filter out x86_64 assets
+    elif machine in ["aarch64", "arm64"]:
+        for x86_word in x86_64_markers:
+            regex = re.compile(rf"\b{x86_word}\b", flags=re.IGNORECASE)
+            if regex.search(asset_name):
+                return True
+
     return False
 
 

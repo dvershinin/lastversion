@@ -597,6 +597,33 @@ def install_rpms(res, rpms, args):
     #     sys.exit(1)
 
 
+def install_debs(_res, debs, args):
+    """Install deb packages using apt.
+
+    Args:
+        _res: Release dict (unused, kept for API consistency with install_rpms)
+        debs: List of deb package URLs
+        args: CLI arguments
+    """
+    try:
+        import subprocess
+
+        # Download debs first, then install with apt
+        local_debs = []
+        for deb_url in debs:
+            local_file = download_file(deb_url)
+            local_debs.append(local_file)
+
+        params = ["apt", "install"]
+        params.extend(local_debs)
+        if args.assumeyes:
+            params.append("-y")
+        subprocess.call(params)
+    except OSError:
+        log.critical("Failed to launch apt for package install!")
+        sys.exit(1)
+
+
 def install_standalone_binary(url, install_name):
     """Install a standalone binary from a URL to `~/Applications/<install_name>`
 
@@ -615,16 +642,27 @@ def install_standalone_binary(url, install_name):
 
 
 def install_release(res, args):
-    """Install latest release"""
+    """Install latest release.
+
+    Prefers native package formats (RPM/deb) over AppImages for better
+    integration with package managers and architecture compatibility.
+    """
+    # Prefer RPMs on RPM-based distros
+    rpms = [asset for asset in res["assets"] if asset.endswith(".rpm")]
+    if rpms:
+        return install_rpms(res, rpms, args)
+
+    # Prefer debs on Debian-based distros
+    debs = [asset for asset in res["assets"] if asset.endswith(".deb")]
+    if debs:
+        return install_debs(res, debs, args)
+
+    # Fall back to AppImages (cross-distro)
     app_images = [asset for asset in res["assets"] if asset.endswith(".AppImage")]
     if app_images:
         return install_app_image(
             app_images[0], install_name=res.get("install_name", args.repo)
         )
-
-    rpms = [asset for asset in res["assets"] if asset.endswith(".rpm")]
-    if rpms:
-        return install_rpms(res, rpms, args)
 
     # static files are those without an extension
     static_binaries = [
