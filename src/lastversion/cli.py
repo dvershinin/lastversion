@@ -97,7 +97,9 @@ def main(argv=None):
         "--sem",
         dest="sem",
         choices=["major", "minor", "patch", "any"],
-        help="Semantic versioning level base to print or compare against",
+        help="Semantic versioning level base to print or compare against. "
+        "When used with -gt: 'minor' constrains to same major, 'patch' constrains "
+        "to same major.minor. Exit code 4 if newer version exists outside constraint",
     )
     parser.add_argument(
         "-v",
@@ -429,14 +431,49 @@ def main(argv=None):
         else:
             # result may be a tag str, not just Version
             if isinstance(res, Version):
+                # Keep original version for semver constraint checking
+                original_res = res
                 res = res.sem_extract_base(args.sem)
+            else:
+                original_res = None
             print(res)
             # special exit code "2" is useful for scripting to detect if no newer release exists
+            # exit code "4" is for when a newer version exists but outside semver constraint
             if args.newer_than:
-                # set up same SEM base
+                # Keep original newer_than for semver constraint checking
+                original_newer_than = args.newer_than
+                # set up same SEM base for display comparison
                 args.newer_than = args.newer_than.sem_extract_base(args.sem)
                 if res <= args.newer_than:
                     sys.exit(2)
+                # Check semver constraints when --sem is specified with minor or patch
+                # Exit code 4 means: newer version exists but outside semver constraint
+                if original_res and args.sem in ("minor", "patch"):
+                    if args.sem == "minor":
+                        # For minor: latest must be within same major series
+                        if original_res.major != original_newer_than.major:
+                            log.info(
+                                "Version %s is outside semver constraint (different major: %s vs %s)",
+                                original_res,
+                                original_res.major,
+                                original_newer_than.major,
+                            )
+                            sys.exit(4)
+                    elif args.sem == "patch":
+                        # For patch: latest must be within same major.minor series
+                        if (
+                            original_res.major != original_newer_than.major
+                            or original_res.minor != original_newer_than.minor
+                        ):
+                            log.info(
+                                "Version %s is outside semver constraint (different major.minor: %s.%s vs %s.%s)",
+                                original_res,
+                                original_res.major,
+                                original_res.minor,
+                                original_newer_than.major,
+                                original_newer_than.minor,
+                            )
+                            sys.exit(4)
     else:
         # empty list returned to --assets, emit 3
         if args.format == "assets" and res is not False:
