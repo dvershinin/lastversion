@@ -350,7 +350,7 @@ def extract_tar(buffer: io.BytesIO, to_dir):
         if not check_if_tar_safe(archive_file):
             raise TarPathTraversalException("Attempted Path Traversal in Tar File")
 
-        contents: list[tarfile.TarInfo] = archive_file.getmembers()
+        contents = archive_file.getmembers()
         assert contents, "Empty TAR archive"
         top_dir = Path(contents[0].name).resolve()
         only_one_top_dir = True
