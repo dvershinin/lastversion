@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.11] - 2025-12-07
+### Fixed
+* Fixed UnicodeEncodeError in --help on systems with LANG=C (EL7 RPM builds)
+
 ## [3.5.10] - 2025-12-07
 ### Added
 * Bulk input option `-i` / `--input-file` to process multiple repos from a file #178

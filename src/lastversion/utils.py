@@ -148,10 +148,10 @@ def is_not_compatible_bitness(asset_name):
 
     # On x86_64, filter out non-x86_64 assets
     if machine in ["x86_64", "AMD64"]:
-        for non_amd64_word in non_amd64_markers:
-            regex = re.compile(rf"\b{non_amd64_word}\b", flags=re.IGNORECASE)
-            if regex.search(asset_name):
-                return True
+    for non_amd64_word in non_amd64_markers:
+        regex = re.compile(rf"\b{non_amd64_word}\b", flags=re.IGNORECASE)
+        if regex.search(asset_name):
+            return True
         # Also check for armNN patterns
         regex = re.compile(r"\barm\d+\b", flags=re.IGNORECASE)
         if regex.search(asset_name):
