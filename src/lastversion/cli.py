@@ -33,6 +33,72 @@ from lastversion.utils import download_file, extract_file
 from lastversion.version import Version
 
 
+def process_bulk_input(args):
+    """Process multiple repositories from an input file.
+
+    Args:
+        args: Parsed command line arguments with input_file set
+
+    Returns:
+        Exit code (0 for success, 1 for any failures)
+    """
+    # Read repos from file or stdin
+    if args.input_file == "-":
+        repos = sys.stdin.read().strip().split("\n")
+    else:
+        try:
+            with open(args.input_file, encoding="utf-8") as f:
+                repos = f.read().strip().split("\n")
+        except IOError as e:
+            log.critical("Failed to read input file: %s", e)
+            return sys.exit(1)
+
+    # Filter out empty lines and comments
+    repos = [r.strip() for r in repos if r.strip() and not r.strip().startswith("#")]
+
+    if not repos:
+        log.critical("No repositories found in input file")
+        return sys.exit(1)
+
+    results = []
+    has_failures = False
+
+    for repo in repos:
+        try:
+            result = latest(
+                repo,
+                output_format=args.format,
+                pre_ok=args.pre,
+                assets_filter=args.filter,
+                short_urls=args.shorter_urls,
+                major=args.major,
+                formal=args.formal,
+                at=args.at,
+                having_asset=args.having_asset,
+                only=args.only,
+                even=args.even,
+            )
+            if result:
+                if args.format == "json":
+                    result["repo"] = repo
+                    results.append(result)
+                else:
+                    print(f"{repo}: {result}")
+            else:
+                print(f"{repo}: not found", file=sys.stderr)
+                has_failures = True
+        except (BadProjectError, ApiCredentialsError) as e:
+            print(f"{repo}: error - {e}", file=sys.stderr)
+            has_failures = True
+
+    # Output JSON results as array if json format
+    if args.format == "json" and results:
+        json.dump(results, sys.stdout)
+        print()
+
+    return sys.exit(1 if has_failures else 0)
+
+
 def main(argv=None):
     """
     The entrypoint to CLI app.
@@ -115,6 +181,14 @@ def main(argv=None):
         dest="quiet",
         action="store_true",
         help="Suppress all non-error output, including progress bars",
+    )
+    parser.add_argument(
+        "-i",
+        "--input-file",
+        dest="input_file",
+        metavar="FILE",
+        help="Read repository names/URLs from file (one per line). "
+        "Use '-' to read from stdin",
     )
     # no --download = False, --download filename.tar, --download = None
     parser.add_argument(
@@ -304,6 +378,10 @@ def main(argv=None):
 
     if args.filter:
         args.filter = re.compile(args.filter)
+
+    # Handle bulk input from file
+    if args.input_file:
+        return process_bulk_input(args)
 
     if args.action in ["test", "format"]:
         v = parse_version(args.repo)
