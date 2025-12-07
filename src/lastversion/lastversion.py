@@ -82,6 +82,7 @@ def get_repo_data_from_spec(rpmspec_filename):
         current_version = None
         spec_repo = None
         spec_urls = []
+        current_commit = None
         for line in f.readlines():
             if line.startswith("%global lastversion_repo"):
                 spec_repo = shlex.split(line)[2].strip()
@@ -89,6 +90,10 @@ def get_repo_data_from_spec(rpmspec_filename):
                 upstream_github = shlex.split(line)[2].strip()
             elif line.startswith("%global upstream_name"):
                 upstream_name = shlex.split(line)[2].strip()
+            elif line.startswith("%global commit "):
+                # Commit-based release (snapshots)
+                current_commit = shlex.split(line)[2].strip()
+                repo_data["commit_based"] = True
             elif line.startswith("Name:"):
                 name = line.split("Name:")[1].strip()
             elif line.startswith("URL:"):
@@ -121,6 +126,10 @@ def get_repo_data_from_spec(rpmspec_filename):
                 else:
                     # Any non-empty string defaults to True for safety
                     repo_data["formal"] = bool(value)
+
+        # Store current commit for comparison
+        if current_commit:
+            repo_data["current_commit"] = current_commit
 
         if not current_version:
             log.critical(
@@ -550,6 +559,102 @@ def update_spec(repo, res, sem="minor", changelog: bool = False):
 
     with open(repo, "w") as f:
         f.write("\n".join(out))
+
+
+def update_spec_commit(spec_file, commit_info, repo_data):
+    """Update spec file for commit-based (snapshot) releases.
+
+    Args:
+        spec_file: Path to the spec file
+        commit_info: Dict with 'sha', 'short_sha', 'date', 'message'
+        repo_data: Dict with repo data from spec parsing
+
+    Updates:
+        - %global commit <sha>
+        - %global commit_date <YYYYMMDD>
+        - Release: 0.%{snapinfo}%{?dist} (if no releases) or 1.%{snapinfo}%{?dist}
+    """
+    current_commit = repo_data.get("current_commit")
+    if current_commit == commit_info["sha"]:
+        log.info("Commit %s is already current in spec file", commit_info["short_sha"])
+        sys.exit(2)
+
+    print(f"Updating to commit {commit_info['short_sha']}")
+
+    # Format commit date as YYYYMMDD
+    commit_date = commit_info["date"].strftime("%Y%m%d")
+
+    out = []
+    commit_present = False
+    commit_date_present = False
+    snapinfo_present = False
+
+    with open(spec_file) as f:
+        for ln in f.readlines():
+            if ln.startswith("%global commit "):
+                out.append(f'%global commit {commit_info["sha"]}')
+                commit_present = True
+            elif ln.startswith("%global commit_date "):
+                out.append(f"%global commit_date {commit_date}")
+                commit_date_present = True
+            elif ln.startswith("%global snapinfo "):
+                # Keep existing snapinfo definition
+                out.append(ln.rstrip())
+                snapinfo_present = True
+            elif ln.startswith("Release:"):
+                release_tag_regex = r"^Release:(\s+)(\S+)"
+                m = re.match(release_tag_regex, ln)
+                if m:
+                    # Check if there's a formal release version
+                    current_version = repo_data.get("current_version")
+                    if current_version and str(current_version) != "0":
+                        # Post-release snapshot: 1.snapinfo
+                        out.append(f"Release:{m.group(1)}1.%{{snapinfo}}%{{?dist}}")
+                    else:
+                        # Pre-release snapshot: 0.snapinfo
+                        out.append(f"Release:{m.group(1)}0.%{{snapinfo}}%{{?dist}}")
+                else:
+                    out.append(ln.rstrip())
+            else:
+                out.append(ln.rstrip())
+
+    # Add missing globals at the top
+    if not commit_present:
+        out.insert(0, f'%global commit {commit_info["sha"]}')
+
+    if not commit_date_present:
+        # Insert after %global commit
+        for i, line in enumerate(out):
+            if line.startswith("%global commit "):
+                out.insert(i + 1, f"%global commit_date {commit_date}")
+                break
+
+    if not snapinfo_present:
+        # Add default snapinfo definition after commit_date
+        for i, line in enumerate(out):
+            if line.startswith("%global commit_date "):
+                out.insert(i + 1, "%global snapinfo %{commit_date}git%{shortcommit}")
+                break
+
+    # Add shortcommit if not present
+    has_shortcommit = any(
+        line.startswith("%global shortcommit ") for line in out
+    )
+    if not has_shortcommit:
+        for i, line in enumerate(out):
+            if line.startswith("%global commit "):
+                out.insert(i + 1, "%global shortcommit %(c=%{commit}; echo ${c:0:7})")
+                break
+
+    with open(spec_file, "w") as f:
+        f.write("\n".join(out))
+
+    log.info(
+        "Updated %s to commit %s (%s)",
+        spec_file,
+        commit_info["short_sha"],
+        commit_info["message"][:50],
+    )
 
 
 def install_app_image(url, install_name):

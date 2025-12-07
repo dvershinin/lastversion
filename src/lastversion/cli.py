@@ -24,6 +24,8 @@ from lastversion.lastversion import (
     log,
     parse_version,
     update_spec,
+    update_spec_commit,
+    get_repo_data_from_spec,
     install_release,
 )
 from lastversion.repo_holders.base import BaseProjectHolder
@@ -31,6 +33,44 @@ from lastversion.repo_holders.github import TOKEN_PRO_TIP
 from lastversion import utils
 from lastversion.utils import download_file, extract_file
 from lastversion.version import Version
+
+
+def handle_commit_based_spec(args, repo_data):
+    """Handle update of commit-based spec files.
+
+    Args:
+        args: Parsed command line arguments
+        repo_data: Dict with repo data from spec parsing
+
+    Returns:
+        Exit code
+    """
+    from lastversion.holder_factory import HolderFactory
+
+    repo = repo_data.get("repo")
+    if not repo:
+        log.critical("Could not determine repository from spec file")
+        return sys.exit(1)
+
+    try:
+        with HolderFactory.get_instance_for_repo(repo) as project:
+            # Check if the holder supports getting latest commit
+            if not hasattr(project, "get_latest_commit"):
+                log.critical(
+                    "Commit-based updates are only supported for GitHub repositories"
+                )
+                return sys.exit(1)
+
+            commit_info = project.get_latest_commit()
+            if not commit_info:
+                log.critical("Failed to get latest commit from %s", repo)
+                return sys.exit(1)
+
+            return update_spec_commit(args.repo, commit_info, repo_data)
+
+    except (ApiCredentialsError, BadProjectError) as error:
+        log.critical(str(error))
+        return sys.exit(4)
 
 
 def process_bulk_input(args):
@@ -413,6 +453,11 @@ def main(argv=None):
     if args.repo.endswith(".spec"):
         args.action = "update-spec"
         args.format = "dict"
+        # Check if this is a commit-based spec file
+        repo_data = get_repo_data_from_spec(args.repo)
+        if repo_data.get("commit_based"):
+            # Handle commit-based spec update
+            return handle_commit_based_spec(args, repo_data)
 
     if not args.sem:
         if args.action == "update-spec":

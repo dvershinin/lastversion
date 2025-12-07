@@ -871,3 +871,29 @@ class GitHubRepoSession(BaseProjectHolder):
             self.feed_contents[official_repo] = r.text
             return official_repo
         return None
+
+    def get_latest_commit(self, branch=None):
+        """Get the latest commit on the default branch or specified branch.
+
+        Args:
+            branch: Branch name (optional, uses default branch if not specified)
+
+        Returns:
+            dict with 'sha', 'date', 'message' or None if failed
+        """
+        url = f"{self.api_base}/repos/{self.repo}/commits"
+        params = {"per_page": 1}
+        if branch:
+            params["sha"] = branch
+        r = self.get(url, params=params)
+        if r.status_code == 200:
+            commits = r.json()
+            if commits:
+                commit = commits[0]
+                return {
+                    "sha": commit["sha"],
+                    "short_sha": commit["sha"][:7],
+                    "date": parser.parse(commit["commit"]["committer"]["date"]),
+                    "message": commit["commit"]["message"].split("\n")[0],
+                }
+        return None
