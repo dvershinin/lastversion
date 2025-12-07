@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      # urllib3 has conditional version constraints based on Python version
+      # (urllib3<2 for Python <3.9, no constraint for Python >=3.9)
+      # This confuses Dependabot, so we ignore it
+      - dependency-name: "urllib3"
+      # cachecontrol also has conditional constraints
+      # (0.12.x for Python <3.10, 0.14.x for Python >=3.10)
+      - dependency-name: "cachecontrol"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
