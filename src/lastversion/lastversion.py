@@ -126,6 +126,11 @@ def get_repo_data_from_spec(rpmspec_filename):
                 else:
                     # Any non-empty string defaults to True for safety
                     repo_data["formal"] = bool(value)
+            elif line.startswith("%global lastversion_sem"):
+                # Semver constraint: major, minor, or patch
+                value = shlex.split(line)[2].strip().lower()
+                if value in ["major", "minor", "patch"]:
+                    repo_data["sem"] = value
 
         # Store current commit for comparison
         if current_commit:
@@ -572,6 +577,14 @@ def update_spec(repo, res, sem="minor", changelog: bool = False):
 
                 release = release.lstrip(digits)
                 out.append("Release:" + m.group(1) + "1" + release)
+            elif ln.startswith("License:") and res.get("rpmspec_license"):
+                # Update License: tag with the license from upstream
+                license_tag_regex = r"^License:(\s+)(\S.*)"
+                m = re.match(license_tag_regex, ln)
+                if m:
+                    out.append("License:" + m.group(1) + res["rpmspec_license"])
+                else:
+                    out.append(ln.rstrip())
             else:
                 out.append(ln.rstrip())
 

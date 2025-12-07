@@ -505,6 +505,9 @@ def main(argv=None):
         if repo_data.get("commit_based"):
             # Handle commit-based spec update
             return handle_commit_based_spec(args, repo_data)
+        # Use semver constraint from spec file if not overridden by CLI
+        if not args.sem and repo_data.get("sem"):
+            args.sem = repo_data["sem"]
 
     if not args.sem:
         if args.action == "update-spec":
