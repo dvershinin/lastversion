@@ -407,6 +407,38 @@ def extract_zip(buffer: io.BytesIO, to_dir):
             archive_file.extractall(path=to_dir)
 
 
+def detect_archive_type(buffer: io.BytesIO, url: str) -> str:
+    """Detect archive type by magic bytes or file extension.
+
+    Args:
+        buffer: File buffer to read magic bytes from.
+        url: URL to fall back on extension detection.
+
+    Returns:
+        Archive type: '7z', 'zip', or 'tar' (for any tar variant).
+    """
+    # Read magic bytes
+    magic = buffer.read(8)
+    buffer.seek(0)
+
+    # 7z magic: 37 7A BC AF 27 1C
+    if magic[:6] == b"7z\xbc\xaf'\x1c":
+        return "7z"
+    # ZIP magic: 50 4B (PK)
+    if magic[:2] == b"PK":
+        return "zip"
+
+    # Fall back to URL extension
+    url_lower = url.lower()
+    if url_lower.endswith(".7z"):
+        return "7z"
+    if url_lower.endswith(".zip"):
+        return "zip"
+
+    # Default to tar (handles .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, etc.)
+    return "tar"
+
+
 def extract_7z(buffer: io.BytesIO, to_dir):
     """
     Extract a 7z archive to dir.
@@ -453,11 +485,13 @@ def extract_file(url: str, to_dir="."):
 
             # Process the file in memory (e.g., extract its contents)
             buffer.seek(0)
-            # Process the buffer (e.g., extract its contents)
+            # Detect archive type by magic bytes or extension
+            archive_type = detect_archive_type(buffer, url)
+            buffer.seek(0)
 
-            if url.endswith(".7z"):
+            if archive_type == "7z":
                 extract_7z(buffer, to_dir=to_dir)
-            elif url.endswith(".zip"):
+            elif archive_type == "zip":
                 extract_zip(buffer, to_dir=to_dir)
             else:
                 extract_tar(buffer, to_dir=to_dir)
