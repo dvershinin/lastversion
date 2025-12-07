@@ -113,11 +113,14 @@ Updating the parent software version is not in the scope of this article. But yo
 
 ## Specifying command-line arguments within `.spec` files
 
-`lastversion` will read some `.spec` defined globas and treat them as command-line
+`lastversion` will read some `.spec` defined globals and treat them as command-line
 arguments, including:
 
 * `lastversion_having_asset` is treated same as `--having-asset` command line argument
 * `lastversion_only` is treated same as `--only` command line argument
+* `lastversion_major` is treated same as `--major` command line argument
+* `lastversion_formal` when set to `1`, `true`, `yes`, or `on` is same as `--formal`
+* `lastversion_sem` specifies semver constraint: `major`, `minor`, or `patch`
 
 Example:
 
@@ -127,3 +130,25 @@ Example:
 
 In this example, "Linux 64 bit: Binary" is the asset name as it appears on 
 GitHub release page.
+
+### Semver constraints in spec files
+
+You can specify a semver constraint directly in your spec file to control which 
+version updates are allowed:
+
+```rpmspec
+%global upstream_github nginx
+%global lastversion_sem patch    # Only allow patch updates (1.26.x → 1.26.y)
+
+Name:    nginx
+Version: 1.26.0
+```
+
+Valid values for `lastversion_sem`:
+
+* `major` - allow any version update
+* `minor` - only allow updates within the same major version (1.x.y → 1.z.w)
+* `patch` - only allow patch updates within same minor version (1.2.x → 1.2.y)
+
+When a newer version is found but violates the semver constraint, `lastversion` 
+exits with code 4.

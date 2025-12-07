@@ -1,15 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [3.5.10] - Unreleased
+## [3.5.10] - 2025-12-07
 ### Added
 * Bulk input option `-i` / `--input-file` to process multiple repos from a file #178
 * Semver constraints for `-gt`: exit code 4 when newer version outside constraint #43
 * Commit-based spec file updates with `%global commit` support #59
+* Spec file `%global lastversion_sem` for semver constraints #26
+* Spec file `License:` tag auto-update from upstream SPDX license #26
+* Cache management: `lastversion cache clear` command #126
 * Codeberg support (recognized as Gitea instance) #174
 * Truststore integration for custom SSL certificates #175
-* GitLab asset digest support in JSON output
-* `.7z` archive extraction support (optional `py7zr` dependency)
+* GitLab asset digest support in JSON output #193
+* `.7z` archive extraction support (optional `py7zr` dependency) #98
+* Expanded SPDX license mappings (80+ licenses) #74
 ### Fixed
 * Architecture filtering for `install` command on aarch64 #117
 * Prefer native packages (RPM/deb) over AppImages when installing
