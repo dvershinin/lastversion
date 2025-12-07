@@ -42,9 +42,11 @@ def asset_matches(asset, search, regex_matching):
 
 
 class GiteaRepoSession(BaseProjectHolder):
-    """A class to represent a GitHub project holder."""
+    """A class to represent a Gitea-based project holder (Gitea, Codeberg, etc.)."""
 
     DEFAULT_HOSTNAME = "gitea.com"
+    # Additional known Gitea-based forges
+    KNOWN_HOSTNAMES = ["gitea.com", "codeberg.org"]
     CAN_BE_SELF_HOSTED = True
     """ The following format will benefit from:
     1) not using API, so is not subject to its rate limits
@@ -108,6 +110,18 @@ class GiteaRepoSession(BaseProjectHolder):
                 f"No project found on GitHub for search query: {repo}"
             )
         return full_name
+
+    @classmethod
+    def is_matching_hostname(cls, hostname):
+        """Check if given hostname matches known Gitea-based forges."""
+        if not hostname:
+            return None
+        # Extract hostname without port for comparison
+        hostname_only = hostname.rsplit(":", 1)[0] if ":" in hostname else hostname
+        # Check against known hostnames
+        if hostname_only in cls.KNOWN_HOSTNAMES:
+            return True
+        return False
 
     def is_instance(self):
         """
