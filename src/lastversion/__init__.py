@@ -8,9 +8,9 @@ __author__ = "Danila Vershinin"
 
 import logging
 
-from .lastversion import check_version, has_update, latest
+from .lastversion import check_version, clear_cache, has_update, latest
 
-__all__ = ["check_version", "has_update", "latest"]
+__all__ = ["check_version", "clear_cache", "has_update", "latest"]
 
 
 # https://realpython.com/python-logging-source-code/#library-vs-application-logging-what-is-nullhandler

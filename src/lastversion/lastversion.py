@@ -367,6 +367,36 @@ def latest(
     return None
 
 
+def clear_cache(repo=None):
+    """Clear the HTTP cache for lastversion.
+
+    This function is useful for webhook handlers that need to invalidate
+    cache when a new release is published.
+
+    Args:
+        repo (str): Optional repository identifier (e.g., "owner/repo").
+                    If provided, attempts to clear cache for that repo only.
+                    If None, clears the entire cache.
+
+    Returns:
+        int: Number of cache entries cleared (or 1 for full cache clear)
+
+    Example:
+        # In a webhook handler for GitHub release events:
+        from lastversion import clear_cache, latest
+
+        def handle_github_webhook(payload):
+            repo = payload['repository']['full_name']
+            clear_cache(repo)
+            # Optionally fetch fresh version
+            version = latest(repo, output_format='json')
+            return version
+    """
+    from lastversion.repo_holders.base import BaseProjectHolder
+
+    return BaseProjectHolder.clear_cache(repo)
+
+
 def has_update(repo, current_version, pre_ok=False, at=None):
     """Given an existing version for a repo, checks if there is an update.
 

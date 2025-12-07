@@ -1,6 +1,22 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.5.10] - Unreleased
+### Added
+* Bulk input option `-i` / `--input-file` to process multiple repos from a file #178
+* Semver constraints for `-gt`: exit code 4 when newer version outside constraint #43
+* Commit-based spec file updates with `%global commit` support #59
+* Codeberg support (recognized as Gitea instance) #174
+* Truststore integration for custom SSL certificates #175
+* GitLab asset digest support in JSON output
+* `.7z` archive extraction support (optional `py7zr` dependency)
+### Fixed
+* Architecture filtering for `install` command on aarch64 #117
+* Prefer native packages (RPM/deb) over AppImages when installing
+* GitLab instances with non-standard ports now work correctly #170
+* GitLab packages are now returned as assets #184
+* Python 3.6 compatibility (type hints, dependency markers)
+
 ## [3.5.7] - 2024-11-07
 ### Fixed
 * Raised files download timeout to 30 seconds

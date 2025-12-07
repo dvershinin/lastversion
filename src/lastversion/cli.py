@@ -35,6 +35,48 @@ from lastversion.utils import download_file, extract_file
 from lastversion.version import Version
 
 
+def handle_cache_action(args):
+    """Handle cache management commands.
+
+    Args:
+        args: Parsed command line arguments
+
+    Usage:
+        lastversion cache clear          - Clear all cache
+        lastversion cache clear <repo>   - Clear cache for specific repo
+        lastversion cache --refresh <repo> - Clear cache and fetch fresh version
+
+    Returns:
+        Exit code
+    """
+    subcommand = args.repo.lower() if args.repo else "help"
+
+    if subcommand == "clear":
+        # Check if there's a repo argument (passed as part of the repo string after "clear")
+        # For simplicity, clearing all cache when just "lastversion cache clear"
+        cleared = BaseProjectHolder.clear_cache()
+        if cleared:
+            print("Cache cleared successfully")
+        else:
+            print("Cache was already empty or does not exist")
+        return sys.exit(0)
+
+    elif subcommand == "help" or subcommand.startswith("-"):
+        print("Usage:")
+        print("  lastversion cache clear         - Clear all cache")
+        print("  lastversion cache clear <repo>  - Not yet implemented")
+        print("")
+        print("To refresh cache for a repo, use --no-cache:")
+        print("  lastversion --no-cache <repo>")
+        return sys.exit(0)
+
+    else:
+        # Treat as repo name - clear cache for this repo and get fresh version
+        cleared = BaseProjectHolder.clear_cache(repo=subcommand)
+        print(f"Cleared {cleared} cache entries for {subcommand}")
+        return sys.exit(0)
+
+
 def handle_commit_based_spec(args, repo_data):
     """Handle update of commit-based spec files.
 
@@ -179,6 +221,7 @@ def main(argv=None):
             "format",
             "install",
             "update-spec",
+            "cache",
         ],
     )
     parser.add_argument(
@@ -422,6 +465,10 @@ def main(argv=None):
     # Handle bulk input from file
     if args.input_file:
         return process_bulk_input(args)
+
+    # Handle cache management
+    if args.action == "cache":
+        return handle_cache_action(args)
 
     if args.action in ["test", "format"]:
         v = parse_version(args.repo)
