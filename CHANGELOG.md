@@ -1,9 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [3.5.11] - 2025-12-07
+## [3.5.12] - 2025-12-07
 ### Fixed
 * Fixed UnicodeEncodeError in --help on systems with LANG=C (EL7 RPM builds)
+* Fixed IndentationError in utils.py (architecture filtering)
 
 ## [3.5.10] - 2025-12-07
 ### Added
