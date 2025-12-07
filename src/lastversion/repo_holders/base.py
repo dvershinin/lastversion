@@ -588,6 +588,49 @@ class BaseProjectHolder(requests.Session):
                 urls.append(download_url)
         return urls
 
+    def get_assets_with_digests(self, release, short_urls, assets_filter=None):
+        """Get assets with digest information for a given release.
+
+        Returns a list of dicts with url, name, size, and digest (if available).
+        This provides more detailed asset info for JSON output.
+        """
+        result = []
+        assets = release.get("assets", [])
+        arch_matched_assets = []
+        if not assets_filter and platform.machine() in ["x86_64", "AMD64"]:
+            for asset in assets:
+                if "x86_64" in asset["name"]:
+                    arch_matched_assets.append(asset)
+            if arch_matched_assets:
+                assets = arch_matched_assets
+
+        if assets:
+            for asset in assets:
+                if assets_filter and not re.search(assets_filter, asset["name"]):
+                    continue
+                if not assets_filter and asset_does_not_belong_to_machine(
+                    asset["name"]
+                ):
+                    log.info(
+                        "Asset %s does not belong to this machine, skipping",
+                        asset["name"],
+                    )
+                    continue
+                asset_info = {
+                    "url": asset.get("browser_download_url"),
+                    "name": asset.get("name"),
+                    "size": asset.get("size"),
+                }
+                # Include digest if available (GitHub provides this since June 2025)
+                if asset.get("digest"):
+                    asset_info["digest"] = asset["digest"]
+                result.append(asset_info)
+        else:
+            download_url = self.release_download_url(release, short_urls)
+            if not assets_filter or re.search(assets_filter, download_url):
+                result.append({"url": download_url, "name": None, "size": None})
+        return result
+
     def get_canonical_link(self):
         """Get the canonical link for a project."""
         if self.feed_url:

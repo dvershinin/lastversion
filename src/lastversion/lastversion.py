@@ -322,6 +322,11 @@ def latest(
                         pass
             release.update(repo_data)
             try:
+                # Get detailed asset info with digests BEFORE get_assets transforms them
+                release["assets_with_digests"] = project.get_assets_with_digests(
+                    release, short_urls, assets_filter
+                )
+                # Get asset URLs (this transforms the assets list)
                 release["assets"] = project.get_assets(
                     release, short_urls, assets_filter
                 )
