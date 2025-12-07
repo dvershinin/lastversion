@@ -153,6 +153,7 @@ cd ..
 %files
 %{_bindir}/brotli
 %{_libdir}/*.so.*
+%{_mandir}/man1/*
 # Virtually add license macro for EL6:
 %{!?_licensedir:%global license %%doc}
 %license LICENSE
