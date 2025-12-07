@@ -28,6 +28,7 @@ from lastversion.lastversion import (
 )
 from lastversion.repo_holders.base import BaseProjectHolder
 from lastversion.repo_holders.github import TOKEN_PRO_TIP
+from lastversion import utils
 from lastversion.utils import download_file, extract_file
 from lastversion.version import Version
 
@@ -105,6 +106,13 @@ def main(argv=None):
         default=0,
         help="Will give you an idea of what is happening under the hood, "
         "-vv to increase verbosity level",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        dest="quiet",
+        action="store_true",
+        help="Suppress all non-error output, including progress bars",
     )
     # no --download = False, --download filename.tar, --download = None
     parser.add_argument(
@@ -235,10 +243,17 @@ def main(argv=None):
         having_asset=None,
         even=False,
         changelog=False,
+        quiet=False,
     )
     args = parser.parse_args(argv)
 
     BaseProjectHolder.CACHE_DISABLED = args.no_cache
+
+    # Handle quiet mode - suppress non-error output and progress bars
+    if args.quiet:
+        utils.QUIET_MODE = True
+        # In quiet mode, only show errors
+        logging.getLogger("lastversion").setLevel(logging.ERROR)
 
     if args.repo == "self":
         args.repo = __self__
@@ -270,7 +285,7 @@ def main(argv=None):
     # add ch to logger
     logger.addHandler(ch)
 
-    if args.verbose:
+    if args.verbose and not args.quiet:
         logger.setLevel(logging.DEBUG)
         log.info("Verbose %s level output.", args.verbose)
         if args.verbose >= 2:

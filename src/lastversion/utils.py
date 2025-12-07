@@ -21,6 +21,9 @@ import tqdm
 
 from lastversion.exceptions import TarPathTraversalException
 
+# Global quiet mode flag - when True, suppresses progress bars and non-error output
+QUIET_MODE = False
+
 PY7ZR_AVAILABLE = False
 try:
     # noinspection PyUnresolvedReferences
@@ -303,7 +306,7 @@ def download_file(url, local_filename=None):
 
             # noinspection PyTypeChecker
             pbar = tqdm.tqdm(
-                disable=None,  # disable on non-TTY
+                disable=QUIET_MODE or None,  # disable on non-TTY or in quiet mode
                 total=num_bars,
                 unit="KB",
                 desc=f"Downloading {local_filename}",
@@ -438,7 +441,7 @@ def extract_file(url: str, to_dir="."):
             buffer = io.BytesIO()
             # noinspection PyTypeChecker
             with tqdm.tqdm(
-                disable=None,  # disable on non-TTY
+                disable=QUIET_MODE or None,  # disable on non-TTY or in quiet mode
                 total=num_bars,
                 unit="KB",
                 desc=url.split("/")[-1],
