@@ -667,9 +667,7 @@ def update_spec_commit(spec_file, commit_info, repo_data):
                 break
 
     # Add shortcommit if not present
-    has_shortcommit = any(
-        line.startswith("%global shortcommit ") for line in out
-    )
+    has_shortcommit = any(line.startswith("%global shortcommit ") for line in out)
     if not has_shortcommit:
         for i, line in enumerate(out):
             if line.startswith("%global commit "):
