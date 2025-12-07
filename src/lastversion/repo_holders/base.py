@@ -398,15 +398,21 @@ class BaseProjectHolder(requests.Session):
 
     @classmethod
     def is_matching_hostname(cls, hostname):
-        """Check if given hostname matches to the project hosting's domains."""
+        """Check if given hostname matches to the project hosting's domains.
+
+        Args:
+            hostname: May include port (netloc format) for non-standard ports.
+        """
         if not hostname:
             return None
         # Hosting does not have domains defined
         if not cls.DEFAULT_HOSTNAME and not cls.SUBDOMAIN_INDICATOR:
             return False
-        if cls.DEFAULT_HOSTNAME == hostname:
+        # Extract hostname without port for comparison
+        hostname_only = hostname.rsplit(":", 1)[0] if ":" in hostname else hostname
+        if cls.DEFAULT_HOSTNAME == hostname_only:
             return True
-        if cls.SUBDOMAIN_INDICATOR and hostname.startswith(
+        if cls.SUBDOMAIN_INDICATOR and hostname_only.startswith(
             cls.SUBDOMAIN_INDICATOR + "."
         ):
             return True
