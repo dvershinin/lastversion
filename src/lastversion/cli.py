@@ -373,8 +373,8 @@ def main(argv=None):
             having_asset=args.having_asset,
             exclude=args.exclude,
             even=args.even,
-                formal=args.formal,
-                changelog=args.changelog,
+            formal=args.formal,
+            changelog=args.changelog,
         )
     except (ApiCredentialsError, BadProjectError) as error:
         log.critical(str(error))
