@@ -383,7 +383,7 @@ def main(argv=None):
         "--changelog",
         dest="changelog",
         action="store_true",
-        help="Generate RPM %%changelog entry (1–7 concise bullets)",
+        help="Generate RPM %%changelog entry (1-7 concise bullets)",
     )
     parser.add_argument("--version", action=VersionAction)
     parser.set_defaults(

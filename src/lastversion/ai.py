@@ -26,7 +26,7 @@ def generate_changelog(raw_notes: str, context: dict) -> Optional[List[str]]:
     Args:
         raw_notes: Upstream release notes/description (markdown/plain).
         context: Minimal context like {"repo": str, "tag": str, "version": str}.
-        bullets: Target number of bullets (3–7 permitted).
+        bullets: Target number of bullets (3-7 permitted).
 
     Returns:
         List of bullet strings (without leading dashes), or None on failure.
