@@ -43,12 +43,12 @@ jobs:
         env:
           LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
       - name: 'Upload brotli.spec artifact'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: brotli.spec
           path: tests/brotli.spec
       - name: 'Upload nginx-module-immutable.spec artifact'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nginx-module-immutable.spec
           path: tests/nginx-module-immutable.spec
@@ -95,7 +95,7 @@ jobs:
         LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
 
     - name: Upload pytest test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: pytest-results-${{ matrix.python-version }}
         path: junit/test-results-${{ matrix.python-version }}.xml
