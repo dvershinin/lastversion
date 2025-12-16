@@ -11,7 +11,7 @@ enabled = true
 
   [analyzers.meta]
   runtime_version = "3.x.x"
-  max_line_length = 88
+  max_line_length = 120
 
 [[analyzers]]
 name = "shell"
@@ -19,6 +19,8 @@ enabled = true
 
 
 [[transformers]]
-
 name = "black"
 enabled = true
+
+  [transformers.meta]
+  line_length = 120
