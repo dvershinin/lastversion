@@ -107,7 +107,7 @@ jobs:
 
     - name: Upload coverage to Codacy
       # Skip for Dependabot PRs which don't have access to secrets
-      if: ${{ secrets.CODACY_PROJECT_TOKEN != '' }}
+      if: github.actor != 'dependabot[bot]'
       run: |
         bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml
       env:
