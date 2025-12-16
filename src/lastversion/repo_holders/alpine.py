@@ -1,4 +1,5 @@
 """A module to represent an Alpine Linux package repository holder."""
+
 import io
 import logging
 import re
@@ -95,7 +96,9 @@ class AlpineRepoSession(BaseProjectHolder):
         try:
             response = self.get(url)
             if response.status_code != 200:
-                log.debug("Failed to fetch APKINDEX from %s: %s", url, response.status_code)
+                log.debug(
+                    "Failed to fetch APKINDEX from %s: %s", url, response.status_code
+                )
                 return None
 
             # APKINDEX is a tar.gz containing an APKINDEX file
@@ -119,7 +122,9 @@ class AlpineRepoSession(BaseProjectHolder):
         """Check if this holder has a valid project."""
         return self.project is not None
 
-    def get_latest(self, pre_ok=False, major=None):  # noqa: ARG002  # pylint: disable=unused-argument
+    def get_latest(
+        self, pre_ok=False, major=None
+    ):  # noqa: ARG002  # pylint: disable=unused-argument
         """Get the latest release for this package.
 
         Args:
@@ -133,7 +138,9 @@ class AlpineRepoSession(BaseProjectHolder):
             self.project = None
             self.apk_repo = None
             for apk_repo in self.REPOS:
-                pkg_info = self._fetch_package_from_index(self.branch, apk_repo, self.arch)
+                pkg_info = self._fetch_package_from_index(
+                    self.branch, apk_repo, self.arch
+                )
                 if pkg_info:
                     self.project = pkg_info
                     self.apk_repo = apk_repo
@@ -175,7 +182,9 @@ class AlpineRepoSession(BaseProjectHolder):
 
         return ret
 
-    def release_download_url(self, release, shorter=False):  # noqa: ARG002  # pylint: disable=unused-argument
+    def release_download_url(
+        self, release, shorter=False
+    ):  # noqa: ARG002  # pylint: disable=unused-argument
         """Get release download URL for the package.
 
         Alpine packages are downloaded as .apk files from the CDN.
