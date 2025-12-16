@@ -1,4 +1,5 @@
 """A module to represent an Alpine Linux package repository holder."""
+
 import io
 import logging
 import re
@@ -53,7 +54,10 @@ class AlpineRepoSession(BaseProjectHolder):
         """Construct URL for APKINDEX.tar.gz."""
         # Branches in URLs use 'v' prefix for versioned branches
         branch_path = branch if branch == "edge" else f"v{branch}"
-        return f"https://{self.CDN_HOSTNAME}/alpine/" f"{branch_path}/{apk_repo}/{arch}/APKINDEX.tar.gz"
+        return (
+            f"https://{self.CDN_HOSTNAME}/alpine/"
+            f"{branch_path}/{apk_repo}/{arch}/APKINDEX.tar.gz"
+        )
 
     def _parse_apkindex(self, content):
         """Parse APKINDEX content and return dict of packages.
@@ -95,7 +99,9 @@ class AlpineRepoSession(BaseProjectHolder):
         try:
             response = self.get(url)
             if response.status_code != 200:
-                log.debug("Failed to fetch APKINDEX from %s: %s", url, response.status_code)
+                log.debug(
+                    "Failed to fetch APKINDEX from %s: %s", url, response.status_code
+                )
                 return None
 
             # APKINDEX is a tar.gz containing an APKINDEX file
@@ -133,7 +139,9 @@ class AlpineRepoSession(BaseProjectHolder):
             self.project = None
             self.apk_repo = None
             for apk_repo in self.REPOS:
-                pkg_info = self._fetch_package_from_index(self.branch, apk_repo, self.arch)
+                pkg_info = self._fetch_package_from_index(
+                    self.branch, apk_repo, self.arch
+                )
                 if pkg_info:
                     self.project = pkg_info
                     self.apk_repo = apk_repo
@@ -187,12 +195,18 @@ class AlpineRepoSession(BaseProjectHolder):
         arch = release.get("arch", self.arch)
         branch_path = self.branch if self.branch == "edge" else f"v{self.branch}"
 
-        return f"https://{self.CDN_HOSTNAME}/alpine/{branch_path}/" f"{self.apk_repo}/{arch}/{self.repo}-{version}.apk"
+        return (
+            f"https://{self.CDN_HOSTNAME}/alpine/{branch_path}/"
+            f"{self.apk_repo}/{arch}/{self.repo}-{version}.apk"
+        )
 
     @staticmethod
     def make_canonical_link(repo):
         """Make canonical link for a package."""
-        return f"https://{AlpineRepoSession.DEFAULT_HOSTNAME}/packages" f"?name={repo}&branch=edge"
+        return (
+            f"https://{AlpineRepoSession.DEFAULT_HOSTNAME}/packages"
+            f"?name={repo}&branch=edge"
+        )
 
     def get_canonical_link(self):
         """Get the canonical link for this package."""
