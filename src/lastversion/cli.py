@@ -491,7 +491,7 @@ def main(argv=None):
         if args.having_asset is None:
             args.having_asset = r"~\.(AppImage|rpm)$"
             try:
-                import apt
+                import apt  # noqa: F401 - used for feature detection
 
                 args.having_asset = r"~\.(AppImage|deb)$"
             except ImportError:

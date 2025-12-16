@@ -25,6 +25,13 @@ repos:
           "--exclude=build,dist,*.egg-info"
         ]
 
+  # Ruff - fast Python linter (catches most DeepSource issues)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: ["--line-length=120", "--fix", "--exit-non-zero-on-fix"]
+
   # Import sorting
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2

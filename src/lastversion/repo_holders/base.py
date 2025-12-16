@@ -311,7 +311,6 @@ class BaseProjectHolder(requests.Session):
             # Clear cache entries for specific repo
             # CacheControl uses URL-based filenames, so we need to find and remove
             # files that match the repo pattern
-            import hashlib
             from urllib.parse import quote
 
             # Common URL patterns for the repo
