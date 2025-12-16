@@ -5,6 +5,7 @@ from lastversion.repo_holders.base import BaseProjectHolder
 
 class MercurialRepoSession(BaseProjectHolder):
     """Mercurial repository holder."""
+
     CAN_BE_SELF_HOSTED = True
     REPO_URL_PROJECT_COMPONENTS = 1
 

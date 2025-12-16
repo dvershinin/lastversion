@@ -1,4 +1,5 @@
 """Version holder based on system package repositories."""
+
 import datetime
 import logging
 

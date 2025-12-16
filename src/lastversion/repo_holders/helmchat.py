@@ -1,4 +1,5 @@
 """Helm Chart repo holder."""
+
 import logging
 
 import yaml
@@ -10,6 +11,7 @@ log = logging.getLogger(__name__)
 
 class HelmChartRepoSession(BaseProjectHolder):
     """Helm Chart repo session."""
+
     # Any URI identifies a project
     REPO_IS_URI = True
 

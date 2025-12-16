@@ -1,4 +1,5 @@
 """Test SourceForge repository."""
+
 from urllib.parse import urlunparse, urlparse
 
 from lastversion.repo_holders.base import BaseProjectHolder

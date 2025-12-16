@@ -1,4 +1,5 @@
 """Factory for holders."""
+
 import logging
 from collections import OrderedDict
 from urllib.parse import urlparse
@@ -74,7 +75,9 @@ class HolderFactory:
         log.info("Have not found any RSS feed for the website %s", hostname)
         github_link = holder.home_soup.select_one("a[href*='github.com']")
         if github_link:
-            hostname, repo = GitHubRepoSession.get_host_repo_for_link(github_link["href"])
+            hostname, repo = GitHubRepoSession.get_host_repo_for_link(
+                github_link["href"]
+            )
             # log that we found GitHub link on the website
             log.info("Found GitHub link on the website %s: %s", hostname, repo)
             return GitHubRepoSession(repo, hostname)
@@ -99,7 +102,9 @@ class HolderFactory:
         return holder
 
     @staticmethod
-    def try_match_with_holder_class(project_hosting_name, project_hosting_class, repo, hostname):
+    def try_match_with_holder_class(
+        project_hosting_name, project_hosting_class, repo, hostname
+    ):
         """Try to match a holder class with a given repo."""
         # only try if there is hostname
         if not hostname:
@@ -151,7 +156,9 @@ class HolderFactory:
                 return project_hosting_class(repo, hostname)
             known_repo = project_hosting_class.is_official_for_repo(repo, hostname)
             if known_repo:
-                return HolderFactory.create_holder_from_known_repo(known_repo, project_hosting_class)
+                return HolderFactory.create_holder_from_known_repo(
+                    known_repo, project_hosting_class
+                )
 
         for (
             project_hosting_name,
@@ -170,7 +177,9 @@ class HolderFactory:
                 return holder
 
         if not holder and hostname:
-            raise BadProjectError(f"Could not find a holder for the {repo} at {hostname}")
+            raise BadProjectError(
+                f"Could not find a holder for the {repo} at {hostname}"
+            )
 
         if not holder and not hostname:
             return GitHubRepoSession(repo)

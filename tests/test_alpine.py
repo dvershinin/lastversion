@@ -1,4 +1,5 @@
 """Test Alpine Linux package repository."""
+
 import os
 
 from lastversion.lastversion import latest

@@ -1,4 +1,5 @@
 """A module to represent a Pypi project holder."""
+
 import logging
 
 from dateutil import parser

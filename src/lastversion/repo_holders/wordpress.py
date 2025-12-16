@@ -1,4 +1,5 @@
 """Provides class to represent a WordPress plugin project holder."""
+
 import logging
 
 from lastversion.repo_holders.base import BaseProjectHolder
