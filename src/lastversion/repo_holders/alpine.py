@@ -53,7 +53,7 @@ class AlpineRepoSession(BaseProjectHolder):
         """Construct URL for APKINDEX.tar.gz."""
         # Branches in URLs use 'v' prefix for versioned branches
         branch_path = branch if branch == "edge" else f"v{branch}"
-        return f"https://{self.CDN_HOSTNAME}/alpine/" f"{branch_path}/{apk_repo}/{arch}/APKINDEX.tar.gz"
+        return f"https://{self.CDN_HOSTNAME}/alpine/{branch_path}/{apk_repo}/{arch}/APKINDEX.tar.gz"
 
     def _parse_apkindex(self, content):
         """Parse APKINDEX content and return dict of packages.
@@ -68,8 +68,8 @@ class AlpineRepoSession(BaseProjectHolder):
         packages = {}
         current_pkg = {}
 
-        for line in content.split("\n"):
-            line = line.strip()
+        for raw_line in content.splitlines():
+            line = raw_line.strip()
             if not line:
                 # End of package entry
                 if "P" in current_pkg and "V" in current_pkg:
@@ -175,7 +175,7 @@ class AlpineRepoSession(BaseProjectHolder):
 
         return ret
 
-    def release_download_url(self, release, shorter=False):
+    def release_download_url(self, release, shorter=False):  # pylint: disable=unused-argument
         """Get release download URL for the package.
 
         Alpine packages are downloaded as .apk files from the CDN.
@@ -187,12 +187,12 @@ class AlpineRepoSession(BaseProjectHolder):
         arch = release.get("arch", self.arch)
         branch_path = self.branch if self.branch == "edge" else f"v{self.branch}"
 
-        return f"https://{self.CDN_HOSTNAME}/alpine/{branch_path}/" f"{self.apk_repo}/{arch}/{self.repo}-{version}.apk"
+        return f"https://{self.CDN_HOSTNAME}/alpine/{branch_path}/{self.apk_repo}/{arch}/{self.repo}-{version}.apk"
 
     @staticmethod
     def make_canonical_link(repo):
         """Make canonical link for a package."""
-        return f"https://{AlpineRepoSession.DEFAULT_HOSTNAME}/packages" f"?name={repo}&branch=edge"
+        return f"https://{AlpineRepoSession.DEFAULT_HOSTNAME}/packages?name={repo}&branch=edge"
 
     def get_canonical_link(self):
         """Get the canonical link for this package."""
