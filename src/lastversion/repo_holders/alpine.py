@@ -103,9 +103,9 @@ class AlpineRepoSession(BaseProjectHolder):
             with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:
                 for member in tar.getmembers():
                     if member.name == "APKINDEX":
-                        f = tar.extractfile(member)
-                        if f:
-                            content = f.read().decode("utf-8")
+                        file_obj = tar.extractfile(member)
+                        if file_obj:
+                            content = file_obj.read().decode("utf-8")
                             packages = self._parse_apkindex(content)
                             if self.repo in packages:
                                 return packages[self.repo]
@@ -119,7 +119,7 @@ class AlpineRepoSession(BaseProjectHolder):
         """Check if this holder has a valid project."""
         return self.project is not None
 
-    def get_latest(self, pre_ok=False, major=None):  # pylint: disable=unused-argument
+    def get_latest(self, pre_ok=False, major=None):  # noqa: ARG002  # pylint: disable=unused-argument
         """Get the latest release for this package.
 
         Args:
@@ -175,7 +175,7 @@ class AlpineRepoSession(BaseProjectHolder):
 
         return ret
 
-    def release_download_url(self, release, shorter=False):  # pylint: disable=unused-argument
+    def release_download_url(self, release, shorter=False):  # noqa: ARG002  # pylint: disable=unused-argument
         """Get release download URL for the package.
 
         Alpine packages are downloaded as .apk files from the CDN.
@@ -197,7 +197,5 @@ class AlpineRepoSession(BaseProjectHolder):
     def get_canonical_link(self):
         """Get the canonical link for this package."""
         branch_path = self.branch if self.branch == "edge" else f"v{self.branch}"
-        return (
-            f"https://{self.DEFAULT_HOSTNAME}/package/{branch_path}/"
-            f"{self.apk_repo or 'main'}/{self.arch}/{self.repo}"
-        )
+        apk_repo = self.apk_repo or "main"
+        return f"https://{self.DEFAULT_HOSTNAME}/package/{branch_path}/{apk_repo}/{self.arch}/{self.repo}"
