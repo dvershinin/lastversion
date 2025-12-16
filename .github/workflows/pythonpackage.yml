@@ -27,7 +27,8 @@ jobs:
         run: |
           pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-3.6.xml
         env:
-          LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
+          # Use custom token if available, otherwise fall back to GITHUB_TOKEN (for Dependabot PRs)
+          LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
 
       - name: Update .spec files
         run: |
@@ -41,14 +42,15 @@ jobs:
           fi
           rm -rf libmozjpeg.spec
         env:
-          LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
+          # Use custom token if available, otherwise fall back to GITHUB_TOKEN (for Dependabot PRs)
+          LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
       - name: 'Upload brotli.spec artifact'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: brotli.spec
           path: tests/brotli.spec
       - name: 'Upload nginx-module-immutable.spec artifact'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nginx-module-immutable.spec
           path: tests/nginx-module-immutable.spec
@@ -92,10 +94,11 @@ jobs:
       run: |
         pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-${{ matrix.python-version }}.xml
       env:
-        LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN }}
+        # Use custom token if available, otherwise fall back to GITHUB_TOKEN (for Dependabot PRs)
+        LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
 
     - name: Upload pytest test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: pytest-results-${{ matrix.python-version }}
         path: junit/test-results-${{ matrix.python-version }}.xml
@@ -113,7 +116,7 @@ jobs:
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download brotli.spec artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: brotli.spec
     - name: Build updated spec
@@ -127,7 +130,7 @@ jobs:
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download nginx-module-immutable.spec artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v6
       with:
         name: nginx-module-immutable.spec
     - name: Build updated spec
