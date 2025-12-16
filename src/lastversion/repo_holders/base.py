@@ -108,6 +108,7 @@ class SafeFileCache(FileCache):
             # Do not fail requests on cache lock issues; just skip caching
             log.debug("Cache write skipped due to lock error: %s", exc)
 
+
 def matches_filter(filter_s, positive, version_s):
     """Check if a version string matches a filter string.
 
@@ -344,9 +345,10 @@ class BaseProjectHolder(requests.Session):
                     # Remove entries matching the repo
                     repo_lower = repo.lower()
                     keys_to_remove = [
-                        k for k in names_cache
-                        if repo_lower in k.lower() or
-                        (names_cache[k].get("repo", "").lower() == repo_lower)
+                        k
+                        for k in names_cache
+                        if repo_lower in k.lower()
+                        or (names_cache[k].get("repo", "").lower() == repo_lower)
                     ]
                     for key in keys_to_remove:
                         del names_cache[key]
@@ -360,6 +362,7 @@ class BaseProjectHolder(requests.Session):
         else:
             # Clear all cache
             import shutil
+
             try:
                 shutil.rmtree(cache_dir)
                 log.info("Cleared all cache from: %s", cache_dir)
