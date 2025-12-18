@@ -20,24 +20,21 @@ from os.path import expanduser
 from pathlib import Path
 from urllib.parse import urlparse
 
+import requests
 import yaml
 from packaging.version import InvalidVersion
 
-from lastversion.repo_holders.test import TestProjectHolder
-from lastversion.holder_factory import HolderFactory
 from lastversion.ai import generate_changelog
-from lastversion.version import Version
+from lastversion.cache import get_release_cache
+from lastversion.exceptions import ApiCredentialsError
+from lastversion.holder_factory import HolderFactory
+from lastversion.repo_holders.test import TestProjectHolder
 from lastversion.spdx_id_to_rpmspec import rpmspec_licenses
-from lastversion.utils import (
-    download_file,
-    rpm_installed_version,
-    extract_appimage_desktop_file,
-)
+from lastversion.utils import download_file, extract_appimage_desktop_file, rpm_installed_version
+from lastversion.version import Version
 
 log = logging.getLogger(__name__)
-FAILS_SEM_ERR_FMT = (
-    "Latest version %s fails semantic %s constraint against current version %s"
-)
+FAILS_SEM_ERR_FMT = "Latest version %s fails semantic %s constraint against current version %s"
 
 
 # noinspection GrazieInspection
@@ -137,9 +134,7 @@ def get_repo_data_from_spec(rpmspec_filename):
             repo_data["current_commit"] = current_commit
 
         if not current_version:
-            log.critical(
-                "Did not find neither Version: nor %upstream_version in the spec file"
-            )
+            log.critical("Did not find neither Version: nor %upstream_version in the spec file")
             sys.exit(1)
         try:
             if current_version != "x":
@@ -207,6 +202,7 @@ def latest(
     even=False,
     formal=False,
     changelog=False,
+    cache_ttl=None,
 ):
     r"""Find the latest release version for a project.
 
@@ -233,6 +229,8 @@ def latest(
         even (bool): Consider as stable only releases with even minor component, e.g. 1.2.3
         formal (bool): Consider as stable only releases with formal tags set up in Web UI
         changelog (bool): Populate release["changelog"] using upstream notes (if True)
+        cache_ttl (int): Optional TTL override for release data cache (seconds).
+                         Only used when release cache is enabled in config.
 
     Examples:
         Find the latest version of Mautic, it is OK to consider betas.
@@ -253,6 +251,53 @@ def latest(
     """
     repo_data = {}
 
+    # Check release data cache first (when enabled and using json/dict output)
+    release_cache = get_release_cache()
+    cache_key_params = {
+        "pre_ok": pre_ok,
+        "major": major,
+        "only": only,
+        "at": at,
+        "having_asset": having_asset,
+        "exclude": exclude,
+        "even": even,
+        "formal": formal,
+    }
+
+    def _return_from_cache(cached_data, fmt, is_stale=False):
+        """Helper to return cached data in the appropriate format."""
+        if cached_data is None:
+            return None
+        prefix = "stale " if is_stale else ""
+        log.info("Using %scached release data for: %s", prefix, repo)
+        if is_stale:
+            log.warning("Network/API error occurred. Returning stale cached data for: %s", repo)
+        if fmt == "version":
+            try:
+                return Version(cached_data.get("version", ""))
+            except InvalidVersion:
+                return None
+        elif fmt == "tag":
+            return cached_data.get("tag_name")
+        elif fmt == "dict":
+            # Convert version string back to Version object for dict output
+            try:
+                cached_data["version"] = Version(cached_data.get("version", ""))
+            except InvalidVersion:
+                pass
+            return cached_data
+        else:  # json
+            return cached_data
+
+    # Try to get from cache for formats that can use cached data
+    if release_cache.enabled and output_format in ["json", "dict", "version", "tag"]:
+        cached_release = release_cache.get(repo, **cache_key_params)
+        if cached_release:
+            result = _return_from_cache(cached_release, output_format, is_stale=False)
+            if result is not None:
+                return result
+            # Fall through to fetch fresh data if cache parsing failed
+
     # noinspection HttpUrlsUsage
     if repo.endswith(".yml") and not repo.startswith(("http://", "https://")):
         repo_data = get_repo_data_from_yml(repo)
@@ -264,110 +309,128 @@ def latest(
     if repo.endswith(".spec"):
         repo_data = get_repo_data_from_spec(rpmspec_filename=repo)
 
-    with HolderFactory.get_instance_for_repo(
-        repo_data.get("repo", repo), at=at
-    ) as project:
-        project.set_only(repo_data.get("only", only))
-        project.set_exclude(exclude)
-        project.set_having_asset(repo_data.get("having_asset", having_asset))
-        project.set_even(even)
-        project.set_formal(repo_data.get("formal", formal))
-        release = project.get_latest(pre_ok=pre_ok, major=repo_data.get("major", major))
+    # Define network error types that should trigger cache fallback
+    network_errors = (
+        requests.exceptions.RequestException,  # All requests errors (connection, timeout, etc.)
+        ApiCredentialsError,  # Rate limits, auth failures
+        ConnectionError,
+        TimeoutError,
+        OSError,  # Network unreachable, etc.
+    )
 
-        # bail out, found nothing that looks like a release
-        if not release:
-            return None
+    try:
+        with HolderFactory.get_instance_for_repo(repo_data.get("repo", repo), at=at) as project:
+            project.set_only(repo_data.get("only", only))
+            project.set_exclude(exclude)
+            project.set_having_asset(repo_data.get("having_asset", having_asset))
+            project.set_even(even)
+            project.set_formal(repo_data.get("formal", formal))
+            release = project.get_latest(pre_ok=pre_ok, major=repo_data.get("major", major))
 
-        from_type = f"Located the latest release tag {release['tag_name']} at: {project.get_canonical_link()}"
-        if "type" in release:
-            from_type = f"{from_type} via {release['type']} mechanism"
-        log.info(from_type)
+            # bail out, found nothing that looks like a release
+            if not release:
+                return None
 
-        version = release["version"]
-        tag = release["tag_name"]
+            from_type = f"Located the latest release tag {release['tag_name']} at: {project.get_canonical_link()}"
+            if "type" in release:
+                from_type = f"{from_type} via {release['type']} mechanism"
+            log.info(from_type)
 
-        # return the release if we've reached far enough:
-        if output_format == "version":
-            return version
+            version = release["version"]
+            tag = release["tag_name"]
 
-        if output_format in ["json", "dict"]:
-            if output_format == "dict":
-                release["version"] = version
-            else:
-                release["version"] = str(version)
-                if "tag_date" in release:
-                    release["tag_date"] = str(release["tag_date"])
-            release["v_prefix"] = tag.startswith("v")
-            version_macro = (
-                "upstream_version" if "module_of" in repo_data else "version"
-            )
-            version_macro = f"%{{{version_macro}}}"
-            holder_i = {value: key for key, value in HolderFactory.HOLDERS.items()}
-            release["source"] = holder_i[type(project)]
-            release["spec_tag"] = tag.replace(str(version), version_macro)
-            # spec_tag_no_prefix is the helpful macro that will allow us to know where tarball
-            # extracts to (GitHub-specific)
-            if release["spec_tag"].startswith(f"v{version_macro}") or re.match(
-                r"^v\d", release["spec_tag"]
-            ):
-                release["spec_tag_no_prefix"] = release["spec_tag"].lstrip("v")
-            else:
-                release["spec_tag_no_prefix"] = release["spec_tag"]
-            release["tag_name"] = tag
-            if hasattr(project, "repo_license"):
-                release["license"] = project.repo_license(tag)
-            if hasattr(project, "repo_readme"):
-                release["readme"] = project.repo_readme(tag)
-            if changelog:
-                text, source = project.collect_release_notes(tag, release)
-                if text:
-                    context = {
-                        "repo": project.get_canonical_link(),
-                        "tag": tag,
-                        "version": str(release["version"]),
-                        "source": release.get("source"),
-                    }
-                    try:
-                        bullets = generate_changelog(text, context)
-                        if bullets:
-                            release["changelog"] = bullets
-                            release["changelog_source"] = source
-                    except Exception:
-                        pass
-            release.update(repo_data)
-            try:
-                # Get detailed asset info with digests BEFORE get_assets transforms them
-                release["assets_with_digests"] = project.get_assets_with_digests(
-                    release, short_urls, assets_filter
-                )
-                # Get asset URLs (this transforms the assets list)
-                release["assets"] = project.get_assets(
-                    release, short_urls, assets_filter
-                )
-            except NotImplementedError:
-                pass
-            release["from"] = project.get_canonical_link()
+            # return the release if we've reached far enough:
+            if output_format == "version":
+                return version
 
-            if "license" in release and release["license"]:
-                spdx_id = release["license"].get("license", {}).get("spdx_id")
-                rpmspec_licence = (
-                    rpmspec_licenses[spdx_id] if spdx_id in rpmspec_licenses else None
-                )
-                if rpmspec_licence:
-                    release["rpmspec_license"] = rpmspec_licence
+            if output_format in ["json", "dict"]:
+                if output_format == "dict":
+                    release["version"] = version
+                else:
+                    release["version"] = str(version)
+                    if "tag_date" in release:
+                        release["tag_date"] = str(release["tag_date"])
+                release["v_prefix"] = tag.startswith("v")
+                version_macro = "upstream_version" if "module_of" in repo_data else "version"
+                version_macro = f"%{{{version_macro}}}"
+                holder_i = {value: key for key, value in HolderFactory.HOLDERS.items()}
+                release["source"] = holder_i[type(project)]
+                release["spec_tag"] = tag.replace(str(version), version_macro)
+                # spec_tag_no_prefix is the helpful macro that will allow us to know where tarball
+                # extracts to (GitHub-specific)
+                if release["spec_tag"].startswith(f"v{version_macro}") or re.match(r"^v\d", release["spec_tag"]):
+                    release["spec_tag_no_prefix"] = release["spec_tag"].lstrip("v")
+                else:
+                    release["spec_tag_no_prefix"] = release["spec_tag"]
+                release["tag_name"] = tag
+                if hasattr(project, "repo_license"):
+                    release["license"] = project.repo_license(tag)
+                if hasattr(project, "repo_readme"):
+                    release["readme"] = project.repo_readme(tag)
+                if changelog:
+                    text, source = project.collect_release_notes(tag, release)
+                    if text:
+                        context = {
+                            "repo": project.get_canonical_link(),
+                            "tag": tag,
+                            "version": str(release["version"]),
+                            "source": release.get("source"),
+                        }
+                        try:
+                            bullets = generate_changelog(text, context)
+                            if bullets:
+                                release["changelog"] = bullets
+                                release["changelog_source"] = source
+                        except Exception:
+                            pass
+                release.update(repo_data)
+                try:
+                    # Get detailed asset info with digests BEFORE get_assets transforms them
+                    release["assets_with_digests"] = project.get_assets_with_digests(release, short_urls, assets_filter)
+                    # Get asset URLs (this transforms the assets list)
+                    release["assets"] = project.get_assets(release, short_urls, assets_filter)
+                except NotImplementedError:
+                    pass
+                release["from"] = project.get_canonical_link()
 
-            release["source_url"] = project.release_download_url(release, short_urls)
+                if "license" in release and release["license"]:
+                    spdx_id = release["license"].get("license", {}).get("spdx_id")
+                    rpmspec_licence = rpmspec_licenses[spdx_id] if spdx_id in rpmspec_licenses else None
+                    if rpmspec_licence:
+                        release["rpmspec_license"] = rpmspec_licence
 
-            return release
+                release["source_url"] = project.release_download_url(release, short_urls)
 
-        if output_format == "assets":
-            return project.get_assets(release, short_urls, assets_filter)
+                # Store in release cache if enabled
+                if release_cache.enabled:
+                    release_cache.set(repo, release, ttl=cache_ttl, **cache_key_params)
 
-        if output_format == "source":
-            return project.release_download_url(release, short_urls)
+                return release
 
-        if output_format == "tag":
-            return tag
+            if output_format == "assets":
+                return project.get_assets(release, short_urls, assets_filter)
+
+            if output_format == "source":
+                return project.release_download_url(release, short_urls)
+
+            if output_format == "tag":
+                return tag
+
+    except network_errors as e:
+        # Network or API error - try to fall back to stale cached data
+        log.warning("Network/API error while fetching release data: %s", e)
+
+        # Try to get stale cache (bypass TTL check)
+        if output_format in ["json", "dict", "version", "tag"]:
+            # Get any cached data, even if expired (for fallback)
+            stale_cache = release_cache.get(repo, ignore_expiry=True, **cache_key_params)
+            if stale_cache:
+                result = _return_from_cache(stale_cache, output_format, is_stale=True)
+                if result is not None:
+                    return result
+
+        # No cached data available, re-raise the exception
+        raise
 
     return None
 
@@ -509,14 +572,10 @@ def update_spec(repo, res, sem="minor", changelog: bool = False):
             latest_minor = res["version"].release[1]
             if sem in ["minor", "patch"]:
                 if latest_major != current_major:
-                    log.warning(
-                        FAILS_SEM_ERR_FMT, res["version"], sem, res["current_version"]
-                    )
+                    log.warning(FAILS_SEM_ERR_FMT, res["version"], sem, res["current_version"])
                     sys.exit(4)
                 if sem == "patch" and latest_minor != current_minor:
-                    log.warning(
-                        FAILS_SEM_ERR_FMT, res["version"], sem, res["current_version"]
-                    )
+                    log.warning(FAILS_SEM_ERR_FMT, res["version"], sem, res["current_version"])
                     sys.exit(4)
     else:
         log.info("No newer version than already present in spec file")
@@ -534,16 +593,11 @@ def update_spec(repo, res, sem="minor", changelog: bool = False):
                 out.append(f'%global lastversion_tag {res["spec_tag"]}')
                 lastversion_tag_present = True
             elif ln.startswith("%global lastversion_dir "):
-                out.append(
-                    f"%global lastversion_dir "
-                    f'{res["spec_name"]}-{res["spec_tag_no_prefix"]}'
-                )
+                out.append(f"%global lastversion_dir " f'{res["spec_name"]}-{res["spec_tag_no_prefix"]}')
                 lastversion_dir_present = True
             elif ln.startswith("%global upstream_version "):
                 out.append(f'%global upstream_version {res["version"]}')
-            elif ln.startswith("Version:") and (
-                "module_of" not in res or not res["module_of"]
-            ):
+            elif ln.startswith("Version:") and ("module_of" not in res or not res["module_of"]):
                 version_tag_regex = r"^Version:(\s+)(\S+)"
                 m = re.match(version_tag_regex, ln)
                 out.append("Version:" + m.group(1) + str(res["version"]))
@@ -680,9 +734,7 @@ def update_spec_commit(spec_file, commit_info, repo_data):
                 break
 
     # Add shortcommit if not present
-    has_shortcommit = any(
-        line.startswith("%global shortcommit ") for line in out
-    )
+    has_shortcommit = any(line.startswith("%global shortcommit ") for line in out)
     if not has_shortcommit:
         for i, line in enumerate(out):
             if line.startswith("%global commit "):
@@ -808,18 +860,12 @@ def install_release(res, args):
     # Fall back to AppImages (cross-distro)
     app_images = [asset for asset in res["assets"] if asset.endswith(".AppImage")]
     if app_images:
-        return install_app_image(
-            app_images[0], install_name=res.get("install_name", args.repo)
-        )
+        return install_app_image(app_images[0], install_name=res.get("install_name", args.repo))
 
     # static files are those without an extension
-    static_binaries = [
-        asset for asset in res["assets"] if "." not in asset.rsplit("/", 1)[-1]
-    ]
+    static_binaries = [asset for asset in res["assets"] if "." not in asset.rsplit("/", 1)[-1]]
     if static_binaries:
-        return install_standalone_binary(
-            static_binaries[0], install_name=res.get("install_name", args.repo)
-        )
+        return install_standalone_binary(static_binaries[0], install_name=res.get("install_name", args.repo))
 
     log.error("No installable assets found to install")
     sys.exit(1)

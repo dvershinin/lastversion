@@ -5,8 +5,7 @@ import math
 import os
 import re
 import time
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from urllib.parse import unquote
 
 import feedparser
@@ -17,10 +16,7 @@ from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
-TOKEN_PRO_TIP = (
-    "ProTip: set GITHUB_API_TOKEN env var as per "
-    "https://github.com/dvershinin/lastversion#tips"
-)
+TOKEN_PRO_TIP = "ProTip: set GITHUB_API_TOKEN env var as per " "https://github.com/dvershinin/lastversion#tips"
 
 
 def asset_matches(asset, search, regex_matching):
@@ -170,15 +166,10 @@ class GitHubRepoSession(BaseProjectHolder):
         cache = self.get_name_cache()
 
         try:
-            if (
-                repo in cache
-                and time.time() - cache[repo]["updated_at"] < 3600 * 24 * 30
-            ):
+            if repo in cache and time.time() - cache[repo]["updated_at"] < 3600 * 24 * 30:
                 log.info("Found %s in repo short name cache", repo)
                 if not cache[repo]["repo"]:
-                    raise BadProjectError(
-                        f"No project found on GitHub for search query: {repo}"
-                    )
+                    raise BadProjectError(f"No project found on GitHub for search query: {repo}")
                 return cache[repo]["repo"]
         except TypeError:
             pass
@@ -194,9 +185,7 @@ class GitHubRepoSession(BaseProjectHolder):
         self.update_name_cache(cache)
 
         if not full_name:
-            raise BadProjectError(
-                f"No project found on GitHub for search query: {repo}"
-            )
+            raise BadProjectError(f"No project found on GitHub for search query: {repo}")
         return full_name
 
     def __init__(self, repo, hostname=DEFAULT_HOSTNAME):
@@ -216,9 +205,7 @@ class GitHubRepoSession(BaseProjectHolder):
                 self.headers.update({"Authorization": f"token {self.api_token}"})
                 break
         if not self.api_token:
-            log.info(
-                "No API token found in environment variables %s.", self.TOKEN_ENV_VARS
-            )
+            log.info("No API token found in environment variables %s.", self.TOKEN_ENV_VARS)
 
         # Explicitly specify the API version that we want:
         self.headers.update({"Accept": "application/vnd.github+json"})
@@ -249,15 +236,9 @@ class GitHubRepoSession(BaseProjectHolder):
                 "Denied API access. Please set GITHUB_API_TOKEN env var "
                 "as per https://github.com/dvershinin/lastversion#tips"
             )
-        if (
-            r.status_code == 403
-            and "X-RateLimit-Reset" in r.headers
-            and "X-RateLimit-Remaining" in r.headers
-        ):
+        if r.status_code == 403 and "X-RateLimit-Reset" in r.headers and "X-RateLimit-Remaining" in r.headers:
             if self.rate_limited_count > 2:
-                raise ApiCredentialsError(
-                    f"API requests were denied after retrying {self.rate_limited_count} times"
-                )
+                raise ApiCredentialsError(f"API requests were denied after retrying {self.rate_limited_count} times")
             remaining = int(r.headers["X-RateLimit-Remaining"])
             # One sec to account for skewed clock between GitHub and client
             wait_for = float(r.headers["X-RateLimit-Reset"]) - time.time() + 1.0
@@ -266,15 +247,9 @@ class GitHubRepoSession(BaseProjectHolder):
                 # got 403, likely due to used quota
                 if wait_for < 300:
                     if wait_for < 0:
-                        log.warning(
-                            "Exceeded API quota. Repeating request because "
-                            "quota is about to be reinstated"
-                        )
+                        log.warning("Exceeded API quota. Repeating request because " "quota is about to be reinstated")
                     else:
-                        w = (
-                            f"Waiting {wait_for} seconds for API quota "
-                            f"reinstatement."
-                        )
+                        w = f"Waiting {wait_for} seconds for API quota " f"reinstatement."
                         if not self.api_token:
                             w = f"{w} {TOKEN_PRO_TIP}"
                         log.warning(w)
@@ -338,9 +313,7 @@ class GitHubRepoSession(BaseProjectHolder):
         """Fetch a text file content at a given tag using raw-first, API fallback."""
         # Prefer API-first for non-public GitHub (Enterprise/self-hosted)
         if self.hostname != self.DEFAULT_HOSTNAME:
-            r = self.repo_query(
-                f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"}
-            )
+            r = self.repo_query(f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"})
             if r.status_code == 200 and r.text and r.text.strip():
                 return r.text
         else:
@@ -350,9 +323,7 @@ class GitHubRepoSession(BaseProjectHolder):
             if rr.status_code == 200 and rr.text and rr.text.strip():
                 return rr.text
             # API fallback with raw Accept
-            r = self.repo_query(
-                f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"}
-            )
+            r = self.repo_query(f"/contents/{path}?ref={tag}", headers={"Accept": "application/vnd.github.raw"})
             if r.status_code == 200 and r.text and r.text.strip():
                 return r.text
         return None
@@ -480,20 +451,14 @@ class GitHubRepoSession(BaseProjectHolder):
                 if ret and tag_date + timedelta(days=365) < ret["tag_date"]:
                     log.info("The version %s is newer, but is too old!", version)
                     break
-                if (
-                    not ret
-                    or version >= ret["version"]
-                    or (tag_date - ret["tag_date"]) > timedelta(hours=1)
-                ):
+                if not ret or version >= ret["version"] or (tag_date - ret["tag_date"]) > timedelta(hours=1):
                     # we always want to return formal release if it exists,
                     # because it has useful data grab formal release via APi
                     # to check for pre-release
                     # >= case is when we have release from atom but update with tag date from API
                     formal_release = self.get_formal_release_for_tag(tag_name)
                     if formal_release:
-                        ret = self.set_matching_formal_release(
-                            ret, formal_release, version, pre_ok
-                        )
+                        ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
                     else:
                         if not self.having_asset:
                             ret = {
@@ -502,9 +467,7 @@ class GitHubRepoSession(BaseProjectHolder):
                                 "version": version,
                                 "type": "graphql",
                             }
-                            log.info(
-                                "Selected version as current selection: %s.", version
-                            )
+                            log.info("Selected version as current selection: %s.", version)
             if ret:
                 break
         return ret
@@ -574,9 +537,7 @@ class GitHubRepoSession(BaseProjectHolder):
                 # TODO handle API failure here as it may result in "false positive"?
                 release_for_tag = self.get_formal_release_for_tag(tag_name)
                 if release_for_tag:
-                    ret = self.set_matching_formal_release(
-                        ret, release_for_tag, version, pre_ok
-                    )
+                    ret = self.set_matching_formal_release(ret, release_for_tag, version, pre_ok)
                 else:
                     ret = t
                     ret["tag_name"] = tag_name
@@ -598,9 +559,7 @@ class GitHubRepoSession(BaseProjectHolder):
         """
         if self.repo in self.feed_contents:
             return self.feed_contents[self.repo]
-        feed_response = self.get_feed_response(
-            url=f"https://{self.hostname}/{self.repo}/releases.atom"
-        )
+        feed_response = self.get_feed_response(url=f"https://{self.hostname}/{self.repo}/releases.atom")
         if feed_response.status_code == 404 and not rename_checked:
             # #44: in some network locations, GitHub returns 404 (as opposed to a 301 redirect) for the renamed
             # repositories /releases.atom. When we get a 404, we lazily load repo info via API, and hopefully
@@ -648,10 +607,7 @@ class GitHubRepoSession(BaseProjectHolder):
         """Should we skip this version from being selected based on semver."""
         if version.is_semver():
             self.seen_semver = True
-        comparable = (
-            selected_release
-            and selected_release["version"].is_semver() == version.is_semver()
-        )
+        comparable = selected_release and selected_release["version"].is_semver() == version.is_semver()
         if selected_release and not comparable:
             log.info(
                 "Version %s is not comparable to current selection %s",
@@ -667,9 +623,7 @@ class GitHubRepoSession(BaseProjectHolder):
             return True
         # if we have seen a semver tag, then any non-semver can be discarded
         if self.seen_semver and not version.is_semver():
-            log.info(
-                "Version %s is not a semver and we already found a semver", version
-            )
+            log.info("Version %s is not a semver and we already found a semver", version)
             return True
         return False
 
@@ -715,9 +669,7 @@ class GitHubRepoSession(BaseProjectHolder):
                 formal_release = self.get_formal_release_for_tag(tag_name)
                 if formal_release:
                     # use the full release info
-                    ret = self.set_matching_formal_release(
-                        ret, formal_release, version, pre_ok
-                    )
+                    ret = self.set_matching_formal_release(ret, formal_release, version, pre_ok)
                 else:
                     if self.having_asset:
                         continue
@@ -756,14 +708,10 @@ class GitHubRepoSession(BaseProjectHolder):
             # we are good with release from feeds only without looking at the API
             # simply because feeds list stuff in order of recency,
             # however, still use /tags unless releases.atom has data within a year
-            if ret and ret["tag_date"].replace(tzinfo=None) > (
-                datetime.utcnow() - timedelta(days=365)
-            ):
+            if ret and ret["tag_date"].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
                 return self.enrich_release_info(ret)
 
-            log.info(
-                "Feed contained none or only tags older than 1 year. Switching to API"
-            )
+            log.info("Feed contained none or only tags older than 1 year. Switching to API")
 
         # only if we did not find desired stuff through feeds, we switch to using API :)
         # this may be required in cases
@@ -803,9 +751,7 @@ class GitHubRepoSession(BaseProjectHolder):
 
         return self.enrich_release_info(ret)
 
-    def set_matching_formal_release(
-        self, ret, formal_release, version, pre_ok, data_type="release"
-    ):
+    def set_matching_formal_release(self, ret, formal_release, version, pre_ok, data_type="release"):
         """Set the current release selection to this formal release if matching conditions.
 
         Args:
@@ -820,8 +766,7 @@ class GitHubRepoSession(BaseProjectHolder):
             return ret
         if not pre_ok and formal_release["prerelease"]:
             log.info(
-                "Found formal release for this tag which is unwanted "
-                "pre-release: %s.",
+                "Found formal release for this tag which is unwanted " "pre-release: %s.",
                 version,
             )
             return ret
@@ -851,9 +796,7 @@ class GitHubRepoSession(BaseProjectHolder):
                 formal_release["tag_date"] = created_at
         formal_release["version"] = version
         formal_release["type"] = data_type
-        log.info(
-            "Selected version as current selection: %s.", formal_release["version"]
-        )
+        log.info("Selected version as current selection: %s.", formal_release["version"])
         return formal_release
 
     def try_get_official(self, repo):
@@ -864,9 +807,7 @@ class GitHubRepoSession(BaseProjectHolder):
         """
         official_repo = f"{repo}/{repo}"
         log.info("Checking existence of %s", official_repo)
-        r = self.get_feed_response(
-            url=f"https://{self.hostname}/{official_repo}/releases.atom"
-        )
+        r = self.get_feed_response(url=f"https://{self.hostname}/{official_repo}/releases.atom")
         if r.status_code == 200:
             self.feed_contents[official_repo] = r.text
             return official_repo

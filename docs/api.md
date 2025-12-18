@@ -1,19 +1,19 @@
 ## `lastversion` public API
 
-You don't need to use `lastversion` as a command line tool or install it as a 
-package to use it. 
+You don't need to use `lastversion` as a command line tool or install it as a
+package to use it.
 
 You can consume `lastversion` functionality through **two** API offerings:
 
-1. **Free Public API** at `lastversion-api.getpagespeed.com`  
+1. **Free Public API** at `lastversion-api.getpagespeed.com`
 2. **Production-Ready Commercial API** on [RapidAPI](https://rapidapi.com/ciapnz/api/lastversion)
 
 ### 1. Public API (Limited, Best for Small Usage)
 
-**Free API has Limited SLA and Rate Limits:** It’s free, so heavier usage or production traffic may see performance 
+**Free API has Limited SLA and Rate Limits:** It’s free, so heavier usage or production traffic may see performance
 or reliability constraints. For use in automated workflows, we highly recommend the commercial API below.
 
-For casual or small usage scenarios, you can directly query this free public endpoint: 
+For casual or small usage scenarios, you can directly query this free public endpoint:
 
     https://lastversion-api.getpagespeed.com/<github-repo>
 
@@ -28,7 +28,7 @@ Examples:
 
 Note that API caches results for 2 hours.
 
-For faster updates of your own project, please set up a webhook for your 
+For faster updates of your own project, please set up a webhook for your
 GitHub repo that points to:
 
     https://lastversion-api.getpagespeed.com/hooks/github

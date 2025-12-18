@@ -27,7 +27,7 @@ What output does `lastversion` give when being run?
 
 Thank you for submitting this issue/request! 🌟
 
-Currently, my focus is on maintaining and enhancing features critical to GitHub releases. 
+Currently, my focus is on maintaining and enhancing features critical to GitHub releases.
 Fetching a release version from other sources is not a priority at the moment, neither supplementary feature like
 zipball/tarball download, etc.
 

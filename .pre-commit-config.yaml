@@ -12,6 +12,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-added-large-files
+      - id: check-merge-conflict   # Catch merge conflict markers
       - id: debug-statements       # No pdb/breakpoint left behind
 
   # Python syntax and style
@@ -25,12 +26,14 @@ repos:
           "--exclude=build,dist,*.egg-info"
         ]
 
-  # Ruff - fast Python linter (catches most DeepSource issues)
+  # Ruff - fast Python linter and formatter
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4
     hooks:
       - id: ruff
         args: ["--line-length=120", "--fix", "--exit-non-zero-on-fix"]
+      - id: ruff-format
+        args: ["--line-length=120"]
 
   # Import sorting
   - repo: https://github.com/pycqa/isort
@@ -47,3 +50,10 @@ repos:
         args: ["--check", "--line-length=120"]
         language_version: python3
 
+  # Bandit for security scanning
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: ["bandit[toml]"]

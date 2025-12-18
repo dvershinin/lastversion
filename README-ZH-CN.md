@@ -2,7 +2,7 @@
 
 [![Python package](https://github.com/dvershinin/lastversion/actions/workflows/pythonpackage.yml/badge.svg)](https://github.com/dvershinin/lastversion/actions/workflows/pythonpackage.yml)
 [![PyPI version](https://badge.fury.io/py/lastversion.svg)](https://badge.fury.io/py/lastversion)
-[![Documentation Status](https://readthedocs.org/projects/lastversion/badge/?version=latest)](https://lastversion.getpagespeed.com/en/latest/?badge=latest) 
+[![Documentation Status](https://readthedocs.org/projects/lastversion/badge/?version=latest)](https://lastversion.getpagespeed.com/en/latest/?badge=latest)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/manual/GetPageSpeed/lastversion?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dvershinin/lastversion&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/gh/dvershinin/lastversion/dashboard?utm_source=github.com&utm_medium=referral&utm_content=dvershinin/lastversion&utm_campaign=Badge_Coverage)
 
@@ -48,13 +48,13 @@
 ## 简介
 
 ```bash
-lastversion apache/incubator-pagespeed-ngx 
+lastversion apache/incubator-pagespeed-ngx
 #> 1.13.35.2
 
-lastversion apache/incubator-pagespeed-ngx -d 
+lastversion apache/incubator-pagespeed-ngx -d
 #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
 
-lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz 
+lastversion apache/incubator-pagespeed-ngx -d pagespeed.tar.gz
 #> downloads with chosen filename
 
 lastversion https://transmissionbt.com/
@@ -67,7 +67,7 @@ lastversion https://transmissionbt.com/
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
 sudo yum install lastversion
 ```
-   
+
 ## 在其它系统上安装 `lastversion`
 
 用 `pip` 安装是最简单的方法。
@@ -75,7 +75,7 @@ sudo yum install lastversion
 ```bash
 pip install lastversion
 ```
-    
+
 ## 使用方法
 
 一般来说，`lastversion` 只需要一个参数，即一个仓库的 URL（或 用户名/仓库名），例如：
@@ -88,7 +88,7 @@ lastversion https://github.com/gperftools/gperftools
 
 ```bash
 lastversion gperftools/gperftools
-```    
+```
 
 如果你想偷懒，不想复制粘贴项目的 URL，
 你可以直接使用项目的名字作为参数，这将会使用仓库搜索 API（速度比较慢）。
@@ -111,7 +111,7 @@ lastversion wordpress
 lastversion self
 ```
 
-你可以通过 `--help` 查看和输出控制（行为）相关的选项。 
+你可以通过 `--help` 查看和输出控制（行为）相关的选项。
 
 ```text
 usage: lastversion [-h] [--pre] [--verbose] [-d [FILENAME]]
@@ -149,7 +149,7 @@ optional arguments:
                         for repos with multiple projects inside
   --filter REGEX        Filters --assets result by a regular expression
   --having-asset [ASSET]
-                        Only consider releases with this asset  
+                        Only consider releases with this asset
   -su, --shorter-urls   A tiny bit shorter URLs produced
   --at {github,gitlab,bitbucket,pip,hg,sf,website-feed,local}
                         If the repo argument is one word, specifies where to
@@ -175,7 +175,7 @@ optional arguments:
 你也可以使用 `--source` 去代替 `--format source`，用 `--assets` 代替 `--format assets`，例如：
 
 ```bash
-lastversion --assets mautic/mautic 
+lastversion --assets mautic/mautic
 #> https://github.com/mautic/mautic/archive/2.15.1/mautic-2.15.1.tar.gz
 ```
 
@@ -198,14 +198,14 @@ lastversion --assets --filter win REPO
 下载最新的 Mautic 源码：
 
 ```bash
-lastversion mautic/mautic --download 
+lastversion mautic/mautic --download
 ```
-    
+
 自定义下载的文件名（只对下载源代码有效并且此为默认设置）：
 
 ```bash
 lastversion mautic/mautic --download mautic.tar.gz
-```  
+```
 
 你也可以使用 `lastversion` 输出源代码或者 asset 的 URL 并下载它，例如：
 
@@ -222,7 +222,7 @@ wget $(lastversion --assets mautic/mautic)
 
 如果你只想下载源代码，你可以使用 `--source`，例如：
 ```bash
-wget $(lastversion --source mautic/mautic)  
+wget $(lastversion --source mautic/mautic)
 ```
 
 ### 用例: 获取最新版本（含测试版）
@@ -231,7 +231,7 @@ wget $(lastversion --source mautic/mautic)
 如果你不这么认为，你可以使用 `--pre` 将预发布版本作为最新版。
 
 ```bash
-lastversion --pre mautic/mautic 
+lastversion --pre mautic/mautic
 #> 2.15.2b0
 ```
 
@@ -242,7 +242,7 @@ lastversion --pre mautic/mautic
 
 ```bash
 lastversion php/php-src --major 7.2
-``` 
+```
 
 这行命令会输出当前的 PHP 稳定的版本，其版本格式为 `7.2.x`。
 
@@ -341,11 +341,11 @@ lastversion requests --at pip
 sudo lastversion install mailspring
 ```
 
-上面这行命令从 [MailSpring](https://github.com/Foundry376/Mailspring) 
+上面这行命令从 [MailSpring](https://github.com/Foundry376/Mailspring)
 的最新版本中找到 `.rpm` 并传递给 `yum` 或 `dnf`。
 
 你甚至可以通过 cron 实现自动更新，这将确保你在某个包为最新版本，就像下面这样：
- 
+
 ```bash
 @daily /usr/bin/lastversion install mailspring -y 2>/dev/null
 ```
@@ -354,7 +354,7 @@ sudo lastversion install mailspring
 那么这个 `.rpm` 会被自动安装，以确保你的版本的最新的。
 
 你甚至可以在更新完毕后收到邮件提醒（cron 的标准功能）。
-  
+
 不用说都知道，这种方式会导致我们不知道潜在的缺失的依赖。
 所以，只有当 `yum` 库没有你所需要的东西的时候才使用 `lastversion install ...`。
 
@@ -404,10 +404,10 @@ fi
 LATEST_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
 if [[ $? -eq 0 ]]; then
   echo "I better update my kernel now, because ${LATEST_KERNEL} is there"
-else 
+else
   echo "My kernel is latest and greatest."
-fi 
-```  
+fi
+```
 
 #### 退出状态码
 
@@ -442,8 +442,8 @@ export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
 
 `GITHUB_API_TOKEN` 和 `GITHUB_TOKEN` 这两个环境变量均可被识别，
 且当两者同时存在时优先使用前者。
-    
-对于 GitLab, 你可以使用 
+
+对于 GitLab, 你可以使用
 [Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html):
 
 ```bash
@@ -486,7 +486,7 @@ else:
 *   `False` 如果没有更加新的版本
 
 你也可以调用 `lastversion.latest(...)` 函数来获取最新版本的信息。
- 
+
 ```python
 from lastversion import lastversion
 from packaging import version
@@ -499,7 +499,7 @@ if latest_mautic_version >= version.parse('1.8.1'):
     print('It is newer')
 ```
 
-如果 `output_format='version'`（默认），函数会返回一个 
+如果 `output_format='version'`（默认），函数会返回一个
 [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 对象
 或者 `none`。所以你可以进行如版本比较等工作。
 
@@ -509,7 +509,7 @@ if latest_mautic_version >= version.parse('1.8.1'):
 那么字典的 `Key`（键）可能会不同，
 但可以保证一定会有下列的 `Key`（键）。
 
-*   `version`：[Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 
+*   `version`：[Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version)
 
  对象，包含被找到的版本，如 `1.2.3`。
 

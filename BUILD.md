@@ -23,4 +23,3 @@ twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 # uptload to the real thing
 twine upload dist/*
 ```
-

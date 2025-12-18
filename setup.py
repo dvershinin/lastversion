@@ -10,8 +10,8 @@ lastversion
 import io
 import os
 import re
-from setuptools import find_packages, setup
 
+from setuptools import find_packages, setup
 
 _version_re = re.compile(r"__version__\s=\s\"(.*)\"")
 
@@ -52,9 +52,7 @@ with io.open("README.md", "r", encoding="utf-8") as fh:
 
 base_dir = os.path.join(os.path.dirname(__file__), "src")
 
-with open(
-    os.path.join(base_dir, "lastversion", "__about__.py"), "r", encoding="utf-8"
-) as f:
+with open(os.path.join(base_dir, "lastversion", "__about__.py"), "r", encoding="utf-8") as f:
     version = _version_re.search(f.read()).group(1)
 
 setup(
@@ -77,6 +75,7 @@ setup(
         "build": install_requires + tests_requires + docs_requires,
         "7z": ["py7zr"],
         "truststore": ["truststore"],
+        "redis": ["redis>=3.0.0"],
     },
     tests_require=tests_requires,
     include_package_data=True,

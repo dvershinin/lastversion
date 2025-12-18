@@ -5,9 +5,9 @@ import sys as _sys
 from argparse import SUPPRESS, Action
 
 import lastversion
-from .__about__ import __version__, __self__
-from .exceptions import ApiCredentialsError
 
+from .__about__ import __self__, __version__
+from .exceptions import ApiCredentialsError
 
 log = logging.getLogger(__name__)
 

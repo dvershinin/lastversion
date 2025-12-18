@@ -5,6 +5,7 @@ from lastversion.repo_holders.base import BaseProjectHolder
 
 class MercurialRepoSession(BaseProjectHolder):
     """Mercurial repository holder."""
+
     CAN_BE_SELF_HOSTED = True
     REPO_URL_PROJECT_COMPONENTS = 1
 
@@ -23,6 +24,4 @@ class MercurialRepoSession(BaseProjectHolder):
         Get the latest release.
         E.g. https://hg.nginx.org/nginx/atom-tags
         """
-        return self.find_release_in_feed(
-            f"https://{self.hostname}/{self.repo}/atom-tags", pre_ok, major
-        )
+        return self.find_release_in_feed(f"https://{self.hostname}/{self.repo}/atom-tags", pre_ok, major)

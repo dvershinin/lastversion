@@ -18,7 +18,7 @@ A tiny command-line utility that helps to answer a simple question:
 
 ... and, optionally, download/install it.
 
-`lastversion` allows finding well-formatted, the latest release version of a project from these 
+`lastversion` allows finding well-formatted, the latest release version of a project from these
  supported locations:
 
 *   [GitHub](https://github.com/dvershinin/lastversion/wiki/GitHub-specifics)
@@ -38,7 +38,7 @@ In general, quite many project authors complicate finding the latest version by:
 *   Creating a formal release that is clearly a Release Candidate (`rc` in tag), but forgetting to
     mark it as a pre-release
 
-*   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy 
+*   Putting extraneous text in release tag e.g. `release-1.2.3` or `name-1.2.3-2019` anything fancy
     like that
 
 *   Putting or not putting the `v` prefix inside release tags. Today yes, tomorrow not. I'm not
@@ -53,21 +53,21 @@ To deal with all this mess and get a well-formatted, last *stable* version (or d
 
 `lastversion` is particularly useful in automated build systems where tracking the latest release versions is essential.
 
-`lastversion` does a little bit of AI to detect if releasers mistakenly filed a beta version as a 
+`lastversion` does a little bit of AI to detect if releasers mistakenly filed a beta version as a
 stable release.
-It incorporates logic for cleaning up human inconsistency from 
+It incorporates logic for cleaning up human inconsistency from
 version information.
 
 ## Synopsis
 
 ```bash
-lastversion apache/incubator-pagespeed-ngx 
+lastversion apache/incubator-pagespeed-ngx
 #> 1.13.35.2
 
-lastversion download apache/incubator-pagespeed-ngx 
+lastversion download apache/incubator-pagespeed-ngx
 #> downloaded incubator-pagespeed-ngx-v1.13.35.2-stable.tar.gz
 
-lastversion download apache/incubator-pagespeed-ngx -o pagespeed.tar.gz 
+lastversion download apache/incubator-pagespeed-ngx -o pagespeed.tar.gz
 #> downloads with chosen filename
 
 lastversion https://transmissionbt.com/
@@ -89,7 +89,7 @@ Supported:
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
 sudo yum -y install lastversion
 ```
-   
+
 ## Installation for other systems
 
 Installing with `pip` is easiest:
@@ -97,10 +97,10 @@ Installing with `pip` is easiest:
 ```bash
 pip install lastversion
 ```
-    
+
 ## Usage
 
-Typically, you would just pass a repository URL (or repo owner/name to it) as the only argument, 
+Typically, you would just pass a repository URL (or repo owner/name to it) as the only argument,
 e.g.:
 
 ```bash
@@ -111,9 +111,9 @@ Equivalently accepted invocation with the same output is:
 
 ```bash
 lastversion gperftools/gperftools
-```    
+```
 
-If you're lazy to even copy-paste a project's URL, you can just type its name as argument, which 
+If you're lazy to even copy-paste a project's URL, you can just type its name as argument, which
 will use repository search API (slower).
 Helps to answer what is the latest Linux version:
 
@@ -121,16 +121,16 @@ Helps to answer what is the latest Linux version:
 lastversion linux
 ```
 
-Or wondering what is the latest version of WordPress? 
+Or wondering what is the latest version of WordPress?
 
 ```bash
 lastversion wordpress
 ```
-   
-A special value of `self` for the main argument, will look up the last release of `lastversion` 
+
+A special value of `self` for the main argument, will look up the last release of `lastversion`
 itself.
 
-For more options to control output or behavior, see `--help` output:    
+For more options to control output or behavior, see `--help` output:
 
 ```text
 usage: lastversion [-h] [--pre] [--sem {major,minor,patch,any}] [-v]
@@ -177,7 +177,7 @@ optional arguments:
   --exclude REGEX       Only consider releases NOT containing this text.
                         Useful for repos with multiple projects inside
   --even                Only even versions like 1.[2].x, or 3.[6].x are
-                        considered as stable                        
+                        considered as stable
   --filter REGEX        Filters --assets result by a regular expression
   --having-asset [ASSET]
                         Only consider releases with this asset
@@ -207,20 +207,20 @@ The `--format` will affect what kind of information from the last release and in
 *   `tag` will emit just the latest release's tag name, which useful if you're constructing download
     URL yourself or need the tag name otherwise
 
-An asset is a downloadable file that typically represents an executable, or otherwise 
-"ready to launch" project. It's what you see filed under formal releases, and is usually a compiled 
+An asset is a downloadable file that typically represents an executable, or otherwise
+"ready to launch" project. It's what you see filed under formal releases, and is usually a compiled
 (for a specific platform), program.
 
-Source files are either tarballs or zipballs of sources for the source code of release. 
+Source files are either tarballs or zipballs of sources for the source code of release.
 
 You can display either assets or source URLs of the latest release, by passing the corresponding
  `--format flag`, e.g. `--format source`
 
-You also simply pass `--source` instead of `--format source`, and `--assets` instead of 
+You also simply pass `--source` instead of `--format source`, and `--assets` instead of
 `--format assets`, as in:
 
 ```bash
-lastversion --assets mautic/mautic 
+lastversion --assets mautic/mautic
 #> https://github.com/mautic/mautic/archive/2.15.1/mautic-2.15.1.tar.gz
 ```
 
@@ -229,17 +229,17 @@ By default, `lastversion` filters output of `--assets` to be OS-specific. Who ne
 To override this behavior, you can use `--filter`, which has a regular expression as its argument.
 To disable OS filtering, use `--filter .`, this will match everything.
 
-You can naturally use `--filter` in place where you would use `grep`, e.g. 
+You can naturally use `--filter` in place where you would use `grep`, e.g.
 `lastversion --assets --filter win REPO`
 
 ### Use case: Work with a multi-project repository
 
 Sometimes a single repository actually hosts many components, and creates releases that
-have separate version line for each component. 
+have separate version line for each component.
 
-To help `lastversion` get a component's version for such repos, use `--only` and `--exclude` 
+To help `lastversion` get a component's version for such repos, use `--only` and `--exclude`
 switches.
-They make `lastversion` look at only those releases which are tagged (or not) with specified 
+They make `lastversion` look at only those releases which are tagged (or not) with specified
 strings.
 
 [Example](https://github.com/lastversion-test-repos/autoscaler/tags):
@@ -256,7 +256,7 @@ lastversion --exclude chart https://github.com/lastversion-test-repos/autoscaler
 
 The above will report a non-chart latest version, `1.23.0`.
 
-Useful for hard cases, you can pass in regular expressions for both arguments, by prepending them 
+Useful for hard cases, you can pass in regular expressions for both arguments, by prepending them
 with tilde, like so:
 
 ```bash
@@ -272,24 +272,24 @@ You can also use `lastversion` to download assets/sources for the latest release
 Download the most recent Mautic source release:
 
 ```bash
-lastversion download mautic/mautic 
+lastversion download mautic/mautic
 ```
-    
+
 Customize downloaded filename (works only for sources, which is the default):
 
 ```bash
 lastversion download mautic/mautic -o mautic.tar.gz
 ```
 
-You can also directly fetch and extract the latest release's file into the current working directory 
+You can also directly fetch and extract the latest release's file into the current working directory
 by using `extract` command:
 
 ```bash
 lastversion extract wordpress
 ```
-    
-You can have `lastversion` output sources/assets URLs and have those downloaded by 
-something else:    
+
+You can have `lastversion` output sources/assets URLs and have those downloaded by
+something else:
 
 ```bash
 wget $(lastversion --assets mautic/mautic)
@@ -297,21 +297,21 @@ wget $(lastversion --assets mautic/mautic)
 
 This will download all assets of the newest stable Mautic, which are two zip files.
 
-How this works: `lastversion` outputs all asset URLs, each on a new line, and `wget` is smart 
+How this works: `lastversion` outputs all asset URLs, each on a new line, and `wget` is smart
 enough to download each URL. Magic :)
 
-For releases that have no assets added, it will download the source archive.  
+For releases that have no assets added, it will download the source archive.
 
 To always download the source, use `--source` instead:
 
 ```bash
-wget $(lastversion --source mautic/mautic)  
+wget $(lastversion --source mautic/mautic)
 ```
 
 ### Use case: Download specific asset under specified filename
 
 If you want to download specific asset of the last version's release and save the downloaded file
- under a desired name, combine `-d` option (for download name) and `--filter` for specifying assets 
+ under a desired name, combine `-d` option (for download name) and `--filter` for specifying assets
  filter.
 
 Example:
@@ -323,14 +323,14 @@ lastversion --pre Aircoookie/WLED --format assets --filter ESP32.bin -d ESP32.bi
 ### Use case: Get the last version (betas are fine)
 
 We consider the latest release is the one that is stable / not marked as beta.
-If you think otherwise, then pass `--pre` switch and if the latest version of repository is a 
+If you think otherwise, then pass `--pre` switch and if the latest version of repository is a
 pre-release, then you'll get its version instead:
 
 ```bash
-lastversion --pre mautic/mautic 
+lastversion --pre mautic/mautic
 #> 2.15.2b0
 ```
-    
+
 ### Use case: version of a specific branch
 
 For some projects, there may be several stable releases available simultaneously, in different
@@ -339,7 +339,7 @@ version to match with, to help you find the latest stable release of a branch, l
 
 ```bash
 lastversion php/php-src --major 7.2
-``` 
+```
 
 This will give you current stable version of PHP 7.2.x, e.g. `7.2.28`.
 
@@ -367,14 +367,14 @@ Easy with the `--having-asset` switch:
 lastversion telegramdesktop/tdesktop --having-asset "Linux 64 bit: Binary"
 ```
 
-The argument value to `--having-asset` can be made as regular expression. For this, prepend it 
+The argument value to `--having-asset` can be made as regular expression. For this, prepend it
 with tilde sign. E.g. to get releases with macOS installers:
 
 ```bash
 lastversion telegramdesktop/tdesktop --having-asset "~\.dmg$"
 ```
 
-You can pass no value to `--having-asset` at all. Then `lastversion` will only return the latest 
+You can pass no value to `--having-asset` at all. Then `lastversion` will only return the latest
 release which has **any** assets added to it:
 
 ```bash
@@ -390,8 +390,8 @@ or other announcement channels.
 An easy compromise that `lastversion` does about this, is hard coding well-known OS names, and using
 Wikipedia behind the scenes:
 
-```bash 
-lastversion rocky  #> 8.4 
+```bash
+lastversion rocky  #> 8.4
 lastversion windows  #> 10.0.19043.1081
 lastversion ios  #> 14.6
 ```
@@ -409,14 +409,14 @@ lastversion https://en.wikipedia.org/wiki/Rocky_Linux  #> 8.4
 lastversion https://nginx.org --major stable #> 1.16.1
 lastversion https://nginx.org --major mainline #> 1.17.9
 ```
-    
+
 Behind the scenes, this checks with `hg.nginx.org` which is a Mercurial web repo.
 Those are supported as well, e.g.
 
 ```bash
 lastversion https://hg.example.com/project/
 ```
-    
+
 Mercurial repositories are rather rare these days, but support has been added primarily for NGINX.
 
 ### Special use case: find the release of a PyPI project
@@ -441,20 +441,20 @@ If a project provides `.rpm` assets and your system has `yum` or `dnf`, you can 
 ```bash
 sudo lastversion install mailspring
 ```
- 
-This finds [MailSpring](https://github.com/Foundry376/Mailspring), gets its latest release info, 
-filters assets for `.rpm` and passes it to `yum` / `dnf`. 
+
+This finds [MailSpring](https://github.com/Foundry376/Mailspring), gets its latest release info,
+filters assets for `.rpm` and passes it to `yum` / `dnf`.
 
 You can even set up an auto-updater cron job which will ensure you are on the latest version of a
  package, like so:
- 
+
 ```bash
 @daily /usr/bin/lastversion install mailspring -y 2>/dev/null
 ```
 
 If the Mailspring GitHub repo posts a release with newer `.rpm`, then it will be automatically
  installed, making sure you are running the latest and greatest Mailspring version.
-  
+
 You'll even get an email alert after update (standard cron feature).
 
 Needless to say, more often than not, such RPM packages have no idea about all potentially missing
@@ -524,11 +524,11 @@ Say you ran `mysqld --version` and got this output:
 
 This is rather hard to parse in bash if you want to just extract the major MySQL server version.
 
-`lastversion` can easily parse out and give the desired information based on desired semantic 
+`lastversion` can easily parse out and give the desired information based on desired semantic
 versioning level:
 
 ```bash
-lastversion --sem major format "mysqld  Ver 5.6.51-91.0 for Linux on x86_64 (Percona Server (GPL) , Release 91.0, Revision b59139e)" 
+lastversion --sem major format "mysqld  Ver 5.6.51-91.0 for Linux on x86_64 (Percona Server (GPL) , Release 91.0, Revision b59139e)"
 #> 5
 ```
 
@@ -549,7 +549,7 @@ versioning base level is being compared, thus the result.
 
 #### Check for NEW release
 
-When you're building some upstream package, and you did this before, there is a known "last build" 
+When you're building some upstream package, and you did this before, there is a known "last build"
 version.
 Automatic builds become easy with:
 
@@ -566,7 +566,7 @@ Here, the `-gt` is actually a switch passed to `lastversion`, which acts in a si
  `-gt` comparison in bash.
 
 There is more to it if you want to make this reliable.
-See my ranting on 
+See my ranting on
 [RPM auto-builds with `lastversion`](https://github.com/dvershinin/lastversion/wiki/Use-in-RPM-building)
 
 #### Check if there is a newer kernel for your Linux machine
@@ -575,32 +575,32 @@ See my ranting on
 LATEST_KERNEL=$(lastversion linux -gt $(uname -r | cut -d '-' -f 1))
 if [[ $? -eq 0 ]]; then
   echo "I better update my kernel now, because ${LATEST_KERNEL} is there"
-else 
+else
   echo "My kernel is latest and greatest."
-fi 
-```  
+fi
+```
 
 #### Exit Status codes
 
-Exit status codes are the usual means of communicating a command's execution success or failure. 
-So `lastversion` follows this: successful command returns `0` while anything else is an error of 
+Exit status codes are the usual means of communicating a command's execution success or failure.
+So `lastversion` follows this: successful command returns `0` while anything else is an error of
 some kind.
 For example, when the latest stable release version if found, `0` is returned.
 `0` is also returned for `-gt` comparison when leftmost argument is newer than rightmost argument.
- 
-Exit status code `1` is returned for cases like no release tag existing for repository at all, or 
+
+Exit status code `1` is returned for cases like no release tag existing for repository at all, or
 repository does not exist.
 
 Exit status code `2` is returned for `-gt` version comparison negative lookup, that is when rightmost argument is newer
 than leftmost argument.
 
-Exit status code `3` is returned when filtering assets of last release yields empty URL set 
+Exit status code `3` is returned when filtering assets of last release yields empty URL set
 (no match)
 
 ## Tips
 
-Getting the latest version is heavy on the API, because GitHub does not allow to fetch tags in 
-chronological order, and some repositories switch from one version format to another, so *we can't 
+Getting the latest version is heavy on the API, because GitHub does not allow to fetch tags in
+chronological order, and some repositories switch from one version format to another, so *we can't
 just consider the highest version to be latest*.
 We have to fetch every tag's commit date, and see if it's actually more recent. Thus, it's slower
 with larger repositories, which have potentially a lot of tags.
@@ -610,7 +610,7 @@ It does conditional ETag validation, which, as per GitHub API will not count tow
 The cache is stored in `~/.cache/lastversion` on Linux systems.
 
 It is *much recommended* to set up your [GitHub API token](https://github.com/settings/tokens).
-Bare API token is enough, you may deselect all permissions. 
+Bare API token is enough, you may deselect all permissions.
 You can then increase your rate limit by adding the following `~/.bashrc` file:
 
 ```bash
@@ -619,7 +619,7 @@ export GITHUB_API_TOKEN=xxxxxxxxxxxxxxx
 
 You can use either `GITHUB_API_TOKEN` or `GITHUB_TOKEN` environment variable.
 The former has priority.
-    
+
 For GitLab, you can use a
 [Personal Access Token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html):
 
@@ -667,8 +667,8 @@ The `has_update` function returns either:
 *   `False` if there is no newer version than the one given
 
 Alternatively, invoke `lastversion.latest(...)` function to get the latest version information
- for a repo.  
- 
+ for a repo.
+
 ```python
 from lastversion import latest
 from packaging import version
@@ -681,15 +681,15 @@ if latest_mautic_version >= version.parse('1.8.1'):
     print('It is newer')
 ```
 
-With `output_format='version'` (the default), the function returns a 
+With `output_format='version'` (the default), the function returns a
 [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) object, or
  `None`. So you can do things like above, namely version comparison, checking dev status, etc.
- 
+
 With `output_format='dict'`, a dictionary returned with the latest release information, or `False`.
 The dictionary keys vary between different project locations (GitHub vs BitBucket, for example),
 but are guaranteed to always have these keys:
 
-*   `version`: [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version) 
+*   `version`: [Version](https://packaging.pypa.io/en/latest/version.html#packaging.version.Version)
  object, contains the found release version, e.g. `1.2.3`
 *   `source`: string, the identifier of the project source, e.g. `github`, or `gitlab`
 *   `tag_date`: datetime object, the release date, e.g. `2020-12-15 14:41:39`
@@ -698,22 +698,22 @@ but are guaranteed to always have these keys:
 
 The `lastversion.latest` function accepts 3 arguments
 
-*   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`   
+*   `repo`, in format of `<owner>/<name>`, or any URL under this repository, e.g. `https://github.com/dvershinin/lastversion/issues`
 *   `format`, which accepts the same values as when you run `lastversion` interactively, as well as
  `dict` to return a dictionary as described above
 *   `pre_ok`, boolean for whether to include pre-releases as potential versions
-*   `at`, specifies project location when using one-word repo names, one of 
+*   `at`, specifies project location when using one-word repo names, one of
  `github`, `gitlab`, `bitbucket`, `pip`, `hg`, `sf`, `website-feed`, `local`
 
 ## Using in Continuous Integration
 
-You can also use `lastversion` directly in your GitHub action workflows, 
+You can also use `lastversion` directly in your GitHub action workflows,
 with [`lastversion-action`](https://github.com/dvershinin/lastversion-action).
 
 ## Hosted API Option
 
-Prefer a hosted, no-install solution for getting the latest versions?  
-Check out the [lastversion API on RapidAPI](https://rapidapi.com/ciapnz/api/lastversion). 
+Prefer a hosted, no-install solution for getting the latest versions?
+Check out the [lastversion API on RapidAPI](https://rapidapi.com/ciapnz/api/lastversion).
 
 **Highlights:**
 - **No Installation Needed**: Access the latest release info of any project from any environment—CI/CD pipelines, serverless functions, or front-end code—without installing `lastversion`.

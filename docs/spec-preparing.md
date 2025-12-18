@@ -11,16 +11,16 @@ You can set up a simple build pipeline via e.g. cron, to automatically build pac
  versions.
 
 In general, you may not have to do any special changes in your `.spec` files. `lastversion` will
- look at the `URL:` tag and check the latest release from that location, and update the `Version:` 
+ look at the `URL:` tag and check the latest release from that location, and update the `Version:`
  tag if a more recent version is found.
 
 However, if you are working with projects hosted on GitHub, it is highly recommended to prepare
  your `.spec` files in a special way.
- 
+
 The recommended changes below will allow `lastversion` to work with your `.spec` file and discover
  the GitHub repository in question, the current version *and* release tag. The release tag is very
   important to be part of your build, because it helps to avoid breaking builds.
- 
+
 ## lastversion-friendly spec changes
 
 There are only a couple of modifications you must make to your `.spec` file in order to make it
@@ -47,7 +47,7 @@ If the package name and GitHub repository `Name:` of your package do not match, 
 %global upstream_name brotli
 ```
 
-When you run `lastversion foo.spec`, it will automatically add `lastversion_tag` and `lastversion_dir` macros. 
+When you run `lastversion foo.spec`, it will automatically add `lastversion_tag` and `lastversion_dir` macros.
 These globals, as well as `Version:` tag, are updated by `lastversion` with the proper values for the last release.
 
 The `URL:` and `Source0:` tags of your spec file must be put to the following form:
@@ -128,12 +128,12 @@ Example:
 %global lastversion_having_asset "Linux 64 bit: Binary"
 ```
 
-In this example, "Linux 64 bit: Binary" is the asset name as it appears on 
+In this example, "Linux 64 bit: Binary" is the asset name as it appears on
 GitHub release page.
 
 ### Semver constraints in spec files
 
-You can specify a semver constraint directly in your spec file to control which 
+You can specify a semver constraint directly in your spec file to control which
 version updates are allowed:
 
 ```rpmspec
@@ -150,5 +150,5 @@ Valid values for `lastversion_sem`:
 * `minor` - only allow updates within the same major version (1.x.y → 1.z.w)
 * `patch` - only allow patch updates within same minor version (1.2.x → 1.2.y)
 
-When a newer version is found but violates the semver constraint, `lastversion` 
+When a newer version is found but violates the semver constraint, `lastversion`
 exits with code 4.

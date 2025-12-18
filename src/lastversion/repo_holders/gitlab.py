@@ -1,4 +1,5 @@
 """GitLab repo session."""
+
 import logging
 import os
 import platform
@@ -7,10 +8,9 @@ from datetime import timedelta
 
 from dateutil import parser
 
+from lastversion.exceptions import BadProjectError
 from lastversion.repo_holders.base import BaseProjectHolder
 from lastversion.utils import asset_does_not_belong_to_machine
-
-from lastversion.exceptions import BadProjectError
 
 log = logging.getLogger(__name__)
 
@@ -203,16 +203,12 @@ class GitLabRepoSession(BaseProjectHolder):
         ext = "zip" if os.name == "nt" else "tar.gz"
         tag = release["tag_name"]
         url_format = "https://{}/{}/-/archive/{}/{}-{}.{}"
-        return url_format.format(
-            self.hostname, self.repo, tag, self.repo.split("/")[1], tag, ext
-        )
+        return url_format.format(self.hostname, self.repo, tag, self.repo.split("/")[1], tag, ext)
 
     def repo_license(self, tag):
         """Get repo license."""
 
-        response = self.get(
-            f"https://{self.hostname}/{self.repo}/-/raw/{tag}/LICENSE?ref_type=tags"
-        )
+        response = self.get(f"https://{self.hostname}/{self.repo}/-/raw/{tag}/LICENSE?ref_type=tags")
         if response.status_code == 200:
             return {"text": response.text}
         return None

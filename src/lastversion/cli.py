@@ -15,22 +15,21 @@ try:
 except ImportError:
     pass
 
+from lastversion import check_version, latest, utils
 from lastversion.__about__ import __self__
-from lastversion import check_version, latest
 from lastversion.argparse_version import VersionAction
 from lastversion.exceptions import ApiCredentialsError, BadProjectError
 from lastversion.holder_factory import HolderFactory
 from lastversion.lastversion import (
+    get_repo_data_from_spec,
+    install_release,
     log,
     parse_version,
     update_spec,
     update_spec_commit,
-    get_repo_data_from_spec,
-    install_release,
 )
 from lastversion.repo_holders.base import BaseProjectHolder
 from lastversion.repo_holders.github import TOKEN_PRO_TIP
-from lastversion import utils
 from lastversion.utils import download_file, extract_file
 from lastversion.version import Version
 
@@ -44,11 +43,15 @@ def handle_cache_action(args):
     Usage:
         lastversion cache clear          - Clear all cache
         lastversion cache clear <repo>   - Clear cache for specific repo
-        lastversion cache --refresh <repo> - Clear cache and fetch fresh version
+        lastversion cache info           - Show cache statistics
+        lastversion cache cleanup        - Clean up expired cache entries
 
     Returns:
         Exit code
     """
+    from lastversion.cache import get_release_cache
+    from lastversion.config import get_config
+
     subcommand = args.repo.lower() if args.repo else "help"
 
     if subcommand == "clear":
@@ -61,10 +64,79 @@ def handle_cache_action(args):
             print("Cache was already empty or does not exist")
         return sys.exit(0)
 
+    elif subcommand == "info":
+        # Show cache statistics
+        config = get_config()
+        release_cache = get_release_cache()
+
+        print("Cache Configuration:")
+        print(f"  Config file: {config.config_path}")
+        print(f"  Backend: {config.cache_backend}")
+        print(f"  Release cache enabled: {config.release_cache_enabled}")
+        print(f"  Release cache TTL: {config.release_cache_ttl}s")
+        print(f"  File cache path: {config.file_cache_path}")
+        print(f"  File cache max age: {config.file_cache_max_age}s")
+        print()
+
+        if release_cache.enabled or release_cache.backend:
+            # Force create backend for stats even if not enabled
+            if not release_cache.backend:
+                from lastversion.cache import create_cache_backend
+
+                try:
+                    backend = create_cache_backend()
+                    info = backend.info()
+                except Exception as e:
+                    print(f"Error getting cache info: {e}")
+                    return sys.exit(1)
+            else:
+                info = release_cache.info()
+
+            print("Release Data Cache Stats:")
+            print(f"  Backend: {info.get('backend', 'N/A')}")
+            print(f"  Entries: {info.get('entries', 0)}")
+            if info.get("expired_entries"):
+                print(f"  Expired entries: {info.get('expired_entries', 0)}")
+            if info.get("size_human"):
+                print(f"  Size: {info.get('size_human')}")
+            elif info.get("size_bytes"):
+                print(f"  Size: {info.get('size_bytes')} bytes")
+            # Show last cleanup info
+            last_cleanup = info.get("last_cleanup")
+            if last_cleanup:
+                from datetime import datetime
+
+                cleanup_time = datetime.fromtimestamp(last_cleanup)
+                print(f"  Last cleanup: {cleanup_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            else:
+                print("  Last cleanup: never")
+            print(f"  Auto-cleanup interval: {info.get('auto_cleanup_interval', 'N/A')}s")
+        else:
+            print("Release data cache is not enabled.")
+            print("To enable, add to ~/.config/lastversion.yml:")
+            print("  cache:")
+            print("    release_cache:")
+            print("      enabled: true")
+            print("      ttl: 3600  # seconds")
+
+        return sys.exit(0)
+
+    elif subcommand == "cleanup":
+        # Clean up expired cache entries
+        release_cache = get_release_cache()
+        if release_cache.backend:
+            cleaned = release_cache.cleanup()
+            print(f"Cleaned up {cleaned} expired cache entries")
+        else:
+            print("Release cache is not enabled, nothing to clean up")
+        return sys.exit(0)
+
     elif subcommand == "help" or subcommand.startswith("-"):
         print("Usage:")
         print("  lastversion cache clear         - Clear all cache")
-        print("  lastversion cache clear <repo>  - Not yet implemented")
+        print("  lastversion cache clear <repo>  - Clear cache for specific repo")
+        print("  lastversion cache info          - Show cache configuration and stats")
+        print("  lastversion cache cleanup       - Clean up expired cache entries")
         print("")
         print("To refresh cache for a repo, use --no-cache:")
         print("  lastversion --no-cache <repo>")
@@ -98,9 +170,7 @@ def handle_commit_based_spec(args, repo_data):
         with HolderFactory.get_instance_for_repo(repo) as project:
             # Check if the holder supports getting latest commit
             if not hasattr(project, "get_latest_commit"):
-                log.critical(
-                    "Commit-based updates are only supported for GitHub repositories"
-                )
+                log.critical("Commit-based updates are only supported for GitHub repositories")
                 return sys.exit(1)
 
             commit_info = project.get_latest_commit()
@@ -159,6 +229,7 @@ def process_bulk_input(args):
                 having_asset=args.having_asset,
                 only=args.only,
                 even=args.even,
+                cache_ttl=args.cache_ttl,
             )
             if result:
                 if args.format == "json":
@@ -255,8 +326,7 @@ def main(argv=None):
         "--verbose",
         action="count",
         default=0,
-        help="Will give you an idea of what is happening under the hood, "
-        "-vv to increase verbosity level",
+        help="Will give you an idea of what is happening under the hood, " "-vv to increase verbosity level",
     )
     parser.add_argument(
         "-q",
@@ -270,8 +340,7 @@ def main(argv=None):
         "--input-file",
         dest="input_file",
         metavar="FILE",
-        help="Read repository names/URLs from file (one per line). "
-        "Use '-' to read from stdin",
+        help="Read repository names/URLs from file (one per line). " "Use '-' to read from stdin",
     )
     # no --download = False, --download filename.tar, --download = None
     parser.add_argument(
@@ -325,14 +394,12 @@ def main(argv=None):
     parser.add_argument(
         "--only",
         metavar="REGEX",
-        help="Only consider releases containing this text. "
-        "Useful for repos with multiple projects inside",
+        help="Only consider releases containing this text. " "Useful for repos with multiple projects inside",
     )
     parser.add_argument(
         "--exclude",
         metavar="REGEX",
-        help="Only consider releases NOT containing this text. "
-        "Useful for repos with multiple projects inside",
+        help="Only consider releases NOT containing this text. " "Useful for repos with multiple projects inside",
     )
     parser.add_argument(
         "--filter",
@@ -380,6 +447,13 @@ def main(argv=None):
         help="Do not use cache for HTTP requests",
     )
     parser.add_argument(
+        "--cache-ttl",
+        dest="cache_ttl",
+        type=int,
+        metavar="SECONDS",
+        help="Override release cache TTL (requires release cache enabled in config)",
+    )
+    parser.add_argument(
         "--changelog",
         dest="changelog",
         action="store_true",
@@ -403,6 +477,7 @@ def main(argv=None):
         even=False,
         changelog=False,
         quiet=False,
+        cache_ttl=None,
     )
     args = parser.parse_args(argv)
 
@@ -419,9 +494,7 @@ def main(argv=None):
 
     # "expand" repo:1.2 as repo --branch 1.2
     # noinspection HttpUrlsUsage
-    if ":" in args.repo and not (
-        args.repo.startswith(("https://", "http://")) and args.repo.count(":") == 1
-    ):
+    if ":" in args.repo and not (args.repo.startswith(("https://", "http://")) and args.repo.count(":") == 1):
         # right split ':' once only to preserve it in protocol of URLs
         # https://github.com/repo/owner:2.1
         repo_args = args.repo.rsplit(":", 1)
@@ -433,11 +506,7 @@ def main(argv=None):
     # create console handler and set level to debug
     ch = logging.StreamHandler()
     # create formatter
-    fmt = (
-        "%(name)s - %(levelname)s - %(message)s"
-        if args.verbose
-        else "%(levelname)s: %(message)s"
-    )
+    fmt = "%(name)s - %(levelname)s - %(message)s" if args.verbose else "%(levelname)s: %(message)s"
     formatter = logging.Formatter(fmt)
     # add formatter to ch
     ch.setFormatter(formatter)
@@ -550,6 +619,7 @@ def main(argv=None):
             even=args.even,
             formal=args.formal,
             changelog=args.changelog,
+            cache_ttl=args.cache_ttl,
         )
     except (ApiCredentialsError, BadProjectError) as error:
         log.critical(str(error))

@@ -13,7 +13,7 @@ Summary:        MozJPEG, the improved JPEG encoder. Drop-in library
 # this package must be explicitly installed by a user
 AutoReqProv:    no
 
-License:        BSD  
+License:        BSD
 URL:            https://github.com/%{upstream_github}/%{name}
 Source0:        %{url}/archive/%{lastversion_tag}/%{name}-%{lastversion_tag}.tar.gz
 

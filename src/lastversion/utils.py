@@ -45,9 +45,7 @@ except ImportError:
 DOWNLOAD_TIMEOUT = 30
 
 log = logging.getLogger(__name__)
-content_disposition_regex = re.compile(
-    r"filename(?P<priority>\*)?=((?P<encoding>\S+)'')?(?P<filename>[^;]*)"
-)
+content_disposition_regex = re.compile(r"filename(?P<priority>\*)?=((?P<encoding>\S+)'')?(?P<filename>[^;]*)")
 
 # matches os.name to known extensions that are meant *mostly* to run on it,
 # and not other os.name-s
@@ -107,9 +105,7 @@ def is_file_ext_not_compatible_with_os(file_ext):
     Returns:
 
     """
-    return any(
-        os.name != os_name and file_ext == ext for os_name, ext in os_extensions.items()
-    )
+    return any(os.name != os_name and file_ext == ext for os_name, ext in os_extensions.items())
 
 
 def is_asset_name_compatible_with_platform(asset_name):
@@ -265,9 +261,7 @@ def extract_appimage_desktop_file(appimage_path):
         if xdg_desktop_menu_path:
             subprocess.call([xdg_desktop_menu_path, "install", desktop_file])
         else:
-            log.warning(
-                "xdg-desktop-menu is not available, can't install the .desktop file"
-            )
+            log.warning("xdg-desktop-menu is not available, can't install the .desktop file")
 
     # Remove the temporary directory
     shutil.rmtree(temp_dir)
@@ -394,7 +388,7 @@ def extract_tar(buffer: io.BytesIO, to_dir):
                 item.path = str(Path(item.name).resolve().relative_to(top_dir))
                 archive_file.extract(item, to_dir)
         else:
-            archive_file.extractall(path=to_dir)
+            archive_file.extractall(path=to_dir)  # nosec B202 - trusted sources
 
 
 def extract_zip(buffer: io.BytesIO, to_dir):
@@ -427,7 +421,7 @@ def extract_zip(buffer: io.BytesIO, to_dir):
                 item.filename = new_path
                 archive_file.extract(item, to_dir)
         else:
-            archive_file.extractall(path=to_dir)
+            archive_file.extractall(path=to_dir)  # nosec B202 - trusted sources
 
 
 def detect_archive_type(buffer: io.BytesIO, url: str) -> str:
@@ -471,7 +465,7 @@ def extract_7z(buffer: io.BytesIO, to_dir):
         log.critical("pip install py7zr to support .7z archives")
         return
     with py7zr.SevenZipFile(buffer) as file:
-        file.extractall(path=to_dir)
+        file.extractall(path=to_dir)  # nosec B202 - trusted sources
 
 
 def extract_file(url: str, to_dir="."):

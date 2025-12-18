@@ -6,6 +6,7 @@ https://docs.fedoraproject.org/en-US/legal/allowed-licenses/
 Note: Fedora uses SPDX identifiers directly as of Fedora 38+, but older
 specs may still use legacy short names. This mapping supports both.
 """
+
 rpmspec_licenses = {
     # Apache licenses
     "Apache-1.0": "ASL 1.0",

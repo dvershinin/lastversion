@@ -10,4 +10,3 @@ alwaysApply: true
 - Reference files with @ so current code is attached to the context when the rule triggers.
 - For PRs: summarize rule updates in the description; new features MUST update or add rules alongside tests.
 - Prefer nested rules (`.cursor/rules` in subdirectories) for module-specific guidance; they’ll auto-attach when those files are in context.
-

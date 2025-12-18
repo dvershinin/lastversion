@@ -1,17 +1,15 @@
 """Test lastversion."""
 
 import os
-
 import subprocess
 
 import pytest
 from packaging import version
 
+from lastversion.exceptions import BadProjectError
+from lastversion.lastversion import latest
 from lastversion.repo_holders.test import TestProjectHolder
 from lastversion.version import Version
-from lastversion.lastversion import latest
-
-from lastversion.exceptions import BadProjectError
 
 # change dir to tests directory to make relative paths possible
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -296,9 +294,7 @@ def test_main_url():
     """Test CLI with full URL at GitHub."""
     repo = "https://github.com/apache/incubator-pagespeed-ngx"
 
-    with subprocess.Popen(
-        ["lastversion", repo], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    ) as process:
+    with subprocess.Popen(["lastversion", repo], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
         out, _ = process.communicate()
 
         assert version.parse(out.decode("utf-8").strip()) >= version.parse("1.13.35.2")
@@ -418,9 +414,7 @@ def test_last_b_belongs_to_version():
 
 def test_char_yml_direct():
     """Test URL with Chart.yaml."""
-    repo = (
-        "https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core/Chart.yaml"
-    )
+    repo = "https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core/Chart.yaml"
     v = latest(repo)
     assert v >= version.parse("1.0.0")
 

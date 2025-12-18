@@ -1,0 +1,27 @@
+# Bandit security scanner configuration
+# This catches security issues similar to SonarCloud
+
+[tool.bandit]
+# Exclude test files and build artifacts
+exclude_dirs = ["tests", "build", "dist", "site"]
+
+# Skip certain checks that have false positives or are intentional in this codebase
+skips = [
+    # B113: request_without_timeout - we handle timeouts at session level
+    "B113",
+    # B404: import subprocess - intentional for app installation feature
+    "B404",
+    # B603: subprocess calls - intentional, we call known package managers (dnf/apt)
+    "B603",
+    # B105: false positive on TOKEN_PRO_TIP variable name
+    "B105",
+    # B101: assert used - acceptable in extraction code for precondition checks
+    "B101",
+    # B103: chmod 0o755 - intentional for making downloaded apps executable
+    "B103",
+    # B110: try/except/pass - used for cleanup code where failure is acceptable
+    "B110",
+]
+
+# Target only the main source code
+targets = ["src/lastversion"]

@@ -1,22 +1,21 @@
 """The base project holder class."""
 
+import datetime
 import json
 import logging
 import os
 import platform
 import re
-
-import datetime
 import time
+
 import feedparser
 import requests
-from appdirs import user_cache_dir
 from cachecontrol import CacheControlAdapter
 from cachecontrol.caches.file_cache import FileCache
 from packaging.version import InvalidVersion
 
-from lastversion.version import Version
 from lastversion.__about__ import __version__
+from lastversion.config import get_config
 
 # This class basically corresponds to something (often a website) which holds
 # projects (usually a bunch). Often this is a github-like website, so we subclass session
@@ -25,6 +24,7 @@ from lastversion.__about__ import __version__
 # it is instantiated with a particular project in mind/set, but also has some methods for
 # stuff like searching one
 from lastversion.utils import asset_does_not_belong_to_machine, ensure_directory_exists
+from lastversion.version import Version
 
 log = logging.getLogger(__name__)
 
@@ -223,10 +223,14 @@ class BaseProjectHolder(requests.Session):
         self.mount("https://", requests.adapters.HTTPAdapter(max_retries=5))
         app_name = __name__.split(".", maxsplit=1)[0]
 
+        # Load configuration
+        config = get_config()
+
         self.cache_dir = None
         self.cache = None
         if not self.CACHE_DISABLED:
-            self.cache_dir = user_cache_dir(app_name)
+            # Use configured cache path or default
+            self.cache_dir = config.file_cache_path
             log.info("Using cache directory: %s.", self.cache_dir)
             # Use a lock with a finite timeout to avoid rare hangs on cache writes
             lock_cls = InternalTimedDirLock
@@ -237,6 +241,8 @@ class BaseProjectHolder(requests.Session):
             self.mount("https://", cache_adapter)
         else:
             log.info("Cache is disabled for this holder.")
+            # Still need cache_dir for names_cache_filename even if HTTP cache is disabled
+            self.cache_dir = config.file_cache_path
 
         self.names_cache_filename = f"{self.cache_dir}/repos.json"
 
@@ -288,7 +294,7 @@ class BaseProjectHolder(requests.Session):
 
     @classmethod
     def clear_cache(cls, repo=None):
-        """Clear the HTTP cache.
+        """Clear the HTTP cache and release data cache.
 
         Args:
             repo: Optional repo identifier. If provided, clears cache only for
@@ -297,16 +303,24 @@ class BaseProjectHolder(requests.Session):
         Returns:
             int: Number of cache entries cleared
         """
-        from appdirs import user_cache_dir
+        from lastversion.cache import get_release_cache
 
-        app_name = "lastversion"
-        cache_dir = user_cache_dir(app_name)
+        config = get_config()
+        cache_dir = config.file_cache_path
 
         if not os.path.exists(cache_dir):
             log.info("Cache directory does not exist: %s", cache_dir)
             return 0
 
         cleared = 0
+
+        # Clear release data cache
+        release_cache = get_release_cache()
+        if repo:
+            # Clear release cache for specific repo
+            release_cache.delete(repo)
+        else:
+            cleared += release_cache.clear()
 
         if repo:
             # Clear cache entries for specific repo
@@ -347,8 +361,7 @@ class BaseProjectHolder(requests.Session):
                     keys_to_remove = [
                         k
                         for k in names_cache
-                        if repo_lower in k.lower()
-                        or (names_cache[k].get("repo", "").lower() == repo_lower)
+                        if repo_lower in k.lower() or (names_cache[k].get("repo", "").lower() == repo_lower)
                     ]
                     for key in keys_to_remove:
                         del names_cache[key]
@@ -366,7 +379,7 @@ class BaseProjectHolder(requests.Session):
             try:
                 shutil.rmtree(cache_dir)
                 log.info("Cleared all cache from: %s", cache_dir)
-                cleared = 1  # Indicate success
+                cleared += 1  # Indicate success
             except (IOError, OSError) as e:
                 log.warning("Error clearing cache: %s", e)
 
@@ -431,9 +444,7 @@ class BaseProjectHolder(requests.Session):
             url_parts = repo.split("/")
             hostname = url_parts[2]
             offset = 3 + cls.REPO_URL_PROJECT_OFFSET
-            repo = "/".join(
-                url_parts[offset : offset + cls.REPO_URL_PROJECT_COMPONENTS]
-            )
+            repo = "/".join(url_parts[offset : offset + cls.REPO_URL_PROJECT_COMPONENTS])
         return hostname, repo
 
     @classmethod
@@ -461,13 +472,10 @@ class BaseProjectHolder(requests.Session):
             if len(repo_components) == 1 and hasattr(cls, "find_repo_by_name_only"):
                 return repo_arg
             if len(repo_components) < cls.REPO_URL_PROJECT_COMPONENTS:
-                raise ValueError(
-                    f"Repo arg {repo_arg} does not have enough components for {cls.__name__}"
-                )
+                raise ValueError(f"Repo arg {repo_arg} does not have enough components for {cls.__name__}")
             return "/".join(
                 repo_components[
-                    cls.REPO_URL_PROJECT_OFFSET : cls.REPO_URL_PROJECT_OFFSET
-                    + cls.REPO_URL_PROJECT_COMPONENTS
+                    cls.REPO_URL_PROJECT_OFFSET : cls.REPO_URL_PROJECT_OFFSET + cls.REPO_URL_PROJECT_COMPONENTS
                 ]
             )
         return None
@@ -499,19 +507,13 @@ class BaseProjectHolder(requests.Session):
         hostname_only = hostname.rsplit(":", 1)[0] if ":" in hostname else hostname
         if cls.DEFAULT_HOSTNAME == hostname_only:
             return True
-        if cls.SUBDOMAIN_INDICATOR and hostname_only.startswith(
-            cls.SUBDOMAIN_INDICATOR + "."
-        ):
+        if cls.SUBDOMAIN_INDICATOR and hostname_only.startswith(cls.SUBDOMAIN_INDICATOR + "."):
             return True
         return False
 
     def matches_major_filter(self, version, major):
         """Check if version matches major filter."""
-        if (
-            self.branches
-            and major in self.branches
-            and re.search(rf"{self.branches[major]}", str(version))
-        ):
+        if self.branches and major in self.branches and re.search(rf"{self.branches[major]}", str(version)):
             log.info("%s matches major %s", version, self.branches[major])
             return True
         if str(version).startswith(f"{major}."):
@@ -550,9 +552,7 @@ class BaseProjectHolder(requests.Session):
         res = None
 
         if not matches_filter(self.only, True, version_s):
-            log.info(
-                '"%s" does not match the "only" constraint "%s"', version_s, self.only
-            )
+            log.info('"%s" does not match the "only" constraint "%s"', version_s, self.only)
             return None
 
         if not matches_filter(self.exclude, False, version_s):
@@ -605,9 +605,7 @@ class BaseProjectHolder(requests.Session):
                         else:
                             log.info("Parsed as unwanted pre-release version: %s.", v)
                     except InvalidVersion:
-                        log.info(
-                            "Still not a valid version after applying underscores fix"
-                        )
+                        log.info("Still not a valid version after applying underscores fix")
         # apply --major filter
         if res and major and not self.matches_major_filter(res, major):
             log.info("%s is not under the desired major %s", version_s, major)
@@ -660,9 +658,7 @@ class BaseProjectHolder(requests.Session):
             for asset in assets:
                 if assets_filter and not re.search(assets_filter, asset["name"]):
                     continue
-                if not assets_filter and asset_does_not_belong_to_machine(
-                    asset["name"]
-                ):
+                if not assets_filter and asset_does_not_belong_to_machine(asset["name"]):
                     log.info(
                         "Asset %s does not belong to this machine, skipping",
                         asset["name"],
@@ -695,9 +691,7 @@ class BaseProjectHolder(requests.Session):
             for asset in assets:
                 if assets_filter and not re.search(assets_filter, asset["name"]):
                     continue
-                if not assets_filter and asset_does_not_belong_to_machine(
-                    asset["name"]
-                ):
+                if not assets_filter and asset_does_not_belong_to_machine(asset["name"]):
                     log.info(
                         "Asset %s does not belong to this machine, skipping",
                         asset["name"],

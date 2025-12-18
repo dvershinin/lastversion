@@ -8,13 +8,12 @@ import tempfile
 from packaging import version
 
 from lastversion.cli import main
+
 from .helpers import captured_exit_code
 
 
 def test_cli_help_contains_changelog_flag():
-    with subprocess.Popen(
-        ["lastversion", "--help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    ) as process:
+    with subprocess.Popen(["lastversion", "--help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
         out, _ = process.communicate()
         help_text = out.decode("utf-8", errors="ignore")
         assert "--changelog" in help_text
@@ -123,9 +122,7 @@ def test_unzip_osx_bundle_strip(capsys):  # pylint: disable=unused-argument
         with tempfile.TemporaryDirectory() as tmp_dir_name:
             # Set the temp directory as the current working directory
             os.chdir(tmp_dir_name)
-            main(
-                ["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"]
-            )
+            main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"])
             # Assert that MinimalMIDIPlayer.app exists and is a directory
             assert os.path.isdir("Contents")
             # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists

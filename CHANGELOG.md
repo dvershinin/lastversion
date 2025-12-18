@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.0] - 2025-12-19
+### Added
+* Release data cache with configurable TTL - bypass HTTP requests entirely for cached repos #166
+* Configuration file support (`~/.config/lastversion.yml`) for cache and other settings
+* Optional Redis cache backend (`pip install lastversion[redis]`)
+* Automatic cache cleanup with configurable interval
+* Network fallback: use stale cached data when API fails or rate limits exceeded
+* Cache management commands: `lastversion cache info`, `lastversion cache cleanup`
+* `--cache-ttl` CLI option to override cache TTL per-request
+* Bandit security scanning in pre-commit hooks
+### Fixed
+* Config singleton now uses deep copy to prevent shared state between instances
+
 ## [3.5.12] - 2025-12-07
 ### Fixed
 * Fixed UnicodeEncodeError in --help on systems with LANG=C (EL7 RPM builds)
@@ -83,7 +96,7 @@ All notable changes to this project will be documented in this file.
 * `--format source` did not include valid links
 ### Added
 * `source_url` is now included in `--format json` output
-* [Web API!](https://lastversion.getpagespeed.com/api/) Hooray! 
+* [Web API!](https://lastversion.getpagespeed.com/api/) Hooray!
 
 ## [3.4.1] - 2023-12-07
 ### Fixed
@@ -231,7 +244,7 @@ All notable changes to this project will be documented in this file.
 
 ## [2.1.0] - 2022-02-23
 ### Added
-* Several extra repo shortcuts: kodi for Kodi, sles for SUSE Enterprise 
+* Several extra repo shortcuts: kodi for Kodi, sles for SUSE Enterprise
 * Refactored code so that caching can be better used
 * Extra detection of beta via preview and early-access delimiters
 * `--at wordpress` for WordPress plugins
@@ -313,7 +326,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 * GraphQL method for finding release tags was not reliable on repos
   with tags having no tagger field
-* Strip all extraneous alphanumerics from beginning of tags to improve 
+* Strip all extraneous alphanumerics from beginning of tags to improve
   detection
 
 ## [1.3.1] - 2021-01-17
@@ -323,7 +336,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.3.0] - 2021-01-16
 ### Added
-* `--at` switch (and function argument) to explicitly specify project provider 
+* `--at` switch (and function argument) to explicitly specify project provider
 * PyPI support
 
 ## [1.2.6] - 2021-01-13
@@ -345,7 +358,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.2] - 2020-09-29
 ### Fixed
-* `--format json` and `--format assets` work for Non-GitHub projects 
+* `--format json` and `--format assets` work for Non-GitHub projects
 
 ## [1.2.1] - 2020-09-29
 ### Added
@@ -417,7 +430,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2020-03-23
 
 ### Changed
-* BREAKING release for Python consumers:  
+* BREAKING release for Python consumers:
 The `latest` Python function now returns `Version` object instead of string, by default
 
 ### Added
@@ -428,6 +441,6 @@ The `latest` Python function now returns `Version` object instead of string, by 
 * Limited Mercurial web repos support
 * Limited BitBucket support
 * Use feeds where available, thus much, much faster while still precise
-* Ability to pass `.yml` with `repo:` value inside. Other elements are merged into `--format json` 
-output. More on the [wiki](https://github.com/dvershinin/lastversion/wiki/Use-in-automatic-RPM-building) 
+* Ability to pass `.yml` with `repo:` value inside. Other elements are merged into `--format json`
+output. More on the [wiki](https://github.com/dvershinin/lastversion/wiki/Use-in-automatic-RPM-building)
 on how useful it is

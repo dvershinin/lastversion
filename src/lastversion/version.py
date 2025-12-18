@@ -1,8 +1,10 @@
 """Version class for lastversion"""
+
 import re
 from datetime import datetime
 
-from packaging.version import Version as PackagingVersion, InvalidVersion
+from packaging.version import InvalidVersion
+from packaging.version import Version as PackagingVersion
 
 
 class Version(PackagingVersion):
@@ -279,12 +281,7 @@ class Version(PackagingVersion):
         Returns:
             bool:
         """
-        if (
-            self.major
-            and self.minor
-            and self.micro >= 90
-            and self.is_not_date(self.micro)
-        ):
+        if self.major and self.minor and self.micro >= 90 and self.is_not_date(self.micro):
             return True
         return self.dev is not None or self.pre is not None
 

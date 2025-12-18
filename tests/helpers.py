@@ -1,4 +1,5 @@
 """Helper functions for tests."""
+
 import sys
 from contextlib import contextmanager
 
