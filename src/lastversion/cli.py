@@ -110,7 +110,9 @@ def handle_cache_action(args):
                 print(f"  Last cleanup: {cleanup_time.strftime('%Y-%m-%d %H:%M:%S')}")
             else:
                 print("  Last cleanup: never")
-            print(f"  Auto-cleanup interval: {info.get('auto_cleanup_interval', 'N/A')}s")
+            print(
+                f"  Auto-cleanup interval: {info.get('auto_cleanup_interval', 'N/A')}s"
+            )
         else:
             print("Release data cache is not enabled.")
             print("To enable, add to ~/.config/lastversion.yml:")
@@ -170,7 +172,9 @@ def handle_commit_based_spec(args, repo_data):
         with HolderFactory.get_instance_for_repo(repo) as project:
             # Check if the holder supports getting latest commit
             if not hasattr(project, "get_latest_commit"):
-                log.critical("Commit-based updates are only supported for GitHub repositories")
+                log.critical(
+                    "Commit-based updates are only supported for GitHub repositories"
+                )
                 return sys.exit(1)
 
             commit_info = project.get_latest_commit()
@@ -326,7 +330,8 @@ def main(argv=None):
         "--verbose",
         action="count",
         default=0,
-        help="Will give you an idea of what is happening under the hood, " "-vv to increase verbosity level",
+        help="Will give you an idea of what is happening under the hood, "
+        "-vv to increase verbosity level",
     )
     parser.add_argument(
         "-q",
@@ -340,7 +345,8 @@ def main(argv=None):
         "--input-file",
         dest="input_file",
         metavar="FILE",
-        help="Read repository names/URLs from file (one per line). " "Use '-' to read from stdin",
+        help="Read repository names/URLs from file (one per line). "
+        "Use '-' to read from stdin",
     )
     # no --download = False, --download filename.tar, --download = None
     parser.add_argument(
@@ -394,12 +400,14 @@ def main(argv=None):
     parser.add_argument(
         "--only",
         metavar="REGEX",
-        help="Only consider releases containing this text. " "Useful for repos with multiple projects inside",
+        help="Only consider releases containing this text. "
+        "Useful for repos with multiple projects inside",
     )
     parser.add_argument(
         "--exclude",
         metavar="REGEX",
-        help="Only consider releases NOT containing this text. " "Useful for repos with multiple projects inside",
+        help="Only consider releases NOT containing this text. "
+        "Useful for repos with multiple projects inside",
     )
     parser.add_argument(
         "--filter",
@@ -494,7 +502,9 @@ def main(argv=None):
 
     # "expand" repo:1.2 as repo --branch 1.2
     # noinspection HttpUrlsUsage
-    if ":" in args.repo and not (args.repo.startswith(("https://", "http://")) and args.repo.count(":") == 1):
+    if ":" in args.repo and not (
+        args.repo.startswith(("https://", "http://")) and args.repo.count(":") == 1
+    ):
         # right split ':' once only to preserve it in protocol of URLs
         # https://github.com/repo/owner:2.1
         repo_args = args.repo.rsplit(":", 1)
@@ -506,7 +516,11 @@ def main(argv=None):
     # create console handler and set level to debug
     ch = logging.StreamHandler()
     # create formatter
-    fmt = "%(name)s - %(levelname)s - %(message)s" if args.verbose else "%(levelname)s: %(message)s"
+    fmt = (
+        "%(name)s - %(levelname)s - %(message)s"
+        if args.verbose
+        else "%(levelname)s: %(message)s"
+    )
     formatter = logging.Formatter(fmt)
     # add formatter to ch
     ch.setFormatter(formatter)

@@ -28,7 +28,9 @@ class HelmChartRepoSession(BaseProjectHolder):
         # https://raw.githubusercontent.com/bitnami/charts/master/bitnami/aspnet-core/Chart.yaml
         url = f"https://{self.hostname}/{self.repo}"
         if self.hostname in ["github.com"]:
-            url = f"https://raw.githubusercontent.com/{self.repo.replace('/blob/', '/')}"
+            url = (
+                f"https://raw.githubusercontent.com/{self.repo.replace('/blob/', '/')}"
+            )
         r = self.get(url)
         chart_data = yaml.safe_load(r.text)
         return {

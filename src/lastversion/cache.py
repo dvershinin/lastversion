@@ -119,7 +119,9 @@ class FileCacheBackend(CacheBackend):
         try:
             os.makedirs(self.release_cache_dir, exist_ok=True)
         except OSError as e:
-            log.warning("Failed to create cache directory %s: %s", self.release_cache_dir, e)
+            log.warning(
+                "Failed to create cache directory %s: %s", self.release_cache_dir, e
+            )
 
     def _get_cleanup_marker_path(self) -> str:
         """Get path to the cleanup marker file."""
@@ -141,7 +143,10 @@ class FileCacheBackend(CacheBackend):
                 if time_since_cleanup < self.max_age:
                     # Cleanup was done recently, skip
                     return
-                log.debug("Auto-cleanup triggered: %d seconds since last cleanup", int(time_since_cleanup))
+                log.debug(
+                    "Auto-cleanup triggered: %d seconds since last cleanup",
+                    int(time_since_cleanup),
+                )
             else:
                 log.debug("Auto-cleanup triggered: no previous cleanup marker found")
 
@@ -435,7 +440,8 @@ class RedisCacheBackend(CacheBackend):
             import redis  # pylint: disable=import-outside-toplevel
         except ImportError as e:
             raise ImportError(
-                "Redis support requires the 'redis' package. " "Install it with: pip install lastversion[redis]"
+                "Redis support requires the 'redis' package. "
+                "Install it with: pip install lastversion[redis]"
             ) from e
 
         self.key_prefix = key_prefix
@@ -618,7 +624,9 @@ class ReleaseDataCache:
                 key_parts.append(f"{k}={v}")
         return ":".join(key_parts)
 
-    def get(self, repo: str, ignore_expiry: bool = False, **kwargs) -> Optional[Dict[str, Any]]:
+    def get(
+        self, repo: str, ignore_expiry: bool = False, **kwargs
+    ) -> Optional[Dict[str, Any]]:
         """Get cached release data for a repo.
 
         Args:
@@ -638,7 +646,9 @@ class ReleaseDataCache:
             log.info("Release cache hit for: %s", repo)
         return data
 
-    def set(self, repo: str, data: Dict[str, Any], ttl: Optional[int] = None, **kwargs) -> None:
+    def set(
+        self, repo: str, data: Dict[str, Any], ttl: Optional[int] = None, **kwargs
+    ) -> None:
         """Cache release data for a repo.
 
         Args:

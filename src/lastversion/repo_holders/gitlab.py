@@ -203,12 +203,16 @@ class GitLabRepoSession(BaseProjectHolder):
         ext = "zip" if os.name == "nt" else "tar.gz"
         tag = release["tag_name"]
         url_format = "https://{}/{}/-/archive/{}/{}-{}.{}"
-        return url_format.format(self.hostname, self.repo, tag, self.repo.split("/")[1], tag, ext)
+        return url_format.format(
+            self.hostname, self.repo, tag, self.repo.split("/")[1], tag, ext
+        )
 
     def repo_license(self, tag):
         """Get repo license."""
 
-        response = self.get(f"https://{self.hostname}/{self.repo}/-/raw/{tag}/LICENSE?ref_type=tags")
+        response = self.get(
+            f"https://{self.hostname}/{self.repo}/-/raw/{tag}/LICENSE?ref_type=tags"
+        )
         if response.status_code == 200:
             return {"text": response.text}
         return None

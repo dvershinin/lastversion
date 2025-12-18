@@ -7,7 +7,12 @@ from unittest import mock
 
 import pytest
 
-from lastversion.cache import FileCacheBackend, ReleaseDataCache, create_cache_backend, reset_release_cache
+from lastversion.cache import (
+    FileCacheBackend,
+    ReleaseDataCache,
+    create_cache_backend,
+    reset_release_cache,
+)
 from lastversion.config import Config, deep_merge, get_config, reset_config
 
 
@@ -132,7 +137,9 @@ class TestFileCacheBackend:
     def test_auto_cleanup_on_init(self):
         """Test that auto-cleanup runs on init when marker is old."""
         # Create cache with auto_cleanup disabled first
-        cache = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=1, max_age=1, auto_cleanup=False)
+        cache = FileCacheBackend(
+            cache_dir=self.temp_dir, default_ttl=1, max_age=1, auto_cleanup=False
+        )
 
         # Add an entry that will expire
         cache.set("old-entry", {"version": "1.0.0"}, ttl=1)
@@ -147,7 +154,9 @@ class TestFileCacheBackend:
 
         # Create new cache instance with auto_cleanup enabled and short max_age
         # This should trigger auto-cleanup since marker is older than max_age
-        cache2 = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=1, max_age=60, auto_cleanup=True)
+        cache2 = FileCacheBackend(
+            cache_dir=self.temp_dir, default_ttl=1, max_age=60, auto_cleanup=True
+        )
 
         # The expired entry should have been cleaned up
         # (cleanup ran because marker was >60s old)
@@ -158,21 +167,27 @@ class TestFileCacheBackend:
     def test_auto_cleanup_skipped_when_recent(self):
         """Test that auto-cleanup is skipped when marker is recent."""
         # Create cache and run cleanup
-        cache = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=False)
+        cache = FileCacheBackend(
+            cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=False
+        )
         cache.cleanup()  # This touches the marker
 
         # Add an entry
         cache.set("test-entry", {"version": "1.0.0"})
 
         # Create new cache - auto-cleanup should be skipped (marker is fresh)
-        cache2 = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=True)
+        cache2 = FileCacheBackend(
+            cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=True
+        )
 
         # Entry should still exist
         assert cache2.get("test-entry") is not None
 
     def test_cleanup_touches_marker(self):
         """Test that cleanup updates the marker file."""
-        cache = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=False)
+        cache = FileCacheBackend(
+            cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=False
+        )
 
         marker_path = cache._get_cleanup_marker_path()
         assert not os.path.exists(marker_path)
@@ -183,7 +198,9 @@ class TestFileCacheBackend:
 
     def test_info_includes_last_cleanup(self):
         """Test that info() includes last cleanup time."""
-        cache = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=False)
+        cache = FileCacheBackend(
+            cache_dir=self.temp_dir, default_ttl=3600, max_age=3600, auto_cleanup=False
+        )
 
         # Before cleanup
         info1 = cache.info()
@@ -257,7 +274,9 @@ class TestFileCacheBackend:
     def test_cleanup(self):
         """Test cleanup of expired entries."""
         # Use longer max_age to ensure only TTL-expired entries are cleaned
-        cache = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=3600, max_age=3600)
+        cache = FileCacheBackend(
+            cache_dir=self.temp_dir, default_ttl=3600, max_age=3600
+        )
 
         # Set repo1 with very short TTL (will expire)
         cache.set("repo1", {"version": "1.0.0"}, ttl=1)
@@ -566,7 +585,9 @@ class TestNetworkFallbackIntegration:
         )
 
         # Mock the cache globally and verify cache is returned on network error
-        with mock.patch("lastversion.lastversion.get_release_cache", return_value=cache):
+        with mock.patch(
+            "lastversion.lastversion.get_release_cache", return_value=cache
+        ):
             # First verify fresh cache is returned
             result = cache.get(
                 "dvershinin/lastversion",

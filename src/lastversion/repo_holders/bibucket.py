@@ -20,7 +20,8 @@ class BitBucketRepoSession(BaseProjectHolder):
             "repo": "tildeslash/monit",
             # get URL from the official website because it is a "prepared"
             # source that has the `./configure` script available
-            "release_url_format": "https://mmonit.com/{name}/dist/{name}-" "{version}.tar.gz",
+            "release_url_format": "https://mmonit.com/{name}/dist/{name}-"
+            "{version}.tar.gz",
         }
     }
 
@@ -36,7 +37,9 @@ class BitBucketRepoSession(BaseProjectHolder):
         """Get the latest release."""
         # Try to get releases from downloads first (for paid plans)
         try:
-            response = self.get(f"https://api.bitbucket.org/2.0/repositories/{self.repo}/downloads")
+            response = self.get(
+                f"https://api.bitbucket.org/2.0/repositories/{self.repo}/downloads"
+            )
             response.raise_for_status()
 
             # Check if response is valid JSON

@@ -281,7 +281,12 @@ class Version(PackagingVersion):
         Returns:
             bool:
         """
-        if self.major and self.minor and self.micro >= 90 and self.is_not_date(self.micro):
+        if (
+            self.major
+            and self.minor
+            and self.micro >= 90
+            and self.is_not_date(self.micro)
+        ):
             return True
         return self.dev is not None or self.pre is not None
 

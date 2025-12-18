@@ -361,7 +361,8 @@ class BaseProjectHolder(requests.Session):
                     keys_to_remove = [
                         k
                         for k in names_cache
-                        if repo_lower in k.lower() or (names_cache[k].get("repo", "").lower() == repo_lower)
+                        if repo_lower in k.lower()
+                        or (names_cache[k].get("repo", "").lower() == repo_lower)
                     ]
                     for key in keys_to_remove:
                         del names_cache[key]
@@ -444,7 +445,9 @@ class BaseProjectHolder(requests.Session):
             url_parts = repo.split("/")
             hostname = url_parts[2]
             offset = 3 + cls.REPO_URL_PROJECT_OFFSET
-            repo = "/".join(url_parts[offset : offset + cls.REPO_URL_PROJECT_COMPONENTS])
+            repo = "/".join(
+                url_parts[offset : offset + cls.REPO_URL_PROJECT_COMPONENTS]
+            )
         return hostname, repo
 
     @classmethod
@@ -472,10 +475,13 @@ class BaseProjectHolder(requests.Session):
             if len(repo_components) == 1 and hasattr(cls, "find_repo_by_name_only"):
                 return repo_arg
             if len(repo_components) < cls.REPO_URL_PROJECT_COMPONENTS:
-                raise ValueError(f"Repo arg {repo_arg} does not have enough components for {cls.__name__}")
+                raise ValueError(
+                    f"Repo arg {repo_arg} does not have enough components for {cls.__name__}"
+                )
             return "/".join(
                 repo_components[
-                    cls.REPO_URL_PROJECT_OFFSET : cls.REPO_URL_PROJECT_OFFSET + cls.REPO_URL_PROJECT_COMPONENTS
+                    cls.REPO_URL_PROJECT_OFFSET : cls.REPO_URL_PROJECT_OFFSET
+                    + cls.REPO_URL_PROJECT_COMPONENTS
                 ]
             )
         return None
@@ -507,13 +513,19 @@ class BaseProjectHolder(requests.Session):
         hostname_only = hostname.rsplit(":", 1)[0] if ":" in hostname else hostname
         if cls.DEFAULT_HOSTNAME == hostname_only:
             return True
-        if cls.SUBDOMAIN_INDICATOR and hostname_only.startswith(cls.SUBDOMAIN_INDICATOR + "."):
+        if cls.SUBDOMAIN_INDICATOR and hostname_only.startswith(
+            cls.SUBDOMAIN_INDICATOR + "."
+        ):
             return True
         return False
 
     def matches_major_filter(self, version, major):
         """Check if version matches major filter."""
-        if self.branches and major in self.branches and re.search(rf"{self.branches[major]}", str(version)):
+        if (
+            self.branches
+            and major in self.branches
+            and re.search(rf"{self.branches[major]}", str(version))
+        ):
             log.info("%s matches major %s", version, self.branches[major])
             return True
         if str(version).startswith(f"{major}."):
@@ -552,7 +564,9 @@ class BaseProjectHolder(requests.Session):
         res = None
 
         if not matches_filter(self.only, True, version_s):
-            log.info('"%s" does not match the "only" constraint "%s"', version_s, self.only)
+            log.info(
+                '"%s" does not match the "only" constraint "%s"', version_s, self.only
+            )
             return None
 
         if not matches_filter(self.exclude, False, version_s):
@@ -605,7 +619,9 @@ class BaseProjectHolder(requests.Session):
                         else:
                             log.info("Parsed as unwanted pre-release version: %s.", v)
                     except InvalidVersion:
-                        log.info("Still not a valid version after applying underscores fix")
+                        log.info(
+                            "Still not a valid version after applying underscores fix"
+                        )
         # apply --major filter
         if res and major and not self.matches_major_filter(res, major):
             log.info("%s is not under the desired major %s", version_s, major)
@@ -658,7 +674,9 @@ class BaseProjectHolder(requests.Session):
             for asset in assets:
                 if assets_filter and not re.search(assets_filter, asset["name"]):
                     continue
-                if not assets_filter and asset_does_not_belong_to_machine(asset["name"]):
+                if not assets_filter and asset_does_not_belong_to_machine(
+                    asset["name"]
+                ):
                     log.info(
                         "Asset %s does not belong to this machine, skipping",
                         asset["name"],
@@ -691,7 +709,9 @@ class BaseProjectHolder(requests.Session):
             for asset in assets:
                 if assets_filter and not re.search(assets_filter, asset["name"]):
                     continue
-                if not assets_filter and asset_does_not_belong_to_machine(asset["name"]):
+                if not assets_filter and asset_does_not_belong_to_machine(
+                    asset["name"]
+                ):
                     log.info(
                         "Asset %s does not belong to this machine, skipping",
                         asset["name"],

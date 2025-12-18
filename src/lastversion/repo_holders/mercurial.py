@@ -24,4 +24,6 @@ class MercurialRepoSession(BaseProjectHolder):
         Get the latest release.
         E.g. https://hg.nginx.org/nginx/atom-tags
         """
-        return self.find_release_in_feed(f"https://{self.hostname}/{self.repo}/atom-tags", pre_ok, major)
+        return self.find_release_in_feed(
+            f"https://{self.hostname}/{self.repo}/atom-tags", pre_ok, major
+        )
