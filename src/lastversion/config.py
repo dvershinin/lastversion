@@ -1,7 +1,12 @@
 """Configuration management for lastversion.
 
-Loads configuration from ~/.config/lastversion.yml (or platform-appropriate location)
-and provides access to settings throughout the application.
+Loads configuration from platform-appropriate location and provides access to
+settings throughout the application.
+
+Config file locations:
+- Linux: ~/.config/lastversion/lastversion.yml
+- macOS: ~/Library/Application Support/lastversion/lastversion.yml
+- Windows: C:\\Users\\<user>\\AppData\\Local\\lastversion\\lastversion.yml
 """
 
 import copy
@@ -68,7 +73,7 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
 class Config:
     """Configuration manager for lastversion.
 
-    Loads configuration from ~/.config/lastversion.yml and provides
+    Loads configuration from platform-appropriate location and provides
     access to settings. Uses singleton pattern for global access.
     """
 

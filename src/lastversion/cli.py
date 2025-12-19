@@ -113,7 +113,7 @@ def handle_cache_action(args):
             print(f"  Auto-cleanup interval: {info.get('auto_cleanup_interval', 'N/A')}s")
         else:
             print("Release data cache is not enabled.")
-            print("To enable, add to ~/.config/lastversion.yml:")
+            print(f"To enable, add to {config.config_path}:")
             print("  cache:")
             print("    release_cache:")
             print("      enabled: true")

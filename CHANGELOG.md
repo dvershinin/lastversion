@@ -1,10 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.1] - 2025-12-19
+### Fixed
+* Fixed documentation: config file path is platform-specific (use `lastversion cache info` to see)
+
 ## [3.6.0] - 2025-12-19
 ### Added
 * Release data cache with configurable TTL - bypass HTTP requests entirely for cached repos #166
-* Configuration file support (`~/.config/lastversion.yml`) for cache and other settings
+* Configuration file support (platform-specific, run `lastversion cache info` to see path)
 * Optional Redis cache backend (`pip install lastversion[redis]`)
 * Automatic cache cleanup with configurable interval
 * Network fallback: use stale cached data when API fails or rate limits exceeded
