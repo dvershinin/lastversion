@@ -603,6 +603,27 @@ class GitHubRepoSession(BaseProjectHolder):
             release["install_name"] = self.name
         return release or None
 
+    @staticmethod
+    def is_version_more_specific(version_a, version_b):
+        """Check if version_a is more specific than version_b.
+
+        A version is more specific if it has more release components and
+        starts with all the components of the less specific version.
+        E.g., 3.5.4 is more specific than 3.5.
+
+        Args:
+            version_a: The potentially more specific version.
+            version_b: The potentially less specific version.
+
+        Returns:
+            bool: True if version_a is more specific than version_b.
+        """
+        release_a = version_a.release
+        release_b = version_b.release
+        if len(release_a) > len(release_b):
+            return release_a[: len(release_b)] == release_b
+        return False
+
     def semver_check_skip(self, version, selected_release):
         """Should we skip this version from being selected based on semver."""
         if version.is_semver():
@@ -624,6 +645,15 @@ class GitHubRepoSession(BaseProjectHolder):
         # if we have seen a semver tag, then any non-semver can be discarded
         if self.seen_semver and not version.is_semver():
             log.info("Version %s is not a semver and we already found a semver", version)
+            return True
+        # Skip if the new version is less specific than the selected one
+        # e.g., skip 3.5 if we already have 3.5.4 (both under the 3.5 branch)
+        if comparable and self.is_version_more_specific(selected_release["version"], version):
+            log.info(
+                "Version %s is less specific than already selected %s",
+                version,
+                selected_release["version"],
+            )
             return True
         return False
 
@@ -662,8 +692,17 @@ class GitHubRepoSession(BaseProjectHolder):
                     )
                     continue
                 if ret and tag_date + timedelta(days=30) < ret["tag_date"]:
-                    log.info("The version %s is newer, but is too old!", version)
-                    break
+                    # Don't break if the new version is more specific than the selected one
+                    # e.g., continue processing 3.5.4 even if we selected 3.5 from a recent tag
+                    if self.is_version_more_specific(version, ret["version"]):
+                        log.info(
+                            "Version %s is more specific than selected %s, continuing despite date",
+                            version,
+                            ret["version"],
+                        )
+                    else:
+                        log.info("The version %s is newer, but is too old!", version)
+                        break
                 # we always want to return formal release if it exists, because it has useful data
                 # grab formal release via APi to check for pre-release mark
                 formal_release = self.get_formal_release_for_tag(tag_name)
@@ -709,7 +748,22 @@ class GitHubRepoSession(BaseProjectHolder):
             # simply because feeds list stuff in order of recency,
             # however, still use /tags unless releases.atom has data within a year
             if ret and ret["tag_date"].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
-                return self.enrich_release_info(ret)
+                # Don't return early if the result is NOT a formal release and has a
+                # less-specific version (e.g., 3.5 instead of 3.5.x). In such cases,
+                # we should check the API for more specific formal releases.
+                # This handles cases where non-release tags like "3.5-POST-CLANG-FORMAT"
+                # are picked up from the feed but proper releases like "openssl-3.5.4"
+                # exist as formal releases. See issue #218.
+                is_non_formal = ret.get("type") == "feed"
+                version_components = len(ret["version"].release)
+                if is_non_formal and version_components < 3:
+                    log.info(
+                        "Feed result %s is non-formal with %d version components, checking API",
+                        ret["version"],
+                        version_components,
+                    )
+                else:
+                    return self.enrich_release_info(ret)
 
             log.info("Feed contained none or only tags older than 1 year. Switching to API")
 

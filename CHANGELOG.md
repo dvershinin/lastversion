@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.3] - 2025-12-20
+### Fixed
+* Fixed wrong version returned for OpenSSL 3.5 LTS when using `--branch 3.5` #218
+  - Non-release tags like `3.5-POST-CLANG-FORMAT-WEBKIT` were incorrectly selected over proper releases like `openssl-3.5.4`
+  - Added logic to prefer more specific versions (e.g., `3.5.4` over `3.5`) when filtering by branch
+  - Non-formal releases with short version numbers now fall through to API for formal release lookup
+
 ## [3.6.2] - 2025-12-20
 ### Fixed
 * Lowered cachecontrol minimum version to 0.12.6 for Python 3.6 compatibility (EL7 EPEL support)
