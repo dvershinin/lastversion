@@ -20,7 +20,8 @@ install_requires = [
     "requests>=2.16.0",
     "packaging",
     # cachecontrol 0.14+ requires Python 3.10+, use 0.12.x for older Python
-    'cachecontrol[filecache]>=0.12.11,<0.14; python_version<"3.10"',
+    # 0.12.6 is the minimum available in EL7 EPEL
+    'cachecontrol[filecache]>=0.12.6,<0.14; python_version<"3.10"',
     'cachecontrol[filecache]>=0.14.0; python_version>="3.10"',
     # urllib3 2.x requires Python 3.9+
     'urllib3<2; python_version<"3.9"',

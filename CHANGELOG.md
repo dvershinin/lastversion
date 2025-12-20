@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.2] - 2025-12-20
+### Fixed
+* Lowered cachecontrol minimum version to 0.12.6 for Python 3.6 compatibility (EL7 EPEL support)
+
 ## [3.6.1] - 2025-12-19
 ### Fixed
 * Fixed documentation: config file path is platform-specific (use `lastversion cache info` to see)
