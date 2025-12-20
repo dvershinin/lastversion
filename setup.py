@@ -53,7 +53,9 @@ with io.open("README.md", "r", encoding="utf-8") as fh:
 
 base_dir = os.path.join(os.path.dirname(__file__), "src")
 
-with open(os.path.join(base_dir, "lastversion", "__about__.py"), "r", encoding="utf-8") as f:
+with open(
+    os.path.join(base_dir, "lastversion", "__about__.py"), "r", encoding="utf-8"
+) as f:
     version = _version_re.search(f.read()).group(1)
 
 setup(
