@@ -143,17 +143,27 @@ def test_is_version_more_specific():
     # 3.5.4 is more specific than 3.5
     assert GitHubRepoSession.is_version_more_specific(Version("3.5.4"), Version("3.5"))
     # 3.5.4.1 is more specific than 3.5.4
-    assert GitHubRepoSession.is_version_more_specific(Version("3.5.4.1"), Version("3.5.4"))
+    assert GitHubRepoSession.is_version_more_specific(
+        Version("3.5.4.1"), Version("3.5.4")
+    )
     # 3.5.4 is more specific than 3
     assert GitHubRepoSession.is_version_more_specific(Version("3.5.4"), Version("3"))
     # 3.5 is NOT more specific than 3.5.4
-    assert not GitHubRepoSession.is_version_more_specific(Version("3.5"), Version("3.5.4"))
+    assert not GitHubRepoSession.is_version_more_specific(
+        Version("3.5"), Version("3.5.4")
+    )
     # 3.5.4 is NOT more specific than 3.5.4 (same)
-    assert not GitHubRepoSession.is_version_more_specific(Version("3.5.4"), Version("3.5.4"))
+    assert not GitHubRepoSession.is_version_more_specific(
+        Version("3.5.4"), Version("3.5.4")
+    )
     # 3.6.0 is NOT more specific than 3.5 (different version line)
-    assert not GitHubRepoSession.is_version_more_specific(Version("3.6.0"), Version("3.5"))
+    assert not GitHubRepoSession.is_version_more_specific(
+        Version("3.6.0"), Version("3.5")
+    )
     # 2.5.4 is NOT more specific than 3.5 (different major)
-    assert not GitHubRepoSession.is_version_more_specific(Version("2.5.4"), Version("3.5"))
+    assert not GitHubRepoSession.is_version_more_specific(
+        Version("2.5.4"), Version("3.5")
+    )
 
 
 def test_github_openssl_branch_prefers_specific_version():
@@ -168,4 +178,6 @@ def test_github_openssl_branch_prefers_specific_version():
     assert output is not None
     assert output > version.parse("3.5.0"), f"Expected version > 3.5.0, got {output}"
     # Verify it starts with 3.5
-    assert str(output).startswith("3.5."), f"Expected version starting with 3.5., got {output}"
+    assert str(output).startswith(
+        "3.5."
+    ), f"Expected version starting with 3.5., got {output}"
