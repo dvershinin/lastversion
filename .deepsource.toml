@@ -20,7 +20,7 @@ enabled = true
 
 [[transformers]]
 name = "black"
-enabled = true
+enabled = false  # Disabled - Black runs via pre-commit hooks
 
   [transformers.meta]
   line_length = 120
