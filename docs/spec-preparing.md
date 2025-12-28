@@ -1,3 +1,8 @@
+---
+title: "Preparing SPEC files"
+description: "Prepare RPM .spec files so lastversion can detect upstream releases, update versions/tags safely, and keep rebuild automation reliable."
+---
+
 `lastversion` is capable of directly updating RPM .spec files with the latest release version:
 
 ```bash

@@ -1,3 +1,8 @@
+---
+title: "Public API"
+description: "Use lastversion via a free public API endpoint, or the RapidAPI-backed commercial API for higher limits, stability, and more endpoints."
+---
+
 ## `lastversion` public API
 
 You don't need to use `lastversion` as a command line tool or install it as a

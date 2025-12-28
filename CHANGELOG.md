@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.4] - 2025-12-28
+### Added
+* Added SEO front-matter to all MkDocs pages under `docs/`
+* Added pre-commit check to enforce docs front-matter (`scripts/check_docs_frontmatter.py`)
+### Fixed
+* `--no-cache` now bypasses both HTTP cache and release data cache (when enabled)
+
 ## [3.6.3] - 2025-12-20
 ### Fixed
 * Fixed wrong version returned for OpenSSL 3.5 LTS when using `--branch 3.5` #218

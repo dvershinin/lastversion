@@ -230,6 +230,7 @@ def process_bulk_input(args):
                 only=args.only,
                 even=args.even,
                 cache_ttl=args.cache_ttl,
+                skip_release_cache=args.no_cache,
             )
             if result:
                 if args.format == "json":
@@ -444,7 +445,7 @@ def main(argv=None):
         "--no-cache",
         dest="no_cache",
         action="store_true",
-        help="Do not use cache for HTTP requests",
+        help="Do not use cache (both HTTP requests and release data cache)",
     )
     parser.add_argument(
         "--cache-ttl",
@@ -620,6 +621,7 @@ def main(argv=None):
             formal=args.formal,
             changelog=args.changelog,
             cache_ttl=args.cache_ttl,
+            skip_release_cache=args.no_cache,
         )
     except (ApiCredentialsError, BadProjectError) as error:
         log.critical(str(error))

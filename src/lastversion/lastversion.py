@@ -203,6 +203,7 @@ def latest(
     formal=False,
     changelog=False,
     cache_ttl=None,
+    skip_release_cache=False,
 ):
     r"""Find the latest release version for a project.
 
@@ -231,6 +232,8 @@ def latest(
         changelog (bool): Populate release["changelog"] using upstream notes (if True)
         cache_ttl (int): Optional TTL override for release data cache (seconds).
                          Only used when release cache is enabled in config.
+        skip_release_cache (bool): Skip the release data cache entirely (both read and write).
+                                   Useful when you need fresh data from the source.
 
     Examples:
         Find the latest version of Mautic, it is OK to consider betas.
@@ -290,7 +293,7 @@ def latest(
             return cached_data
 
     # Try to get from cache for formats that can use cached data
-    if release_cache.enabled and output_format in ["json", "dict", "version", "tag"]:
+    if release_cache.enabled and not skip_release_cache and output_format in ["json", "dict", "version", "tag"]:
         cached_release = release_cache.get(repo, **cache_key_params)
         if cached_release:
             result = _return_from_cache(cached_release, output_format, is_stale=False)
@@ -401,8 +404,8 @@ def latest(
 
                 release["source_url"] = project.release_download_url(release, short_urls)
 
-                # Store in release cache if enabled
-                if release_cache.enabled:
+                # Store in release cache if enabled (skip if explicitly bypassing cache)
+                if release_cache.enabled and not skip_release_cache:
                     release_cache.set(repo, release, ttl=cache_ttl, **cache_key_params)
 
                 return release

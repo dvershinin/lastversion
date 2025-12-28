@@ -1,3 +1,8 @@
+---
+title: "API Reference: lastversion"
+description: "Python API reference for the `lastversion.lastversion` module, including RPM changelog generation and release discovery behavior."
+---
+
 ::: lastversion.lastversion
 
 ### RPM changelog generation

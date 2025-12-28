@@ -57,3 +57,14 @@ repos:
       - id: bandit
         args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
+
+  # Local hooks
+  - repo: local
+    hooks:
+      - id: check-docs-frontmatter
+        name: Check docs have SEO front-matter
+        description: Ensure all documentation files have YAML front-matter with title and description
+        entry: python3 scripts/check_docs_frontmatter.py
+        language: system
+        types: [markdown]
+        files: ^docs/.*\.md$
