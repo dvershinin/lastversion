@@ -140,9 +140,12 @@ with open(os.path.join(lock_path, "pid"), "w") as f:
     f.write(str(os.getpid()))
 # Exit without cleanup (simulating crash)
 """
+            # Use stdout/stderr=PIPE for Python 3.6 compatibility
+            # (capture_output was added in Python 3.7)
             proc = subprocess.run(
                 [sys.executable, "-c", script],
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 timeout=5,
             )
             assert proc.returncode == 0
