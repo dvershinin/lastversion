@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.6] - 2025-01-04
+### Fixed
+* Fixed cleanup of stale lock directories from pre-v3.6.5 versions
+  - Use `shutil.rmtree()` instead of `os.rmdir()` to handle non-empty lock directories
+  - Old lock directories without PID files are now properly detected and removed
+  - Added debug logging to aid troubleshooting lock issues
+
 ## [3.6.5] - 2025-01-04
 ### Fixed
 * Fixed stale lock files causing `LockAcquireTimeout` errors after process crashes

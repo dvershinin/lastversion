@@ -164,3 +164,30 @@ with open(os.path.join(lock_path, "pid"), "w") as f:
                     assert int(f.read().strip()) == os.getpid()
 
             assert not os.path.exists(lock_path)
+
+    def test_old_style_lock_with_extra_files(self):
+        """Old lock directory with extra files should be cleaned up."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lock_target = os.path.join(tmpdir, "test_file")
+            lock_path = f"{lock_target}.lock"
+
+            # Simulate old-style lock (pre-v3.6.5) with no pid file
+            # but with some leftover files from a crash
+            os.mkdir(lock_path)
+            # Create some extra files that might be left from crashes
+            with open(os.path.join(lock_path, "some_leftover_file"), "w") as f:
+                f.write("leftover data")
+            os.mkdir(os.path.join(lock_path, "nested_dir"))
+            with open(os.path.join(lock_path, "nested_dir", "another_file"), "w") as f:
+                f.write("more leftover data")
+
+            # Lock should be acquired after cleaning up the messy old lock
+            with InternalTimedDirLock(lock_target) as lock:
+                assert lock is not None
+                # Verify we now hold the lock with new PID file
+                pid_file = os.path.join(lock_path, "pid")
+                assert os.path.isfile(pid_file)
+                with open(pid_file, "r") as f:
+                    assert int(f.read().strip()) == os.getpid()
+
+            assert not os.path.exists(lock_path)

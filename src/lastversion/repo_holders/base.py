@@ -133,33 +133,36 @@ class InternalTimedDirLock:
         Returns:
             bool: True if stale lock was cleaned up, False otherwise.
         """
+        import shutil
+
         pid = self._read_lock_pid()
         if pid is None:
-            # No PID file or unreadable - might be very old lock or race condition
-            # Try to clean up anyway if directory is empty or only has pid file
+            # No PID file or unreadable - might be very old lock (pre-v3.6.5)
+            # or race condition. These old locks are safe to remove since they
+            # have no way to track the owner process.
+            log.debug(
+                "Lock has no PID file (likely pre-v3.6.5 stale lock): %s",
+                self._lock_path,
+            )
             try:
-                # Try removing just the pid file if it exists
-                try:
-                    os.remove(self._pid_file)
-                except (IOError, OSError):
-                    pass
-                os.rmdir(self._lock_path)
-                log.debug("Cleaned up lock directory without PID file: %s", self._lock_path)
+                shutil.rmtree(self._lock_path)
+                log.debug(
+                    "Cleaned up stale lock directory without PID file: %s",
+                    self._lock_path,
+                )
                 return True
-            except OSError:
+            except OSError as e:
+                log.debug("Failed to remove stale lock %s: %s", self._lock_path, e)
                 return False
 
         if not _is_process_alive(pid):
             # Process is dead, safe to clean up
             log.debug("Removing stale lock from dead process %d: %s", pid, self._lock_path)
             try:
-                os.remove(self._pid_file)
-            except (IOError, OSError):
-                pass
-            try:
-                os.rmdir(self._lock_path)
+                shutil.rmtree(self._lock_path)
                 return True
-            except OSError:
+            except OSError as e:
+                log.debug("Failed to remove stale lock %s: %s", self._lock_path, e)
                 return False
         return False
 
@@ -181,12 +184,10 @@ class InternalTimedDirLock:
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        import shutil
+
         try:
-            os.remove(self._pid_file)
-        except (IOError, OSError):
-            pass
-        try:
-            os.rmdir(self._lock_path)
+            shutil.rmtree(self._lock_path)
         except Exception:
             pass
         return False
