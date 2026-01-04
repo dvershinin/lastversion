@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.5] - 2025-01-04
+### Fixed
+* Fixed stale lock files causing `LockAcquireTimeout` errors after process crashes
+  - Cache locking now uses PID-based detection instead of simple directory locks
+  - When a process crashes/is killed, subsequent runs automatically clean up stale locks
+  - No more manual intervention needed to clear `~/.cache/lastversion/*.lock` directories
+
 ## [3.6.4] - 2025-12-28
 ### Added
 * Added SEO front-matter to all MkDocs pages under `docs/`

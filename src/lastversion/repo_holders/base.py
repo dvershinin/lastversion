@@ -55,32 +55,136 @@ class LockAcquireTimeout(Exception):
     """Raised when an internal lock cannot be acquired within timeout."""
 
 
+def _is_process_alive(pid):
+    """Check if a process with given PID is still running.
+
+    Args:
+        pid: Process ID to check.
+
+    Returns:
+        bool: True if process is alive, False otherwise.
+    """
+    if pid <= 0:
+        return False
+    try:
+        # On Unix, signal 0 doesn't kill but checks if process exists
+        os.kill(pid, 0)
+        return True
+    except OSError as err:
+        # ESRCH = No such process, EPERM = Permission denied (process exists)
+        import errno
+
+        if err.errno == errno.ESRCH:
+            return False
+        if err.errno == errno.EPERM:
+            # Process exists but we don't have permission to signal it
+            return True
+        return False
+    except Exception:
+        return False
+
+
 class InternalTimedDirLock:
-    """Simple directory-based lock with timeout, no external dependencies.
+    """Directory-based lock with PID tracking for stale lock detection.
 
     This lock attempts to `mkdir` a lock directory next to the target file path.
-    Creation is atomic across processes. It retries until the timeout is reached.
+    Creation is atomic across processes. A PID file inside the lock directory
+    tracks which process holds the lock.
+
+    If an existing lock is found, the lock checks whether the holding process
+    is still alive. If the process is dead (crashed, killed), the stale lock
+    is automatically cleaned up and acquisition proceeds.
+
+    This avoids the need for age-based stale lock detection while providing
+    robust recovery from process failures.
     """
 
     def __init__(self, path, threaded=True, timeout=None):
         # `path` is the target data file path to be protected
         self.path = path
         self._lock_path = f"{path}.lock"
+        self._pid_file = os.path.join(self._lock_path, "pid")
         self._timeout = 5 if timeout is None else timeout
+
+    def _read_lock_pid(self):
+        """Read the PID from an existing lock directory.
+
+        Returns:
+            int or None: The PID if readable, None otherwise.
+        """
+        try:
+            with open(self._pid_file, "r", encoding="utf-8") as f:
+                return int(f.read().strip())
+        except (IOError, OSError, ValueError):
+            return None
+
+    def _write_pid(self):
+        """Write current process PID to the lock directory."""
+        try:
+            with open(self._pid_file, "w", encoding="utf-8") as f:
+                f.write(str(os.getpid()))
+        except (IOError, OSError):
+            # If we can't write PID file, lock still works but without stale detection
+            pass
+
+    def _cleanup_stale_lock(self):
+        """Remove a stale lock directory from a dead process.
+
+        Returns:
+            bool: True if stale lock was cleaned up, False otherwise.
+        """
+        pid = self._read_lock_pid()
+        if pid is None:
+            # No PID file or unreadable - might be very old lock or race condition
+            # Try to clean up anyway if directory is empty or only has pid file
+            try:
+                # Try removing just the pid file if it exists
+                try:
+                    os.remove(self._pid_file)
+                except (IOError, OSError):
+                    pass
+                os.rmdir(self._lock_path)
+                log.debug("Cleaned up lock directory without PID file: %s", self._lock_path)
+                return True
+            except OSError:
+                return False
+
+        if not _is_process_alive(pid):
+            # Process is dead, safe to clean up
+            log.debug("Removing stale lock from dead process %d: %s", pid, self._lock_path)
+            try:
+                os.remove(self._pid_file)
+            except (IOError, OSError):
+                pass
+            try:
+                os.rmdir(self._lock_path)
+                return True
+            except OSError:
+                return False
+        return False
 
     def __enter__(self):
         deadline = time.time() + self._timeout
         while True:
             try:
                 os.mkdir(self._lock_path)
+                self._write_pid()
                 break
-            except FileExistsError:
+            except FileExistsError as exc:
+                # Lock exists - check if holder is still alive
+                if self._cleanup_stale_lock():
+                    # Stale lock cleaned up, try again immediately
+                    continue
                 if time.time() >= deadline:
-                    raise LockAcquireTimeout(f"Failed to acquire lock for {self.path}")
+                    raise LockAcquireTimeout(f"Failed to acquire lock for {self.path}") from exc
                 time.sleep(0.1)
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        try:
+            os.remove(self._pid_file)
+        except (IOError, OSError):
+            pass
         try:
             os.rmdir(self._lock_path)
         except Exception:
