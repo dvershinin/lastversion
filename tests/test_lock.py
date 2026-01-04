@@ -36,30 +36,26 @@ class TestInternalTimedDirLock:
         """Lock should be acquirable and releasable."""
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_target = os.path.join(tmpdir, "test_file")
-            lock_path = f"{lock_target}.lock"
+            lock_file = f"{lock_target}.lock"
 
             with InternalTimedDirLock(lock_target):
-                # Lock directory should exist while held
-                assert os.path.isdir(lock_path)
-                # PID file should exist
-                pid_file = os.path.join(lock_path, "pid")
-                assert os.path.isfile(pid_file)
-                # PID should be our process
-                with open(pid_file, "r") as f:
+                # Lock file should exist while held
+                assert os.path.isfile(lock_file)
+                # PID should be in the lock file
+                with open(lock_file, "r") as f:
                     assert int(f.read().strip()) == os.getpid()
 
             # Lock should be released
-            assert not os.path.exists(lock_path)
+            assert not os.path.exists(lock_file)
 
     def test_lock_timeout_on_held_lock(self):
         """Lock acquisition should timeout if another process holds it."""
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_target = os.path.join(tmpdir, "test_file")
-            lock_path = f"{lock_target}.lock"
+            lock_file = f"{lock_target}.lock"
 
-            # Create lock directory and PID file with our PID (simulating held lock)
-            os.mkdir(lock_path)
-            with open(os.path.join(lock_path, "pid"), "w") as f:
+            # Create lock file with our PID (simulating held lock)
+            with open(lock_file, "w") as f:
                 f.write(str(os.getpid()))
 
             # Trying to acquire should timeout since process (us) is alive
@@ -68,80 +64,75 @@ class TestInternalTimedDirLock:
                     pass
 
             # Cleanup
-            os.remove(os.path.join(lock_path, "pid"))
-            os.rmdir(lock_path)
+            os.remove(lock_file)
 
     def test_stale_lock_cleanup_dead_process(self):
         """Stale lock from dead process should be automatically cleaned up."""
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_target = os.path.join(tmpdir, "test_file")
-            lock_path = f"{lock_target}.lock"
+            lock_file = f"{lock_target}.lock"
 
-            # Create a stale lock with a non-existent PID
-            os.mkdir(lock_path)
-            with open(os.path.join(lock_path, "pid"), "w") as f:
+            # Create a stale lock file with a non-existent PID
+            with open(lock_file, "w") as f:
                 f.write("999999999")  # Very high PID, unlikely to exist
 
             # Lock should be acquired after cleaning stale lock
             with InternalTimedDirLock(lock_target) as lock:
                 assert lock is not None
                 # Verify we now hold the lock
-                with open(os.path.join(lock_path, "pid"), "r") as f:
+                with open(lock_file, "r") as f:
                     assert int(f.read().strip()) == os.getpid()
 
             # Lock should be released
-            assert not os.path.exists(lock_path)
+            assert not os.path.exists(lock_file)
 
-    def test_stale_lock_without_pid_file(self):
-        """Lock directory without PID file should be cleaned up."""
+    def test_stale_lock_empty_file(self):
+        """Empty lock file should be cleaned up."""
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_target = os.path.join(tmpdir, "test_file")
-            lock_path = f"{lock_target}.lock"
+            lock_file = f"{lock_target}.lock"
 
-            # Create an empty lock directory (no PID file)
-            os.mkdir(lock_path)
+            # Create an empty lock file
+            open(lock_file, "w").close()
 
-            # Lock should be acquired after cleaning up empty lock dir
+            # Lock should be acquired after cleaning up empty lock file
             with InternalTimedDirLock(lock_target) as lock:
                 assert lock is not None
 
-            assert not os.path.exists(lock_path)
+            assert not os.path.exists(lock_file)
 
     def test_stale_lock_invalid_pid_content(self):
-        """Lock with invalid PID file content should be cleaned up."""
+        """Lock file with invalid PID content should be cleaned up."""
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_target = os.path.join(tmpdir, "test_file")
-            lock_path = f"{lock_target}.lock"
+            lock_file = f"{lock_target}.lock"
 
-            # Create lock with invalid PID content
-            os.mkdir(lock_path)
-            with open(os.path.join(lock_path, "pid"), "w") as f:
+            # Create lock file with invalid PID content
+            with open(lock_file, "w") as f:
                 f.write("not_a_number")
 
             # Lock should be acquired after cleaning up invalid lock
             with InternalTimedDirLock(lock_target) as lock:
                 assert lock is not None
 
-            assert not os.path.exists(lock_path)
+            assert not os.path.exists(lock_file)
 
     def test_crashed_subprocess_lock_cleanup(self):
         """Lock from crashed subprocess should be detected and cleaned up."""
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_target = os.path.join(tmpdir, "test_file")
-            lock_path = f"{lock_target}.lock"
+            lock_file = f"{lock_target}.lock"
 
-            # Use a subprocess to create a lock and exit without cleanup
+            # Use a subprocess to create a lock file and exit without cleanup
             # This simulates a crash scenario
             script = f"""
 import os
-lock_path = {repr(lock_path)}
-os.mkdir(lock_path)
-with open(os.path.join(lock_path, "pid"), "w") as f:
+lock_file = {repr(lock_file)}
+with open(lock_file, "w") as f:
     f.write(str(os.getpid()))
 # Exit without cleanup (simulating crash)
 """
             # Use stdout/stderr=PIPE for Python 3.6 compatibility
-            # (capture_output was added in Python 3.7)
             proc = subprocess.run(
                 [sys.executable, "-c", script],
                 stdout=subprocess.PIPE,
@@ -150,9 +141,9 @@ with open(os.path.join(lock_path, "pid"), "w") as f:
             )
             assert proc.returncode == 0
 
-            # Lock directory should exist but process should be dead
-            assert os.path.isdir(lock_path)
-            with open(os.path.join(lock_path, "pid"), "r") as f:
+            # Lock file should exist but process should be dead
+            assert os.path.isfile(lock_file)
+            with open(lock_file, "r") as f:
                 dead_pid = int(f.read().strip())
             assert not _is_process_alive(dead_pid)
 
@@ -160,21 +151,57 @@ with open(os.path.join(lock_path, "pid"), "w") as f:
             with InternalTimedDirLock(lock_target, timeout=1) as lock:
                 assert lock is not None
                 # Verify we now hold the lock
-                with open(os.path.join(lock_path, "pid"), "r") as f:
+                with open(lock_file, "r") as f:
                     assert int(f.read().strip()) == os.getpid()
 
-            assert not os.path.exists(lock_path)
+            assert not os.path.exists(lock_file)
 
-    def test_old_style_lock_with_extra_files(self):
-        """Old lock directory with extra files should be cleaned up."""
+    # Tests for backward compatibility with old directory-based locks
+
+    def test_old_style_dir_lock_with_pid(self):
+        """Old directory-based lock with PID file from dead process should be cleaned."""
         with tempfile.TemporaryDirectory() as tmpdir:
             lock_target = os.path.join(tmpdir, "test_file")
             lock_path = f"{lock_target}.lock"
 
-            # Simulate old-style lock (pre-v3.6.5) with no pid file
-            # but with some leftover files from a crash
+            # Simulate old-style directory lock (v3.6.5-v3.6.6) with dead PID
             os.mkdir(lock_path)
-            # Create some extra files that might be left from crashes
+            with open(os.path.join(lock_path, "pid"), "w") as f:
+                f.write("999999999")  # Very high PID, unlikely to exist
+
+            # Lock should be acquired after cleaning up old-style lock
+            with InternalTimedDirLock(lock_target) as lock:
+                assert lock is not None
+                # Verify we now hold the lock (new-style file lock)
+                assert os.path.isfile(lock_path)
+                with open(lock_path, "r") as f:
+                    assert int(f.read().strip()) == os.getpid()
+
+            assert not os.path.exists(lock_path)
+
+    def test_old_style_dir_lock_without_pid(self):
+        """Old directory-based lock without PID file should be cleaned up."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lock_target = os.path.join(tmpdir, "test_file")
+            lock_path = f"{lock_target}.lock"
+
+            # Simulate old-style directory lock (pre-v3.6.5) with no PID file
+            os.mkdir(lock_path)
+
+            # Lock should be acquired after cleaning up old-style lock
+            with InternalTimedDirLock(lock_target) as lock:
+                assert lock is not None
+
+            assert not os.path.exists(lock_path)
+
+    def test_old_style_dir_lock_with_extra_files(self):
+        """Old directory-based lock with extra files should be cleaned up."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lock_target = os.path.join(tmpdir, "test_file")
+            lock_path = f"{lock_target}.lock"
+
+            # Simulate old-style lock with leftover files from crashes
+            os.mkdir(lock_path)
             with open(os.path.join(lock_path, "some_leftover_file"), "w") as f:
                 f.write("leftover data")
             os.mkdir(os.path.join(lock_path, "nested_dir"))
@@ -184,10 +211,29 @@ with open(os.path.join(lock_path, "pid"), "w") as f:
             # Lock should be acquired after cleaning up the messy old lock
             with InternalTimedDirLock(lock_target) as lock:
                 assert lock is not None
-                # Verify we now hold the lock with new PID file
-                pid_file = os.path.join(lock_path, "pid")
-                assert os.path.isfile(pid_file)
-                with open(pid_file, "r") as f:
+                # Verify we now hold the lock (new-style file lock)
+                assert os.path.isfile(lock_path)
+                with open(lock_path, "r") as f:
                     assert int(f.read().strip()) == os.getpid()
 
             assert not os.path.exists(lock_path)
+
+    def test_old_style_dir_lock_with_live_process(self):
+        """Old directory-based lock from live process should NOT be cleaned."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            lock_target = os.path.join(tmpdir, "test_file")
+            lock_path = f"{lock_target}.lock"
+
+            # Simulate old-style directory lock with OUR PID (live process)
+            os.mkdir(lock_path)
+            with open(os.path.join(lock_path, "pid"), "w") as f:
+                f.write(str(os.getpid()))
+
+            # Should timeout since the "holder" (us) is still alive
+            with pytest.raises(LockAcquireTimeout):
+                with InternalTimedDirLock(lock_target, timeout=0.3):
+                    pass
+
+            # Cleanup
+            os.remove(os.path.join(lock_path, "pid"))
+            os.rmdir(lock_path)

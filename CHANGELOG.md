@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.7] - 2025-01-04
+### Changed
+* Simplified lock mechanism: now uses a single lock file instead of a lock directory
+  - Lock file contains just the PID (no nested directory structure)
+  - Uses atomic `O_CREAT | O_EXCL` for race-free lock acquisition
+  - Backward compatible: automatically cleans up old directory-based locks from v3.6.5-v3.6.6
+
 ## [3.6.6] - 2025-01-04
 ### Fixed
 * Fixed cleanup of stale lock directories from pre-v3.6.5 versions
