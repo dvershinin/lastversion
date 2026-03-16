@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.9] - 2026-03-16
+### Fixed
+* Fixed `lastversion wordpress` returning wrong version (6.3.8 instead of latest)
+  - Route the `wordpress` short name to the WordPress.org core version-check API
+  - The GitHub adapter's Atom feed missed the latest 6.9.x tags due to old-branch security patches flooding earlier pages
+  - Plugin lookups via `wordpress.org/plugins/` URLs continue to work as before
+
 ## [3.6.8] - 2026-02-12
 ### Fixed
 * Fixed datetime JSON serialization error when caching release data with dict output format

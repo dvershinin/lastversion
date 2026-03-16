@@ -1,4 +1,4 @@
-"""Provides class to represent a WordPress plugin project holder."""
+"""Provides class to represent a WordPress plugin/core project holder."""
 
 import logging
 
@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class WordPressPluginRepoSession(BaseProjectHolder):
-    """A class to represent a WordPress plugin project holder."""
+    """A class to represent a WordPress plugin or core project holder."""
 
     DEFAULT_HOSTNAME = "wordpress.org"
     REPO_URL_PROJECT_COMPONENTS = 1
@@ -17,8 +17,36 @@ class WordPressPluginRepoSession(BaseProjectHolder):
     # a URI does not start with a repo name, skip '/plugins/'
     REPO_URL_PROJECT_OFFSET = 1
 
+    KNOWN_REPOS_BY_NAME = {
+        "wordpress": {"repo": "wordpress"},
+    }
+
+    def _get_core_project(self):
+        """Fetch WordPress core version info from the version-check API.
+
+        Returns:
+            dict: Project dict with name, version, and download_link,
+                or None if the API call fails.
+        """
+        url = "https://api.wordpress.org/core/version-check/1.7/"
+        log.info("Requesting WordPress core version from %s", url)
+        response = self.get(url)
+        if response.status_code != 200:
+            return None
+        data = response.json()
+        for offer in data.get("offers", []):
+            if offer.get("response") == "upgrade":
+                return {
+                    "name": "WordPress",
+                    "version": offer["version"],
+                    "download_link": offer["download"],
+                }
+        return None
+
     def get_project(self):
         """Get project JSON data."""
+        if self.is_core:
+            return self._get_core_project()
         project = None
         url = f"https://api.{self.hostname}/plugins/info/1.0/{self.repo}.json"
         log.info("Requesting %s", url)
@@ -36,10 +64,13 @@ class WordPressPluginRepoSession(BaseProjectHolder):
             self.hostname = hostname
         else:
             self.hostname = WordPressPluginRepoSession.DEFAULT_HOSTNAME
+        self.is_core = repo and repo.lower() == "wordpress"
         self.project = self.get_project()
 
     def release_download_url(self, release, shorter=False):
         """Get release download URL."""
+        if self.is_core:
+            return self.project.get("download_link")
         return f'https://downloads.wordpress.org/plugin/{self.repo}.{release["version"]}.zip'
 
     def get_latest(self, pre_ok=False, major=None):
@@ -47,6 +78,16 @@ class WordPressPluginRepoSession(BaseProjectHolder):
         ret = {}
         # we are in "enriching" project dict with desired version information
         # and return None if there's no matching version
+
+        if self.is_core:
+            latest_ver = self.project["version"]
+            v = Version(latest_ver)
+            if major and v.major != major:
+                return None
+            ret["version"] = v
+            ret["tag_name"] = latest_ver
+            self.project.update(ret)
+            return self.project
 
         if not major:
             latest_ver = self.project["version"]
@@ -77,4 +118,6 @@ class WordPressPluginRepoSession(BaseProjectHolder):
 
     def get_canonical_link(self):
         """Get canonical link from repo."""
+        if self.is_core:
+            return f"https://{self.hostname}/"
         return f"https://{self.hostname}/plugins/{self.repo}/"
