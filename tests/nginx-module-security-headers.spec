@@ -116,6 +116,15 @@ for so in `find %{bdir}/objs/ -maxdepth 1 -type f -name "*.so"`; do
    $RPM_BUILD_ROOT%{nginx_modules_dir}
 done
 
+%check
+%{__rm} -rf $RPM_BUILD_ROOT/usr/src
+cd %{bdir}
+grep -v 'usr/src' debugfiles.list > debugfiles.list.new && mv debugfiles.list.new debugfiles.list
+cat /dev/null > debugsources.list
+%if 0%{?suse_version} >= 1500
+cat /dev/null > debugsourcefiles.list
+%endif
+
 %clean
 %{__rm} -rf $RPM_BUILD_ROOT
 
