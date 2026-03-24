@@ -55,7 +55,7 @@ class PypiRepoSession(BaseProjectHolder):
         # and return None if there's no matching version
 
         if self.project is None:
-            print("Project is not listed on PyPI")
+            log.warning("Project is not listed on PyPI")
             return None
         if not major:
             latest_ver = self.project["info"]["version"]

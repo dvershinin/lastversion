@@ -5,7 +5,7 @@ import math
 import os
 import re
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.parse import unquote
 
 import feedparser
@@ -747,7 +747,8 @@ class GitHubRepoSession(BaseProjectHolder):
             # we are good with release from feeds only without looking at the API
             # simply because feeds list stuff in order of recency,
             # however, still use /tags unless releases.atom has data within a year
-            if ret and ret["tag_date"].replace(tzinfo=None) > (datetime.utcnow() - timedelta(days=365)):
+            one_year_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=365)
+            if ret and ret["tag_date"].replace(tzinfo=None) > one_year_ago:
                 # Don't return early if the result is NOT a formal release and has a
                 # less-specific version (e.g., 3.5 instead of 3.5.x). In such cases,
                 # we should check the API for more specific formal releases.

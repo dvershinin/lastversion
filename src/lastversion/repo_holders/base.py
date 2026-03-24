@@ -338,6 +338,7 @@ class BaseProjectHolder(requests.Session):
             if text:
                 return text, path
         except Exception:
+            log.error("Failed to collect release notes for tag %s", tag, exc_info=True)
             return None, None
         return None, None
 

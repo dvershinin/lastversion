@@ -386,7 +386,7 @@ def latest(
                                 release["changelog"] = bullets
                                 release["changelog_source"] = source
                         except Exception:
-                            pass
+                            log.error("Failed to generate changelog for %s", tag, exc_info=True)
                 release.update(repo_data)
                 try:
                     # Get detailed asset info with digests BEFORE get_assets transforms them
@@ -562,11 +562,12 @@ def build_changelog_bullets(res, repo_arg):
         }
         return generate_changelog(raw_notes, context)
     except Exception:
+        log.error("Failed to build changelog bullets", exc_info=True)
         return None
 
 
 def update_spec(repo, res, sem="minor", changelog: bool = False):
-    print(res["version"])
+    log.info("Latest version: %s", res["version"])
     if "current_version" not in res or res["current_version"] < res["version"]:
         log.info("Updating spec %s with semantic %s", repo, sem)
         if "current_version" in res and len(res["version"].release) >= 3:
@@ -606,9 +607,9 @@ def update_spec(repo, res, sem="minor", changelog: bool = False):
                 m = re.match(version_tag_regex, ln)
                 out.append("Version:" + m.group(1) + str(res["version"]))
             elif ln.startswith("%changelog") and packager:
-                from datetime import datetime
+                from datetime import datetime, timezone
 
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc)
                 today = now.strftime("%a %b %d %Y")
                 out.append(ln.rstrip())
                 # RPM guideline: include Version-Release in header (Release resets to 1 on bump)
@@ -680,7 +681,7 @@ def update_spec_commit(spec_file, commit_info, repo_data):
         log.info("Commit %s is already current in spec file", commit_info["short_sha"])
         sys.exit(2)
 
-    print(f"Updating to commit {commit_info['short_sha']}")
+    log.info("Updating to commit %s", commit_info["short_sha"])
 
     # Format commit date as YYYYMMDD
     commit_date = commit_info["date"].strftime("%Y%m%d")

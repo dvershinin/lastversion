@@ -6,10 +6,13 @@ summarize upstream release notes into concise bullets suitable for RPM
 """
 
 import json
+import logging
 import os
 from typing import List, Optional
 
 import requests
+
+log = logging.getLogger(__name__)
 
 
 def _get_openai_api_key() -> Optional[str]:
@@ -115,5 +118,6 @@ def generate_changelog(raw_notes: str, context: dict) -> Optional[List[str]]:
             except json.JSONDecodeError:
                 return None
         return None
-    except Exception:
+    except (requests.RequestException, ValueError, KeyError):
+        log.error("OpenAI changelog generation failed", exc_info=True)
         return None
