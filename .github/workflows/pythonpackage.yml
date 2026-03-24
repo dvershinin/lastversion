@@ -81,8 +81,8 @@ jobs:
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # style and complexity checks
-        flake8 . --count --max-complexity=10 --max-line-length=120 --statistics
+        # style and complexity checks (exit-zero: informational, pre-commit enforces)
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
 #    - name: Setup upterm session
 #      uses: lhotari/action-upterm@v1
 #      with:
