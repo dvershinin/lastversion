@@ -36,7 +36,7 @@ jobs:
           echo "%packager Dick Solomon <info@example.com>" >> ~/.rpmmacros
           cd tests
           lastversion brotli.spec
-          lastversion nginx-module-immutable.spec
+          lastversion nginx-module-security-headers.spec
           if lastversion libmozjpeg.spec; then
             exit 1
           fi
@@ -49,11 +49,11 @@ jobs:
         with:
           name: brotli.spec
           path: tests/brotli.spec
-      - name: 'Upload nginx-module-immutable.spec artifact'
+      - name: 'Upload nginx-module-security-headers.spec artifact'
         uses: actions/upload-artifact@v4
         with:
-          name: nginx-module-immutable.spec
-          path: tests/nginx-module-immutable.spec
+          name: nginx-module-security-headers.spec
+          path: tests/nginx-module-security-headers.spec
   build:
 
     runs-on: ubuntu-latest
@@ -126,15 +126,15 @@ jobs:
         mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
         mv *.spec /sources/
         build
-  build-nginx-module-immutable-rpm:
+  build-nginx-module-security-headers-rpm:
     needs: py36
     runs-on: ubuntu-latest
     container: getpagespeed/rpmbuilder:centos-8
     steps:
-    - name: Download nginx-module-immutable.spec artifact
+    - name: Download nginx-module-security-headers.spec artifact
       uses: actions/download-artifact@v4
       with:
-        name: nginx-module-immutable.spec
+        name: nginx-module-security-headers.spec
     - name: Build updated spec
       run: |
         mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
