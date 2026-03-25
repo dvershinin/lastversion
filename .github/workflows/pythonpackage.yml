@@ -45,12 +45,12 @@ jobs:
           # Use custom token if available, otherwise fall back to GITHUB_TOKEN (for Dependabot PRs)
           LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
       - name: 'Upload brotli.spec artifact'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: brotli.spec
           path: tests/brotli.spec
       - name: 'Upload nginx-module-security-headers.spec artifact'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nginx-module-security-headers.spec
           path: tests/nginx-module-security-headers.spec
@@ -98,7 +98,7 @@ jobs:
         LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
 
     - name: Upload pytest test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: pytest-results-${{ matrix.python-version }}
         path: junit/test-results-${{ matrix.python-version }}.xml
