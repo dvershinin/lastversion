@@ -363,7 +363,7 @@ def extract_tar(buffer: io.BytesIO, to_dir):
     """
 
     archive_file: tarfile.TarFile
-    with tarfile.open(fileobj=buffer, mode="r") as archive_file:
+    with tarfile.open(fileobj=buffer, mode="r") as archive_file:  # NOSONAR
         if not check_if_tar_safe(archive_file):
             raise TarPathTraversalException("Attempted Path Traversal in Tar File")
 

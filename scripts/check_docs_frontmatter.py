@@ -27,7 +27,7 @@ EXCLUDED_PATTERNS = [
 REQUIRED_FIELDS = ["title", "description"]
 
 # Regex to extract YAML front-matter
-FRONTMATTER_REGEX = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+FRONTMATTER_REGEX = re.compile(r"^---[ \t]*\n(.*?)\n---[ \t]*\n", re.DOTALL)
 
 
 def is_excluded(filepath: Path) -> bool:

@@ -101,7 +101,7 @@ class AlpineRepoSession(BaseProjectHolder):
 
             # APKINDEX is a tar.gz containing an APKINDEX file
             tar_bytes = io.BytesIO(response.content)
-            with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:
+            with tarfile.open(fileobj=tar_bytes, mode="r:gz") as tar:  # NOSONAR
                 for member in tar.getmembers():
                     if member.name == "APKINDEX":
                         file_obj = tar.extractfile(member)

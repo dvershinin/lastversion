@@ -143,7 +143,7 @@ def test_is_version_more_specific():
     # 3.5.4 is more specific than 3.5
     assert GitHubRepoSession.is_version_more_specific(Version("3.5.4"), Version("3.5"))
     # 3.5.4.1 is more specific than 3.5.4
-    assert GitHubRepoSession.is_version_more_specific(Version("3.5.4.1"), Version("3.5.4"))
+    assert GitHubRepoSession.is_version_more_specific(Version("3.5.4.1"), Version("3.5.4"))  # NOSONAR
     # 3.5.4 is more specific than 3
     assert GitHubRepoSession.is_version_more_specific(Version("3.5.4"), Version("3"))
     # 3.5 is NOT more specific than 3.5.4
