@@ -9,9 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install SSH key
-      uses: shimataro/ssh-key-action@v2
+      uses: shimataro/ssh-key-action@87a8f067114a8ce263df83e9ed5c849953548bc3  # v2.8.1
       with:
         key: ${{ secrets.BUILDER_SSH_KEY }}
         known_hosts: ${{ secrets.BUILDER_SSH_KNOWN_HOSTS }}
     - name: Trigger RPM build
-      run: ${{ secrets.RPM_BUILD_CMD }}
+      run: eval "$RPM_BUILD_CMD"
+      env:
+        RPM_BUILD_CMD: ${{ secrets.RPM_BUILD_CMD }}
