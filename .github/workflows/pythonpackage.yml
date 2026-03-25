@@ -118,7 +118,7 @@ jobs:
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download brotli.spec artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: brotli.spec
     - name: Build updated spec
@@ -132,7 +132,7 @@ jobs:
     container: getpagespeed/rpmbuilder:centos-8
     steps:
     - name: Download nginx-module-security-headers.spec artifact
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: nginx-module-security-headers.spec
     - name: Build updated spec
