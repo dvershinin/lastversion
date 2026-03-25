@@ -68,7 +68,7 @@ def _is_process_alive(pid):
         return False
     try:
         # On Unix, signal 0 doesn't kill but checks if process exists
-        os.kill(pid, 0)
+        os.kill(pid, 0)  # NOSONAR
         return True
     except OSError as err:
         # ESRCH = No such process, EPERM = Permission denied (process exists)

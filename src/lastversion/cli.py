@@ -494,8 +494,8 @@ def main(argv=None):
         args.repo = __self__
 
     # "expand" repo:1.2 as repo --branch 1.2
-    # noinspection HttpUrlsUsage
-    if ":" in args.repo and not (args.repo.startswith(("https://", "http://")) and args.repo.count(":") == 1):
+    _url_prefixes = ("https://", "http://")  # NOSONAR - URL parsing, not HTTP request
+    if ":" in args.repo and not (args.repo.startswith(_url_prefixes) and args.repo.count(":") == 1):
         # right split ':' once only to preserve it in protocol of URLs
         # https://github.com/repo/owner:2.1
         repo_args = args.repo.rsplit(":", 1)

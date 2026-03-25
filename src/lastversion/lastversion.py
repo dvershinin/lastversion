@@ -99,7 +99,7 @@ def get_repo_data_from_spec(rpmspec_filename):
             elif line.startswith("Source0:"):
                 source0 = line.split("Source0:")[1].strip()
                 # noinspection HttpUrlsUsage
-                if source0.startswith("https://") or source0.startswith("http://"):
+                if source0.startswith("https://") or source0.startswith("http://"):  # NOSONAR
                     spec_urls.append(source0)
             elif line.startswith("%global upstream_version "):
                 current_version = shlex.split(line)[2].strip()
