@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.12] - 2026-05-15
+### Fixed
+* Fixed Docker image publish on release
+  - Moved the `NOSONAR` suppression for the missing `USER` directive off the `FROM` line; BuildKit's frontend rejects trailing inline comments on `FROM`, breaking the `Publish Docker image` workflow in 3.6.11
+
 ## [3.6.11] - 2026-05-15
 ### Fixed
 * Fixed `Version` object JSON serialization error when caching release data with dict output format
