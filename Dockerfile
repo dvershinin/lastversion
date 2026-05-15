@@ -1,5 +1,7 @@
 # Use a lightweight base image with Python and pip installed
-FROM python:3.13-alpine # NOSONAR - root required for GitHub Actions workspace compatibility
+# Root required for GitHub Actions workspace compatibility.
+# NOSONAR
+FROM python:3.13-alpine
 
 # Using "lastversion" user as provided by some linter was a mistake and causes issues with GitHub actions being ran as "runner"
 # and lastversion running as a different user and being unable to work with workspace files for extracting to its directory
