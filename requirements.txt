@@ -1,0 +1,7 @@
+# docs/requirements.txt
+mkdocs
+mkdocs-material
+mkdocstrings[crystal,python]
+markdown-include
+pymdown-extensions
+markdown>=3.8.1 # not directly required, pinned by Snyk to avoid a vulnerability
