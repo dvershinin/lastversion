@@ -326,6 +326,30 @@ class TestReleaseDataCache:
         result = cache.get("test/repo")
         assert result == data
 
+    def test_release_cache_version_roundtrip(self, caplog):
+        """Regression: ReleaseDataCache must accept a dict with a Version field.
+
+        Mirrors the production flow at ``lastversion.lastversion:410`` where the
+        release dict for ``output_format == "dict"`` still holds a
+        :class:`Version` instance.
+        """
+        from lastversion.version import Version
+
+        backend = FileCacheBackend(cache_dir=self.temp_dir)
+        cache = ReleaseDataCache(backend=backend, enabled=True, ttl=3600)
+
+        data = {"version": Version("0.2.42"), "tag_name": "v0.2.42"}
+
+        with caplog.at_level("WARNING", logger="lastversion.cache"):
+            cache.set("dvershinin/gixy", data, pre_ok=False, even=False, formal=False)
+
+        assert "not JSON serializable" not in caplog.text
+
+        result = cache.get("dvershinin/gixy", pre_ok=False, even=False, formal=False)
+        assert result is not None
+        assert result["version"] == "0.2.42"
+        assert result["tag_name"] == "v0.2.42"
+
     def test_cache_key_params(self):
         """Test that different parameters create different cache keys."""
         backend = FileCacheBackend(cache_dir=self.temp_dir)
@@ -392,6 +416,52 @@ class TestDatetimeSerialization:
         result = cache.get("test-repo")
         assert result == data
         assert result["tag_date"] == "2024-01-15 10:30:00"
+
+    def test_cache_version_serialization(self, caplog):
+        """Regression: Version objects in cache data must serialize cleanly.
+
+        Reproduces the production warning seen with `lastversion --changelog *.spec`:
+        ``Object of type 'Version' is not JSON serializable``.
+        """
+        from lastversion.version import Version
+
+        cache = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=3600)
+
+        data = {
+            "version": Version("1.2.3"),
+            "tag_name": "v1.2.3",
+        }
+
+        with caplog.at_level("WARNING", logger="lastversion.cache"):
+            cache.set("test-repo-version", data)
+
+        assert "not JSON serializable" not in caplog.text
+
+        result = cache.get("test-repo-version")
+        assert result is not None
+        # Cache returns the version as a string; callers (lastversion._return_from_cache)
+        # re-wrap with Version() for dict output.
+        assert result["version"] == "1.2.3"
+        assert result["tag_name"] == "v1.2.3"
+
+    def test_cache_rejects_unknown_type(self, caplog):
+        """Unknown non-serializable types must still surface as a warning.
+
+        Guards against a regression where someone swaps the explicit
+        ``_json_default`` for a blanket ``default=str``, which would silently
+        cache garbage instead of flagging the bug.
+        """
+
+        class Unserializable:
+            pass
+
+        cache = FileCacheBackend(cache_dir=self.temp_dir, default_ttl=3600)
+
+        with caplog.at_level("WARNING", logger="lastversion.cache"):
+            cache.set("test-repo-unknown", {"weird": Unserializable()})
+
+        assert "not JSON serializable" in caplog.text
+        assert cache.get("test-repo-unknown") is None
 
 
 class TestCacheFactory:

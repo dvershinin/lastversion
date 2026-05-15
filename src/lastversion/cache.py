@@ -13,8 +13,28 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 from lastversion.config import get_config
+from lastversion.version import Version
 
 log = logging.getLogger(__name__)
+
+
+def _json_default(obj: Any) -> Any:
+    """Serialize types that the stdlib JSON encoder does not handle natively.
+
+    Args:
+        obj: Object to serialize. Currently handles :class:`lastversion.version.Version`.
+
+    Returns:
+        A JSON-serializable representation of ``obj``.
+
+    Raises:
+        TypeError: If ``obj`` is of a type this handler does not know about.
+            Unknown types are surfaced explicitly rather than silently coerced
+            via ``str()`` — a leaked unexpected type is a bug, not a cache entry.
+    """
+    if isinstance(obj, Version):
+        return str(obj)
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
 class CacheBackend(ABC):
@@ -228,7 +248,7 @@ class FileCacheBackend(CacheBackend):
 
         try:
             with open(cache_path, "w", encoding="utf-8") as f:
-                json.dump(data, f)
+                json.dump(data, f, default=_json_default)
             log.debug("Cached value for key: %s (TTL: %d)", key, ttl)
         except (IOError, TypeError) as e:
             log.warning("Error writing cache for key %s: %s", key, e)
@@ -493,7 +513,7 @@ class RedisCacheBackend(CacheBackend):
             ttl = self.default_ttl
 
         try:
-            data = json.dumps(value)
+            data = json.dumps(value, default=_json_default)
             if ttl > 0:
                 self._client.setex(redis_key, ttl, data)
             else:
