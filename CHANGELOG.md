@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.11] - 2026-05-15
+### Fixed
+* Fixed `Version` object JSON serialization error when caching release data with dict output format
+  - The `version` field is now serialized to string at the cache layer for both file and Redis backends
+  - This fixes the "Object of type 'Version' is not JSON serializable" warning when running `lastversion --changelog *.spec`
+  - Companion to the 3.6.8 datetime serialization fix; the dict-format path kept `version` as a `Version` instance and tripped the same cache encoder
+
 ## [3.6.9] - 2026-03-16
 ### Fixed
 * Fixed `lastversion wordpress` returning wrong version (6.3.8 instead of latest)
