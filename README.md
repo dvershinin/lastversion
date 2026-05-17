@@ -600,6 +600,20 @@ than leftmost argument.
 Exit status code `3` is returned when filtering assets of last release yields empty URL set
 (no match)
 
+Exit status code `4` is returned when the API refuses the request and `lastversion` gives up.
+This covers:
+
+- **GitHub/Gitea rate limit exceeded.** When the rate-limit reset window is under 5 minutes
+  away, `lastversion` automatically sleeps until the reset and retries (up to 2 sleeps).
+  If the reset is more than 5 minutes away, or retries are exhausted, it exits `4` rather
+  than blocking your script for a long time. The unauthenticated GitHub quota is 60
+  req/hour, so a fresh quota exhaustion almost always falls into the "no wait, exit 4"
+  branch. Set `GITHUB_API_TOKEN` (see Tips below) to raise the ceiling to 5000 req/hour.
+- Invalid or missing API token (HTTP 401).
+- Semver constraint (`--major`, `--only`, etc.) filtered every release out.
+
+The error message goes to stderr; stdout is empty.
+
 ## Tips
 
 Getting the latest version is heavy on the API, because GitHub does not allow to fetch tags in
