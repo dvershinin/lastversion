@@ -25,6 +25,9 @@ install_requires = [
     'cachecontrol[filecache]>=0.14.0; python_version>="3.10"',
     # urllib3 2.x requires Python 3.9+
     'urllib3<2; python_version<"3.9"',
+    # CVE-2025-50181 (Moderate) fixed in 2.5.0; pip users on Py3.9+ get the safe floor.
+    # RPM builds sed-strip these urllib3 lines and use distro python3-urllib3 instead.
+    'urllib3>=2.5.0; python_version>="3.9"',
     "appdirs",
     "feedparser",
     "python-dateutil",
