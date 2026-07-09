@@ -14,10 +14,6 @@ class SourceForgeRepoSession(BaseProjectHolder):
     # a URI does not start with a repo name, skip '/projects/'
     REPO_URL_PROJECT_OFFSET = 1
 
-    def __init__(self, repo, hostname):
-        super().__init__(repo, hostname)
-        self.hostname = hostname
-
     @staticmethod
     def get_normalized_url(download_url):
         """Get normalized URL for a download URL, without /download suffix."""
