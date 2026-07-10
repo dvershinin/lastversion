@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from types import SimpleNamespace
 
 import pytest
 from packaging import version
@@ -9,6 +10,7 @@ from packaging import version
 from lastversion.exceptions import BadProjectError
 from lastversion.lastversion import latest
 from lastversion.repo_holders.github import GitHubRepoSession
+from lastversion.repo_holders.helmchat import HelmChartRepoSession
 from lastversion.repo_holders.test import TestProjectHolder
 from lastversion.version import Version
 
@@ -416,18 +418,49 @@ def test_last_b_belongs_to_version():
     assert not v.is_prerelease
 
 
-def test_char_yml_direct():
+@pytest.fixture
+def helm_chart_urls(monkeypatch):
+    """Capture Helm chart requests while returning deterministic metadata.
+
+    Args:
+        monkeypatch (pytest.MonkeyPatch): Pytest monkeypatch fixture.
+
+    Returns:
+        list: URLs requested by the Helm chart adapter.
+    """
+    requested_urls = []
+
+    def fake_get(_session, url):
+        """Return a minimal Helm chart response.
+
+        Args:
+            _session (HelmChartRepoSession): Helm chart adapter instance.
+            url (str): URL requested by the adapter.
+
+        Returns:
+            types.SimpleNamespace: Response containing valid Chart YAML.
+        """
+        requested_urls.append(url)
+        return SimpleNamespace(text="version: 1.2.3")
+
+    monkeypatch.setattr(HelmChartRepoSession, "get", fake_get)
+    return requested_urls
+
+
+def test_char_yml_direct(helm_chart_urls):
     """Test URL with Chart.yaml."""
     repo = "https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core/Chart.yaml"
     v = latest(repo)
     assert v >= version.parse("1.0.0")
+    assert helm_chart_urls == ["https://raw.githubusercontent.com/bitnami/charts/master/bitnami/aspnet-core/Chart.yaml"]
 
 
-def test_char_yml_indirect_hint():
-    """Test URL with Chart.yaml"""
+def test_char_yml_indirect_hint(helm_chart_urls):
+    """Test URL with Chart.yaml."""
     repo = "https://github.com/bitnami/charts/blob/master/bitnami/aspnet-core"
     v = latest(repo, at="helm_chart")
     assert v >= version.parse("1.0.0")
+    assert helm_chart_urls == ["https://raw.githubusercontent.com/bitnami/charts/master/bitnami/aspnet-core/Chart.yaml"]
 
 
 def test_at_with_url_github():
