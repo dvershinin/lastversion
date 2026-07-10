@@ -8,6 +8,7 @@ from packaging import version
 
 from lastversion.exceptions import BadProjectError
 from lastversion.lastversion import latest
+from lastversion.repo_holders.github import GitHubRepoSession
 from lastversion.repo_holders.test import TestProjectHolder
 from lastversion.version import Version
 
@@ -209,8 +210,11 @@ def test_contain_rpm_related_data():
     assert v["license"]["path"] == "LICENSE"
 
 
-def test_yml_input():
+def test_yml_input(monkeypatch):
     """Test passing a yml file as repo argument."""
+    monkeypatch.setattr(GitHubRepoSession, "repo_license", lambda *_args: {"path": "LICENSE"})
+    monkeypatch.setattr(GitHubRepoSession, "repo_readme", lambda *_args: {"path": "README.md"})
+
     repo = os.path.dirname(os.path.abspath(__file__)) + "/geoip2.yml"
 
     v = latest(repo, output_format="json")
