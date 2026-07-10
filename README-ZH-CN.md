@@ -2,7 +2,7 @@
 
 [![Python package](https://github.com/dvershinin/lastversion/actions/workflows/pythonpackage.yml/badge.svg)](https://github.com/dvershinin/lastversion/actions/workflows/pythonpackage.yml)
 [![PyPI version](https://badge.fury.io/py/lastversion.svg)](https://badge.fury.io/py/lastversion)
-[![Documentation Status](https://readthedocs.org/projects/lastversion/badge/?version=latest)](https://lastversion.getpagespeed.com/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/lastversion/badge/?version=latest)](https://lastversion.getpagespeed.com/)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/manual/GetPageSpeed/lastversion?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dvershinin/lastversion&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://app.codacy.com/project/badge/Coverage/380e3a38dc524112b4dcfc0492d5b816)](https://www.codacy.com/gh/dvershinin/lastversion/dashboard?utm_source=github.com&utm_medium=referral&utm_content=dvershinin/lastversion&utm_campaign=Badge_Coverage)
 
