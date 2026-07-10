@@ -78,7 +78,7 @@ lastversion format "mysqld  Ver 5.6.51-91.0 for Linux"
 #> 5.6.51
 ```
 
-> **Prefer a hosted solution?** Use the [lastversion API](https://rapidapi.com/ciapnz/api/lastversion) — no installation needed, works from any environment. [Learn more](https://lastversion.getpagespeed.com/en/latest/api/).
+> **Prefer a hosted solution?** Use the [lastversion API](https://rapidapi.com/ciapnz/api/lastversion) — no installation needed, works from any environment. [Learn more](https://lastversion.getpagespeed.com/api/).
 
 ## Installation for RPM-based systems
 
