@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1337,7 +1337,7 @@
 <p><a href="https://github.com/dvershinin/lastversion/actions/workflows/pythonpackage.yml"><img alt="Python package" src="https://github.com/dvershinin/lastversion/actions/workflows/pythonpackage.yml/badge.svg" /></a>
 <a href="https://badge.fury.io/py/lastversion"><img alt="PyPI version" src="https://badge.fury.io/py/lastversion.svg" /></a>
 <a href="https://github.com/dvershinin/lastversion/releases"><img alt="GitHub Release" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Flastversion-api.getpagespeed.com%2Fdvershinin%2Flastversion&amp;query=version&amp;label=Release" /></a>
-<a href="https://lastversion.getpagespeed.com/en/latest/?badge=latest"><img alt="Documentation Status" src="https://readthedocs.org/projects/lastversion/badge/?version=latest" /></a>
+<a href="https://lastversion.getpagespeed.com/"><img alt="Documentation Status" src="https://readthedocs.org/projects/lastversion/badge/?version=latest" /></a>
 <a href="https://www.codacy.com/manual/GetPageSpeed/lastversion?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dvershinin/lastversion&amp;utm_campaign=Badge_Grade"><img alt="Codacy Badge" src="https://api.codacy.com/project/badge/Grade/380e3a38dc524112b4dcfc0492d5b816" /></a>
 <a href="https://www.codacy.com/gh/dvershinin/lastversion/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dvershinin/lastversion&amp;utm_campaign=Badge_Coverage"><img alt="Codacy Badge" src="https://app.codacy.com/project/badge/Coverage/380e3a38dc524112b4dcfc0492d5b816" /></a>
 <a href="https://www.buymeacoffee.com/dvershinin"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/dynamic/json?color=blue&amp;label=Buy%20me%20a%20Coffee&amp;prefix=%23&amp;query=next_time_total&amp;url=https%3A%2F%2Fwww.getpagespeed.com%2Fbuymeacoffee.json&amp;logo=buymeacoffee" /></a>
@@ -1406,7 +1406,7 @@ lastversion<span class="w"> </span>format<span class="w"> </span><span class="s2
 <span class="c1">#&gt; 5.6.51</span>
 </code></pre></div>
 <blockquote>
-<p><strong>Prefer a hosted solution?</strong> Use the <a href="https://rapidapi.com/ciapnz/api/lastversion">lastversion API</a> — no installation needed, works from any environment. <a href="https://lastversion.getpagespeed.com/en/latest/api/">Learn more</a>.</p>
+<p><strong>Prefer a hosted solution?</strong> Use the <a href="https://rapidapi.com/ciapnz/api/lastversion">lastversion API</a> — no installation needed, works from any environment. <a href="https://lastversion.getpagespeed.com/api/">Learn more</a>.</p>
 </blockquote>
 <h2 id="installation-for-rpm-based-systems">Installation for RPM-based systems<a class="headerlink" href="#installation-for-rpm-based-systems" title="Permanent link">¤</a></h2>
 <p>Supported:</p>
@@ -1758,6 +1758,19 @@ repository does not exist.</p>
 than leftmost argument.</p>
 <p>Exit status code <code>3</code> is returned when filtering assets of last release yields empty URL set
 (no match)</p>
+<p>Exit status code <code>4</code> is returned when the API refuses the request and <code>lastversion</code> gives up.
+This covers:</p>
+<ul>
+<li><strong>GitHub/Gitea rate limit exceeded.</strong> When the rate-limit reset window is under 5 minutes
+  away, <code>lastversion</code> automatically sleeps until the reset and retries (up to 2 sleeps).
+  If the reset is more than 5 minutes away, or retries are exhausted, it exits <code>4</code> rather
+  than blocking your script for a long time. The unauthenticated GitHub quota is 60
+  req/hour, so a fresh quota exhaustion almost always falls into the "no wait, exit 4"
+  branch. Set <code>GITHUB_API_TOKEN</code> (see Tips below) to raise the ceiling to 5000 req/hour.</li>
+<li>Invalid or missing API token (HTTP 401).</li>
+<li>Semver constraint (<code>--major</code>, <code>--only</code>, etc.) filtered every release out.</li>
+</ul>
+<p>The error message goes to stderr; stdout is empty.</p>
 <h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">¤</a></h2>
 <p>Getting the latest version is heavy on the API, because GitHub does not allow to fetch tags in
 chronological order, and some repositories switch from one version format to another, so <em>we can't
@@ -1914,7 +1927,7 @@ Check out the <a href="https://rapidapi.com/ciapnz/api/lastversion">lastversion 
       <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.expand"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
