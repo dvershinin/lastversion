@@ -17,6 +17,12 @@ plugins:
         python:
           paths:
             - src
+  # Redirect the old ReadTheDocs URL layout (/en/latest/...) to the current
+  # GitHub Pages root. The site moved off RTD; /en/latest/ was a stale 404
+  # in Google Search Console (2026-07).
+  - redirects:
+      redirect_maps:
+        en/latest/index.md: index.md
 watch:
   - src/lastversion
 nav:

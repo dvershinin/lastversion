@@ -1,6 +1,7 @@
 # docs/requirements.txt
 mkdocs
 mkdocs-material
+mkdocs-redirects
 mkdocstrings[crystal,python]
 markdown-include
 pymdown-extensions
