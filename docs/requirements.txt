@@ -5,4 +5,4 @@ mkdocs-redirects
 mkdocstrings[crystal,python]
 markdown-include
 pymdown-extensions
-markdown>=3.8.1 # not directly required, pinned by Snyk to avoid a vulnerability
+markdown>=3.10.2 # not directly required, pinned by Snyk to avoid a vulnerability
