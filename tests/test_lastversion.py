@@ -512,3 +512,20 @@ def test_dict_no_license():
     repo = "https://github.com/lastversion-test-repos/nginx_ajp_module"
     release = latest(repo, output_format="dict")
     assert release["version"] == version.parse("0.3.2")
+
+
+def test_varnish_cache_lts_from_releases_page():
+    """Varnish 6.0 LTS releases exist only as tarballs on the releases page
+    (no GitHub tags after 6.0.16, homepage feed lags), so the known-repo
+    `page` link-scan must surface them for the whole vmod packaging chain."""
+    v = latest("varnish-cache", major="6.0")
+
+    assert v >= version.parse("6.0.18")
+
+
+def test_varnish_cache_lts_by_url():
+    """update-spec derives the repo from a spec's URL: field, so the URL
+    form must resolve through the same releases-page scan."""
+    v = latest("https://varnish-cache.org", major="6.0")
+
+    assert v >= version.parse("6.0.18")

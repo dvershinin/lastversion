@@ -14,12 +14,29 @@ log = logging.getLogger(__name__)
 class FeedRepoSession(BaseProjectHolder):
     """Feed repo session."""
 
+    KNOWN_REPO_URLS = {
+        # URL-form lookups (e.g. update-spec deriving from a spec's URL:)
+        # must resolve to the releases page too, not the stale homepage feed.
+        "varnish-cache.org": {
+            "repo": "varnish-cache",
+            "hostname": "varnish-cache.org",
+            "page": "https://varnish-cache.org/releases/",
+        },
+    }
     KNOWN_REPOS_BY_NAME = {
         "filezilla": {
             "repo": "filezilla",
             "hostname": "filezilla-project.org",
             "only": "FileZilla Client",
-        }
+        },
+        # Varnish 6.0 LTS releases after 6.0.16 exist only as dist tarballs
+        # linked from the releases page; the news feed announces them late or
+        # not at all, and the 6.0 branch is no longer tagged on GitHub.
+        "varnish-cache": {
+            "repo": "varnish-cache",
+            "hostname": "varnish-cache.org",
+            "page": "https://varnish-cache.org/releases/",
+        },
     }
     CAN_BE_SELF_HOSTED = True
     # Unlimited number of components (URI as is)
@@ -63,8 +80,17 @@ class FeedRepoSession(BaseProjectHolder):
         return result
 
     def __init__(self, repo, hostname):
+        # A bare-word invocation like `--at website-feed varnish-cache.org`
+        # arrives with hostname=None and the site in `repo`.
+        if not hostname:
+            hostname = repo
         super().__init__(repo, hostname)
         self.home_soup = None
+        # Optional page whose hyperlinks carry versioned artifact names
+        # (e.g. a releases/downloads listing); takes precedence over the
+        # discovered feed because homepage feeds routinely lag or omit
+        # maintenance releases. Set via a known-repo "page" entry.
+        self.page_url = None
         feeds = self.find_feed("https://" + hostname + "/")
         if not feeds:
             return
@@ -72,11 +98,39 @@ class FeedRepoSession(BaseProjectHolder):
         log.info("Using feed URL: %s", feeds[0])
         self.feed_url = feeds[0]
 
+    def set_page(self, page_url):
+        """Use a link-listing page as the version source."""
+        self.page_url = page_url
+
     def is_instance(self):
-        return self.feed_url
+        return self.feed_url or self.page_url
+
+    def get_latest_from_page_links(self, pre_ok=False, major=None):
+        """Latest version among hyperlink targets/texts of the page."""
+        from urllib.parse import unquote
+
+        from bs4 import BeautifulSoup as bs4
+
+        html = bs4(self.get(self.page_url).text, "html.parser")
+        ret = {}
+        for a in html.findAll("a"):
+            href = a.get("href", None)
+            if not href:
+                continue
+            candidate = unquote(href.rstrip("/").rsplit("/", 1)[-1])
+            version = self.sanitize_version(candidate, pre_ok, major)
+            if not version and a.text:
+                version = self.sanitize_version(a.text.strip(), pre_ok, major)
+            if not version:
+                continue
+            if not ret or version > ret["version"]:
+                ret = {"tag_name": candidate, "version": version}
+        return ret or None
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
+        if self.page_url:
+            return self.get_latest_from_page_links(pre_ok=pre_ok, major=major)
         ret = {}
         # To leverage `cachecontrol`, we fetch the feed using requests as
         # usual, then feed the feed to feedparser as a raw string e.g.

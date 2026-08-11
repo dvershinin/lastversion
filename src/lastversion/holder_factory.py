@@ -97,6 +97,9 @@ class HolderFactory:
 
         if "release_url_format" in known_repo:
             holder.RELEASE_URL_FORMAT = known_repo["release_url_format"]
+
+        if "page" in known_repo and hasattr(holder, "set_page"):
+            holder.set_page(known_repo["page"])
         return holder
 
     @staticmethod
