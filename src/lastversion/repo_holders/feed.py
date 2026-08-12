@@ -10,6 +10,26 @@ from lastversion.repo_holders.base import BaseProjectHolder
 
 log = logging.getLogger(__name__)
 
+# The Varnish Cache FOSS project was renamed to Vinyl Cache in the 9.0 release
+# (2026-03-16) after a trademark dispute with Varnish Software. The
+# varnishcache/* GitHub org is archived; development moved to
+# code.vinyl-cache.org. Varnish Software kept the trademark and now runs
+# github.com/varnish/varnish as a *downstream fork* -- a different codebase,
+# not what these entries should resolve to.
+#
+# The 6.0 and 8.0 LTS branches stayed with Vinyl Cache, so every historic
+# spelling must point at vinyl-cache.org. That host also serves TLS 1.2, which
+# varnish-cache.org (now Varnish Software's) does not -- and EL7 builders
+# running packaging auto-bump crons cannot negotiate TLS 1.3.
+#
+# "repo" stays "varnish-cache": it is the display/cache label, and the tarballs
+# are still named varnish-X.Y.Z.tgz.
+_VINYL_CACHE = {
+    "repo": "varnish-cache",
+    "hostname": "vinyl-cache.org",
+    "page": "https://vinyl-cache.org/releases/",
+}
+
 
 class FeedRepoSession(BaseProjectHolder):
     """Feed repo session."""
@@ -17,11 +37,8 @@ class FeedRepoSession(BaseProjectHolder):
     KNOWN_REPO_URLS = {
         # URL-form lookups (e.g. update-spec deriving from a spec's URL:)
         # must resolve to the releases page too, not the stale homepage feed.
-        "varnish-cache.org": {
-            "repo": "varnish-cache",
-            "hostname": "varnish-cache.org",
-            "page": "https://varnish-cache.org/releases/",
-        },
+        "varnish-cache.org": _VINYL_CACHE,
+        "vinyl-cache.org": _VINYL_CACHE,
     }
     KNOWN_REPOS_BY_NAME = {
         "filezilla": {
@@ -29,23 +46,20 @@ class FeedRepoSession(BaseProjectHolder):
             "hostname": "filezilla-project.org",
             "only": "FileZilla Client",
         },
-        # Varnish 6.0 LTS releases after 6.0.16 exist only as dist tarballs
-        # linked from the releases page; the news feed announces them late or
-        # not at all, and the 6.0 branch is no longer tagged on GitHub.
-        "varnish-cache": {
-            "repo": "varnish-cache",
-            "hostname": "varnish-cache.org",
-            "page": "https://varnish-cache.org/releases/",
-        },
-        # The GitHub owner/repo form must resolve here too: the 6.0 LTS
-        # branch is no longer tagged on GitHub, so asking GitHub yields a
-        # stale 6.0.16 -- and packaging cascades call it in exactly this
-        # form to stamp the version their vmod builds pin against.
-        "varnishcache/varnish-cache": {
-            "repo": "varnish-cache",
-            "hostname": "varnish-cache.org",
-            "page": "https://varnish-cache.org/releases/",
-        },
+        # 6.0 LTS releases exist only as dist tarballs linked from the
+        # releases page; the news feed announces them late or not at all.
+        "varnish-cache": _VINYL_CACHE,
+        "vinyl-cache": _VINYL_CACHE,
+        # The GitHub owner/repo form must resolve here too: the org is
+        # archived, so asking GitHub yields a stale 6.0.16 -- and packaging
+        # cascades call it in exactly this form to stamp the version their
+        # vmod builds pin against.
+        "varnishcache/varnish-cache": _VINYL_CACHE,
+        "vinyl-cache/vinyl-cache": _VINYL_CACHE,
+        # Bare-word host invocations (e.g. `--at website-feed vinyl-cache.org`)
+        # arrive as a repo name, not a hostname, so KNOWN_REPO_URLS misses.
+        "varnish-cache.org": _VINYL_CACHE,
+        "vinyl-cache.org": _VINYL_CACHE,
     }
     CAN_BE_SELF_HOSTED = True
     # Unlimited number of components (URI as is)
