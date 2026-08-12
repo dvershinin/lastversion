@@ -13,6 +13,7 @@ import requests
 from cachecontrol import CacheControlAdapter
 from cachecontrol.caches.file_cache import FileCache
 from packaging.version import InvalidVersion
+from urllib3.util.retry import Retry
 
 from lastversion.__about__ import __version__
 from lastversion.config import get_config
@@ -41,7 +42,7 @@ def _safe_open_write(filename, fmode):
         flags |= os.O_BINARY
     try:
         os.remove(filename)
-    except (IOError, OSError):
+    except OSError:
         pass
     fd = os.open(filename, flags, fmode)
     try:
@@ -115,7 +116,7 @@ class InternalTimedDirLock:
         try:
             with open(self._lock_file, "r", encoding="utf-8") as f:
                 return int(f.read().strip())
-        except (IOError, OSError, ValueError):
+        except (OSError, ValueError):
             return None
 
     def _write_lock_file(self):
@@ -159,7 +160,7 @@ class InternalTimedDirLock:
             try:
                 with open(old_pid_file, "r", encoding="utf-8") as f:
                     pid = int(f.read().strip())
-            except (IOError, OSError, ValueError):
+            except (OSError, ValueError):
                 pass
 
             if pid is None or not _is_process_alive(pid):
@@ -213,7 +214,7 @@ class InternalTimedDirLock:
     def __exit__(self, exc_type, exc, tb):
         try:
             os.remove(self._lock_file)
-        except (IOError, OSError):
+        except OSError:
             pass
         return False
 
@@ -227,7 +228,7 @@ class SafeFileCache(FileCache):
         # Ensure directory exists
         try:
             os.makedirs(os.path.dirname(path), self.dirmode)
-        except (IOError, OSError):
+        except OSError:
             pass
 
         try:
@@ -300,6 +301,8 @@ class BaseProjectHolder(requests.Session):
     # Instance of project holder itself uniquely identifies a project (noname)
     REPO_IS_HOLDER = False
     DEFAULT_TIMEOUT = 30  # default timeout in seconds
+    NETWORK_RETRIES = 5
+    NETWORK_BACKOFF_FACTOR = 0.5
 
     CACHE_DISABLED = False
 
@@ -351,7 +354,16 @@ class BaseProjectHolder(requests.Session):
 
     def __init__(self, name=None, hostname=None):
         super().__init__()
-        self.mount("https://", requests.adapters.HTTPAdapter(max_retries=5))
+        retries = Retry(
+            total=self.NETWORK_RETRIES,
+            connect=self.NETWORK_RETRIES,
+            read=self.NETWORK_RETRIES,
+            status=self.NETWORK_RETRIES,
+            backoff_factor=self.NETWORK_BACKOFF_FACTOR,
+            status_forcelist=(429, 500, 502, 503, 504),
+            allowed_methods=frozenset(("GET", "HEAD")),
+            respect_retry_after_header=True,
+        )
         app_name = __name__.split(".", maxsplit=1)[0]
 
         # Load configuration
@@ -366,7 +378,10 @@ class BaseProjectHolder(requests.Session):
             # Use a lock with a finite timeout to avoid rare hangs on cache writes
             lock_cls = InternalTimedDirLock
             self.cache = SafeFileCache(self.cache_dir, lock_class=lock_cls)
-            cache_adapter = CacheControlAdapter(cache=self.cache)
+            # CacheControl replaces the ordinary requests adapter, so the
+            # retry policy must be applied here too. Mounting a retrying
+            # HTTPAdapter first is ineffective once this adapter replaces it.
+            cache_adapter = CacheControlAdapter(cache=self.cache, max_retries=retries)
             # noinspection HttpUrlsUsage
             self.mount("http://", cache_adapter)
             self.mount("https://", cache_adapter)
@@ -374,6 +389,9 @@ class BaseProjectHolder(requests.Session):
             log.info("Cache is disabled for this holder.")
             # Still need cache_dir for names_cache_filename even if HTTP cache is disabled
             self.cache_dir = config.file_cache_path
+            retry_adapter = requests.adapters.HTTPAdapter(max_retries=retries)
+            self.mount("http://", retry_adapter)
+            self.mount("https://", retry_adapter)
 
         self.names_cache_filename = f"{self.cache_dir}/repos.json"
 
@@ -466,7 +484,7 @@ class BaseProjectHolder(requests.Session):
                 f"/{quote(repo, safe='')}/",
             ]
 
-            for root, dirs, files in os.walk(cache_dir):
+            for root, _dirs, files in os.walk(cache_dir):
                 for filename in files:
                     filepath = os.path.join(root, filename)
                     # Read the cached URL from the file or use filename heuristics
@@ -478,7 +496,7 @@ class BaseProjectHolder(requests.Session):
                         if any(pattern in str(filepath) for pattern in repo_patterns):
                             os.remove(filepath)
                             cleared += 1
-                    except (IOError, OSError):
+                    except OSError:
                         pass
 
             # Also clear from names cache
@@ -511,7 +529,7 @@ class BaseProjectHolder(requests.Session):
                 shutil.rmtree(cache_dir)
                 log.info("Cleared all cache from: %s", cache_dir)
                 cleared += 1  # Indicate success
-            except (IOError, OSError) as e:
+            except OSError as e:
                 log.warning("Error clearing cache: %s", e)
 
         return cleared
