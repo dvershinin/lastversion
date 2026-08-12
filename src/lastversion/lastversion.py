@@ -254,6 +254,23 @@ def latest(
     """
     repo_data = {}
 
+    # Parse local project metadata BEFORE consulting the release cache. Some of
+    # it (notably `current_version`, read off the spec's Version: tag) is state
+    # of the file on disk right now, not of the upstream release, so it must
+    # never be served from a cache entry written when the spec said something
+    # else -- and it must be re-applied over any cache hit, exactly as the
+    # fetch path does with `release.update(repo_data)` further down.
+    # noinspection HttpUrlsUsage
+    if repo.endswith(".yml") and not repo.startswith(("http://", "https://")):
+        repo_data = get_repo_data_from_yml(repo)
+
+    # noinspection HttpUrlsUsage
+    if repo.startswith(("http://", "https://")) and repo.endswith("Chart.yaml"):
+        at = "helm_chart"
+
+    if repo.endswith(".spec"):
+        repo_data = get_repo_data_from_spec(rpmspec_filename=repo)
+
     # Check release data cache first (when enabled and using json/dict output)
     release_cache = get_release_cache()
     cache_key_params = {
@@ -288,6 +305,12 @@ def latest(
                 cached_data["version"] = Version(cached_data.get("version", ""))
             except InvalidVersion:
                 pass
+            # Re-apply freshly parsed local metadata over the cached release,
+            # mirroring `release.update(repo_data)` on the fetch path. Without
+            # this, `current_version` stays whatever JSON round-tripped out of
+            # the cache -- a plain str, which then blows up comparing against
+            # a Version in update_spec().
+            cached_data.update(repo_data)
             return cached_data
         else:  # json
             return cached_data
@@ -300,17 +323,6 @@ def latest(
             if result is not None:
                 return result
             # Fall through to fetch fresh data if cache parsing failed
-
-    # noinspection HttpUrlsUsage
-    if repo.endswith(".yml") and not repo.startswith(("http://", "https://")):
-        repo_data = get_repo_data_from_yml(repo)
-
-    # noinspection HttpUrlsUsage
-    if repo.startswith(("http://", "https://")) and repo.endswith("Chart.yaml"):
-        at = "helm_chart"
-
-    if repo.endswith(".spec"):
-        repo_data = get_repo_data_from_spec(rpmspec_filename=repo)
 
     # Define network error types that should trigger cache fallback
     network_errors = (
@@ -568,6 +580,17 @@ def build_changelog_bullets(res, repo_arg):
 
 def update_spec(repo, res, sem="minor", changelog: bool = False):
     log.info("Latest version: %s", res["version"])
+    # Both are compared and have .release read off them below, so neither may
+    # arrive as a plain str (a JSON-round-tripped cache entry used to do
+    # exactly that, raising TypeError: '<' not supported between instances of
+    # 'str' and 'Version').
+    for key in ("current_version", "version"):
+        if key in res and not isinstance(res[key], Version):
+            try:
+                res[key] = Version(str(res[key]))
+            except InvalidVersion:
+                log.critical("Failed to parse %s %r from release data", key, res[key])
+                sys.exit(1)
     if "current_version" not in res or res["current_version"] < res["version"]:
         log.info("Updating spec %s with semantic %s", repo, sem)
         if "current_version" in res and len(res["version"].release) >= 3:

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 from packaging import version
 
+from lastversion import lastversion as lastversion_mod
 from lastversion.exceptions import BadProjectError
 from lastversion.lastversion import latest
 from lastversion.repo_holders.github import GitHubRepoSession
@@ -569,3 +570,44 @@ def test_page_scan_assets_is_the_tarball_not_the_notes_page():
     assert assets, "page-scan holder must yield a download URL"
     assert all(a for a in assets), f"no None entries allowed: {assets}"
     assert assets[0].endswith(".tgz"), f"expected the tarball, got {assets[0]}"
+
+
+def test_update_spec_coerces_str_versions_from_cache(tmp_path, monkeypatch):
+    """The release cache round-trips through JSON, so a cache hit hands
+    update_spec() `current_version` as a plain str while `version` is a
+    Version. Comparing them raised
+
+        TypeError: '<' not supported between instances of 'str' and 'Version'
+
+    which broke every EL7 packaging auto-bump the moment the spec was
+    genuinely behind upstream -- the one case that has to work."""
+    spec = tmp_path / "varnish.spec"
+    spec.write_text("Name: varnish\nVersion: 6.0.16\nRelease: 1%{?dist}\n\n%changelog\n")
+
+    monkeypatch.setattr(lastversion_mod, "get_rpm_packager", lambda: "Tester <t@example.com>")
+
+    res = {
+        # Exactly what a JSON cache entry yields: both are strings.
+        "current_version": "6.0.16",
+        "version": Version("6.0.18"),
+        "tag_name": "varnish-6.0.18",
+        "spec_tag": "varnish-%{version}",
+        "spec_tag_no_prefix": "%{version}",
+        "spec_name": "%{name}",
+        "version_macro": "version",
+    }
+
+    lastversion_mod.update_spec(str(spec), res, sem="any")
+
+    assert "Version: 6.0.18" in spec.read_text()
+
+
+def test_update_spec_no_op_when_cached_current_version_is_str():
+    """The same str/Version mismatch on an up-to-date spec must still take the
+    'nothing to do' path (exit 2) rather than crashing."""
+    res = {"current_version": "6.0.18", "version": Version("6.0.18")}
+
+    with pytest.raises(SystemExit) as exc:
+        lastversion_mod.update_spec("unused.spec", res, sem="any")
+
+    assert exc.value.code == 2
