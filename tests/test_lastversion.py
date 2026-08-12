@@ -523,6 +523,17 @@ def test_varnish_cache_lts_from_releases_page():
     assert v >= version.parse("6.0.18")
 
 
+def test_varnish_cache_lts_by_github_owner_repo():
+    """Packaging cascades call `lastversion varnishcache/varnish-cache
+    --major 6.0` to stamp the version their vmod builds pin against. The
+    6.0 branch is no longer tagged on GitHub, so asking GitHub returns a
+    stale 6.0.16 and every vmod would pin a daemon ABI that no longer
+    exists in the repo."""
+    v = latest("varnishcache/varnish-cache", major="6.0")
+
+    assert v >= version.parse("6.0.18")
+
+
 def test_varnish_cache_lts_by_url():
     """update-spec derives the repo from a spec's URL: field, so the URL
     form must resolve through the same releases-page scan."""

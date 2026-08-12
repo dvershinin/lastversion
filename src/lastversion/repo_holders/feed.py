@@ -37,6 +37,15 @@ class FeedRepoSession(BaseProjectHolder):
             "hostname": "varnish-cache.org",
             "page": "https://varnish-cache.org/releases/",
         },
+        # The GitHub owner/repo form must resolve here too: the 6.0 LTS
+        # branch is no longer tagged on GitHub, so asking GitHub yields a
+        # stale 6.0.16 -- and packaging cascades call it in exactly this
+        # form to stamp the version their vmod builds pin against.
+        "varnishcache/varnish-cache": {
+            "repo": "varnish-cache",
+            "hostname": "varnish-cache.org",
+            "page": "https://varnish-cache.org/releases/",
+        },
     }
     CAN_BE_SELF_HOSTED = True
     # Unlimited number of components (URI as is)
