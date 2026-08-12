@@ -798,7 +798,10 @@ class BaseProjectHolder(requests.Session):
                 urls.append(asset["browser_download_url"])
         else:
             download_url = self.release_download_url(release, short_urls)
-            if not assets_filter or re.search(assets_filter, download_url):
+            # Holders without a RELEASE_URL_FORMAT return None here; appending
+            # it yields [None], which blows up as a TypeError in any caller
+            # that joins or inspects the URLs.
+            if download_url and (not assets_filter or re.search(assets_filter, download_url)):
                 urls.append(download_url)
         return urls
 

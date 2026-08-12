@@ -556,3 +556,16 @@ def test_vinyl_cache_lts_new_names(repo):
     v = latest(repo, major="6.0")
 
     assert v >= version.parse("6.0.18")
+
+
+def test_page_scan_assets_is_the_tarball_not_the_notes_page():
+    """A releases page links both the tarball and its release notes for the
+    same version. Both sanitize to the same version, so the scan must prefer
+    the archive -- otherwise `--assets` hands back an .html notes page as if
+    it were a download. Holders with no RELEASE_URL_FORMAT used to return
+    [None] here, which crashed the CLI with a TypeError on join."""
+    assets = latest("varnish-cache", major="6.0", output_format="assets")
+
+    assert assets, "page-scan holder must yield a download URL"
+    assert all(a for a in assets), f"no None entries allowed: {assets}"
+    assert assets[0].endswith(".tgz"), f"expected the tarball, got {assets[0]}"

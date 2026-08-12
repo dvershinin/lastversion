@@ -34,6 +34,19 @@ _VINYL_CACHE = {
 class FeedRepoSession(BaseProjectHolder):
     """Feed repo session."""
 
+    # Suffixes that mark a hyperlink as a release artifact rather than a
+    # release-notes page, when both carry the same version.
+    ARCHIVE_EXTENSIONS = (
+        ".tgz",
+        ".tar.gz",
+        ".tar.bz2",
+        ".tar.xz",
+        ".tar.lz",
+        ".tbz2",
+        ".txz",
+        ".zip",
+    )
+
     KNOWN_REPO_URLS = {
         # URL-form lookups (e.g. update-spec deriving from a spec's URL:)
         # must resolve to the releases page too, not the stale homepage feed.
@@ -146,9 +159,31 @@ class FeedRepoSession(BaseProjectHolder):
                 version = self.sanitize_version(a.text.strip(), pre_ok, major)
             if not version:
                 continue
-            if not ret or version > ret["version"]:
-                ret = {"tag_name": candidate, "version": version}
+            # A releases page usually links both the tarball and its release
+            # notes for the same version (e.g. varnish-6.0.18.tgz and
+            # rel6.0.18.html). Both sanitize to the same version, so on a tie
+            # prefer the archive -- the notes page is not a download URL.
+            is_archive = candidate.endswith(self.ARCHIVE_EXTENSIONS)
+            if (
+                not ret
+                or version > ret["version"]
+                or (version == ret["version"] and is_archive and not ret["is_archive"])
+            ):
+                # The hyperlink we matched on IS the artifact location, so keep
+                # it absolute -- it is the only download URL this holder can
+                # offer (there is no RELEASE_URL_FORMAT to synthesize one from).
+                ret = {
+                    "tag_name": candidate,
+                    "version": version,
+                    "download_url": urljoin(self.page_url, href),
+                    "is_archive": is_archive,
+                }
+        ret.pop("is_archive", None)
         return ret or None
+
+    def release_download_url(self, release, shorter=False):
+        """URL of the artifact the page link-scan matched on."""
+        return release.get("download_url") or super().release_download_url(release, shorter)
 
     def get_latest(self, pre_ok=False, major=None):
         """Get the latest release."""
