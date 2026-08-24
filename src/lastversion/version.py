@@ -122,18 +122,18 @@ class Version(PackagingVersion):
         return part
 
     @staticmethod
-    def join_dashed_number_status(version):
-        """
-        Join status with its number when separated by dash in a version string.
+    def join_dashed_number_status(version: str) -> str:
+        """Join status with its number when separated by a dash.
+
         E.g., 4.27-chaos-preview-3 -> 4.27-chaos-pre3
         Helps devel releases to be correctly identified
         # https://www.python.org/dev/peps/pep-0440/#developmental-releases
 
         Args:
-            version:
+            version (str): Version string to normalize.
 
         Returns:
-            str:
+            str: Version string with dashed status numbers joined.
         """
         for regex, substitution in Version.regex_dashed_substitutions:
             version = regex.sub(substitution, version)
@@ -160,7 +160,7 @@ class Version(PackagingVersion):
         # put a delimiter... such string at the beginning typically do not
         # convey stability level, so we are fine to remove them (unlike the
         # ones in the tail)
-        parts_n[0] = re.sub("^[^0-9]+", "", parts_n[0], 1)
+        parts_n[0] = re.sub("^[^0-9]+", "", parts_n[0], count=1)
 
         # Remove empty elements
         parts_n = [item for item in parts_n if item != ""]
@@ -189,7 +189,7 @@ class Version(PackagingVersion):
         version = self.filter_relevant_parts(version)
 
         if char_fix_required:
-            version = re.sub("(\\d)([a-z])$", self.fix_letter_post_release, version, 1)
+            version = re.sub("(\\d)([a-z])$", self.fix_letter_post_release, version, count=1)
         # release-3_0_2 is often seen on Mercurial holders note that the
         # above code removes "release-" already, so we are left with "3_0_2"
         if re.search(r"^(?:\d+_)+(?:\d+)", version):
@@ -272,14 +272,15 @@ class Version(PackagingVersion):
             return True
 
     @property
-    def is_prerelease(self):
-        """
-        Version is a prerelease if it contains all the following:
+    def is_prerelease(self) -> bool:
+        """Determine whether this version is a prerelease.
+
+        A version is a prerelease if it contains all the following:
         * 90+ micro component
         * no date in micro component
 
         Returns:
-            bool:
+            bool: True when the version is a prerelease.
         """
         if self.major and self.minor and self.micro >= 90 and self.is_not_date(self.micro):
             return True

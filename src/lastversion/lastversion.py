@@ -18,6 +18,7 @@ import shlex
 import sys
 from os.path import expanduser
 from pathlib import Path
+from typing import Any, List, Optional, Union
 from urllib.parse import urlparse
 
 import requests
@@ -55,9 +56,8 @@ def find_preferred_url(spec_urls):
     return spec_urls[0] if spec_urls else None
 
 
-def get_repo_data_from_spec(rpmspec_filename):
-    """
-    Extracts repo data and CLI args from .spec file
+def get_repo_data_from_spec(rpmspec_filename: str) -> dict:
+    """Extract repo data and CLI args from a spec file.
 
     The project (repo) is specified inside the .spec file
     GitHub repo is resolved via %{upstream_github} + %{name}/%{upstream_name}
@@ -66,10 +66,10 @@ def get_repo_data_from_spec(rpmspec_filename):
     new version via GitHub, but prepared sources are elsewhere
 
     Args:
-        rpmspec_filename:
+        rpmspec_filename (str): Path to the RPM spec file.
 
     Returns:
-
+        dict: Repository metadata and CLI options parsed from the spec file.
     """
     repo_data = {}
     with open(rpmspec_filename) as f:
@@ -204,16 +204,16 @@ def latest(
     changelog=False,
     cache_ttl=None,
     skip_release_cache=False,
-):
+) -> Any:
     r"""Find the latest release version for a project.
 
     Args:
         major (str): Only consider versions which are "descendants" of this
-          major version string
+            major version string
         short_urls (bool): Whether we should try to return shorter URLs for
-          release data
+            release data
         assets_filter (Union[str, Pattern]): Regular expression for filtering
-          assets for the latest release
+            assets for the latest release
         only (str): Only consider tags with this text. Useful for repos with multiple projects.
                     The argument supports negation and regular expressions. To indicate a regex,
                     start it with tilde sign, to negate the expression, start it with exclamation
@@ -247,9 +247,8 @@ def latest(
         <Version('3.0.7')>
 
     Returns:
-        Union[Version, dict]: Newer version object, if found and `output_format` is `version`.
-    Returns:
-        str: Single string containing tag, if found and `output_format` is `tag`
+        Union[Version, dict, str, None]: Release data in the requested format,
+            or None when no matching release is found.
 
     """
     repo_data = {}
@@ -451,7 +450,7 @@ def latest(
     return None
 
 
-def clear_cache(repo=None):
+def clear_cache(repo=None) -> int:
     """Clear the HTTP cache for lastversion.
 
     This function is useful for webhook handlers that need to invalidate
@@ -470,7 +469,7 @@ def clear_cache(repo=None):
         from lastversion import clear_cache, latest
 
         def handle_github_webhook(payload):
-            repo = payload['repository']['full_name']
+            repo = payload.get("repository", {}).get("full_name")
             clear_cache(repo)
             # Optionally fetch fresh version
             version = latest(repo, output_format='json')
@@ -481,7 +480,7 @@ def clear_cache(repo=None):
     return BaseProjectHolder.clear_cache(repo)
 
 
-def has_update(repo, current_version, pre_ok=False, at=None):
+def has_update(repo, current_version, pre_ok=False, at=None) -> Union[Version, bool]:
     """Given an existing version for a repo, checks if there is an update.
 
     Args:
@@ -501,7 +500,7 @@ def has_update(repo, current_version, pre_ok=False, at=None):
     return False
 
 
-def check_version(value):
+def check_version(value) -> Version:
     """Given a version string, raises argparse.ArgumentTypeError if it does not contain any version.
     In lastversion CLI app, this is used as argument parser helper for --newer-than (-gt) option.
 
@@ -551,11 +550,16 @@ def get_rpm_packager():
     return None
 
 
-def build_changelog_bullets(res, repo_arg):
+def build_changelog_bullets(res: dict, repo_arg: str) -> Optional[List[str]]:
     """Build changelog bullets for a release dict using upstream notes and OpenAI.
 
+    Args:
+        res (dict): Release metadata containing upstream notes.
+        repo_arg (str): Repository identifier used for the release lookup.
+
     Returns:
-        list[str] or None
+        Optional[List[str]]: Generated changelog bullets, or None when notes
+            are unavailable or generation fails.
     """
     try:
         raw_notes = res.get("body") or res.get("description")
@@ -686,13 +690,13 @@ def update_spec(repo, res, sem="minor", changelog: bool = False):
         f.write("\n".join(out))
 
 
-def update_spec_commit(spec_file, commit_info, repo_data):
+def update_spec_commit(spec_file: str, commit_info: dict, repo_data: dict) -> None:
     """Update spec file for commit-based (snapshot) releases.
 
     Args:
-        spec_file: Path to the spec file
-        commit_info: Dict with 'sha', 'short_sha', 'date', 'message'
-        repo_data: Dict with repo data from spec parsing
+        spec_file (str): Path to the spec file.
+        commit_info (dict): Commit metadata with sha, short_sha, date, and message fields.
+        repo_data (dict): Repository metadata parsed from the spec file.
 
     Updates:
         - %global commit <sha>
@@ -825,13 +829,13 @@ def install_rpms(res, rpms, args):
     #     sys.exit(1)
 
 
-def install_debs(_res, debs, args):
+def install_debs(_res: dict, debs: List[str], args: argparse.Namespace) -> None:
     """Install deb packages using apt.
 
     Args:
-        _res: Release dict (unused, kept for API consistency with install_rpms)
-        debs: List of deb package URLs
-        args: CLI arguments
+        _res (dict): Release metadata, unused but kept for API consistency with install_rpms.
+        debs (List[str]): Debian package URLs to download and install.
+        args (argparse.Namespace): Parsed CLI arguments.
     """
     try:
         import subprocess

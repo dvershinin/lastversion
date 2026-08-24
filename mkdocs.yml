@@ -27,6 +27,7 @@ watch:
   - src/lastversion
 nav:
   - Overview: index.md
+  - README (中文): README-ZH-CN.md
   - Code Reference:
     - lastversion.py: reference/lastversion.md
     - version.py: reference/version.md

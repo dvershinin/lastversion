@@ -19,4 +19,4 @@ jobs:
           cache: 'pip' # caching pip dependencies will speed up subsequent runs
       - run: pip install -e .
       - run: pip install -r docs/requirements.txt
-      - run: mkdocs gh-deploy --force --clean --verbose
+      - run: mkdocs gh-deploy --strict --force --clean --verbose

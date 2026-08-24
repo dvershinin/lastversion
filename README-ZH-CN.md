@@ -8,7 +8,7 @@
 
 ![Using lastversion in terminal](https://www.getpagespeed.com/img/lastversion.gif)
 
-[English](README.md) | 简体中文
+[English](https://github.com/dvershinin/lastversion/blob/master/README.md) | 简体中文
 
 一个轻巧的命令行工具，帮助你查询一个项目/软件的最新版本号及各种相关信息，比如下载链接。
 
