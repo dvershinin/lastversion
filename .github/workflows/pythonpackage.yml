@@ -22,10 +22,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .[tests]
+          pip install -e '.[tests]'
       - name: Test with pytest
         run: |
-          pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-3.6.xml
+          pytest -v -n auto --cov="$REPO_NAME" --cov-report=xml --junitxml=junit/test-results-3.6.xml
         env:
           # Use custom token if available, otherwise fall back to GITHUB_TOKEN (for Dependabot PRs)
           LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
@@ -63,20 +63,20 @@ jobs:
         python-version: ["3.9", "3.13"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Extract repository name which is also our primary package name
-      run: echo "REPO_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+      run: echo "REPO_NAME=$(basename "$GITHUB_REPOSITORY")" >> "$GITHUB_ENV"
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
         cache: 'pip' # caching pip dependencies will speed up subsequent runs
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e .[tests]
+        pip install -e '.[tests]'
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -92,7 +92,7 @@ jobs:
 #        limit-access-to-users: dvershinin
     - name: Test with pytest
       run: |
-        pytest -v -n auto --cov=$REPO_NAME --cov-report=xml --junitxml=junit/test-results-${{ matrix.python-version }}.xml
+        pytest -v -n auto --cov="$REPO_NAME" --cov-report=xml --junitxml=junit/test-results-${{ matrix.python-version }}.xml
       env:
         # Use custom token if available, otherwise fall back to GITHUB_TOKEN (for Dependabot PRs)
         LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
@@ -124,7 +124,7 @@ jobs:
     - name: Build updated spec
       run: |
         mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
-        mv *.spec /sources/
+        mv ./*.spec /sources/
         build
   build-nginx-module-security-headers-rpm:
     needs: py36
@@ -138,6 +138,6 @@ jobs:
     - name: Build updated spec
       run: |
         mkdir -p /github/home/rpmbuild/{SOURCES,SPECS}/
-        mv *.spec /sources/
+        mv ./*.spec /sources/
         yum -y install nginx-devel
         build
