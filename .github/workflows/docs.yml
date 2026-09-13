@@ -1,6 +1,11 @@
-name: Deploy docs
+name: Documentation
 
 on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
   release:
     types: [created]
 
@@ -11,12 +16,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout master
-        uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
           cache: 'pip' # caching pip dependencies will speed up subsequent runs
       - run: pip install -e .
       - run: pip install -r docs/requirements.txt
-      - run: mkdocs gh-deploy --strict --force --clean --verbose
+      - name: Build documentation
+        if: github.event_name == 'push'
+        run: mkdocs build --strict
+      - name: Deploy documentation
+        if: github.event_name == 'release'
+        run: mkdocs gh-deploy --strict --force --clean --verbose
