@@ -2,7 +2,6 @@
 
 import os
 import re
-from tempfile import TemporaryDirectory
 
 from packaging import version
 
@@ -67,19 +66,18 @@ def test_github_semver_shorthand_preferred():
     assert output == version.parse("5.6")
 
 
-def test_github_extract_wordpress():
+def test_github_extract_wordpress(monkeypatch, tmp_path):
     """
     Test extracting a GitHub WordPress project into the current directory.
     Once extracted, `index.php` should be in the current directory
     """
     repo = "https://github.com/lastversion-test-repos/WordPress"
     with captured_exit_code():
-        # switch to temporary directory
-        with TemporaryDirectory() as tmp_dir:
-            os.chdir(tmp_dir)
-            main(["extract", repo])
-            assert os.path.exists("index.php")
-            assert os.path.exists("wp-config-sample.php")
+        # monkeypatch.chdir restores cwd, so later tests never run in a deleted dir
+        monkeypatch.chdir(tmp_path)
+        main(["extract", repo])
+        assert os.path.exists("index.php")
+        assert os.path.exists("wp-config-sample.php")
 
 
 def test_github_search_python():

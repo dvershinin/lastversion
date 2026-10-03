@@ -3,7 +3,6 @@
 import os
 import subprocess
 import sys
-import tempfile
 
 from packaging import version
 
@@ -116,33 +115,31 @@ def test_cli_gt_first_arg_is_repo(capsys):
     assert not exit_code  # Check the exit code is correct
 
 
-def test_unzip_osx_bundle_strip(capsys):  # pylint: disable=unused-argument
+def test_unzip_osx_bundle_strip(capsys, monkeypatch, tmp_path):  # pylint: disable=unused-argument
     """Test that ZIP files with single top level directory are stripped."""
     with captured_exit_code() as get_exit_code:
-        with tempfile.TemporaryDirectory() as tmp_dir_name:
-            # Set the temp directory as the current working directory
-            os.chdir(tmp_dir_name)
-            main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"])
-            # Assert that MinimalMIDIPlayer.app exists and is a directory
-            assert os.path.isdir("Contents")
-            # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
-            assert os.path.isfile("Contents/Info.plist")
+        # monkeypatch.chdir restores cwd, so later tests never run in a deleted dir
+        monkeypatch.chdir(tmp_path)
+        main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer-strip"])
+        # Assert that MinimalMIDIPlayer.app exists and is a directory
+        assert os.path.isdir("Contents")
+        # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
+        assert os.path.isfile("Contents/Info.plist")
     exit_code = get_exit_code()
 
     assert not exit_code  # Check the exit code is correct
 
 
-def test_unzip_osx_bundle(capsys):  # pylint: disable=unused-argument
+def test_unzip_osx_bundle(capsys, monkeypatch, tmp_path):  # pylint: disable=unused-argument
     """Test that OSX bundles are unzipped and .app is not stripped."""
     with captured_exit_code() as get_exit_code:
-        with tempfile.TemporaryDirectory() as tmp_dir_name:
-            # Set the temp directory as the current working directory
-            os.chdir(tmp_dir_name)
-            main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer"])
-            # Assert that MinimalMIDIPlayer.app exists and is a directory
-            assert os.path.isdir("MinimalMIDIPlayer.app")
-            # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
-            assert os.path.isfile("MinimalMIDIPlayer.app/Contents/Info.plist")
+        # monkeypatch.chdir restores cwd, so later tests never run in a deleted dir
+        monkeypatch.chdir(tmp_path)
+        main(["--assets", "unzip", "lastversion-test-repos/MinimalMIDIPlayer"])
+        # Assert that MinimalMIDIPlayer.app exists and is a directory
+        assert os.path.isdir("MinimalMIDIPlayer.app")
+        # Assert file MinimalMIDIPlayer.app/Contents/Info.plist exists
+        assert os.path.isfile("MinimalMIDIPlayer.app/Contents/Info.plist")
     exit_code = get_exit_code()
 
     assert not exit_code  # Check the exit code is correct

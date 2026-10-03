@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.19] - 2026-10-03
+### Fixed
+* Fixed crash on urllib3 < 1.26 (EL7/EL8 system packages): `Retry() got an unexpected keyword argument 'allowed_methods'`
+  - 3.6.18's retry policy now falls back to `method_whitelist` on older urllib3
+
 ## [3.6.18] - 2026-10-03
 ### Fixed
 * `.spec` repo resolution now expands spec-defined `%global`/`%define` macros (plus `Name`/`Version`) in `URL`/`Source0`

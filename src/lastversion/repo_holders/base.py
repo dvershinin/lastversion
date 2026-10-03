@@ -29,6 +29,38 @@ from lastversion.version import Version
 
 log = logging.getLogger(__name__)
 
+RETRY_METHODS = frozenset(("GET", "HEAD"))
+
+
+def _make_retry(retries, backoff_factor, retry_cls=Retry):
+    """Build a urllib3 retry policy for idempotent requests across urllib3 versions.
+
+    urllib3 1.26 renamed ``method_whitelist`` to ``allowed_methods`` and 2.x
+    dropped the old name. EL7/EL8 system packages still ship urllib3 < 1.26,
+    so fall back to the old keyword when the new one is rejected.
+
+    Args:
+        retries (int): Retry budget applied to total, connect, read and status.
+        backoff_factor (float): Exponential backoff factor between attempts.
+        retry_cls (type): Retry class to instantiate (overridable for tests).
+
+    Returns:
+        urllib3.util.retry.Retry: Configured retry policy.
+    """
+    kwargs = {
+        "total": retries,
+        "connect": retries,
+        "read": retries,
+        "status": retries,
+        "backoff_factor": backoff_factor,
+        "status_forcelist": (429, 500, 502, 503, 504),
+        "respect_retry_after_header": True,
+    }
+    try:
+        return retry_cls(allowed_methods=RETRY_METHODS, **kwargs)
+    except TypeError:
+        return retry_cls(method_whitelist=RETRY_METHODS, **kwargs)
+
 
 def _safe_open_write(filename, fmode):
     """Open a file for secure write, mirroring CacheControl's behavior without
@@ -354,16 +386,7 @@ class BaseProjectHolder(requests.Session):
 
     def __init__(self, name=None, hostname=None):
         super().__init__()
-        retries = Retry(
-            total=self.NETWORK_RETRIES,
-            connect=self.NETWORK_RETRIES,
-            read=self.NETWORK_RETRIES,
-            status=self.NETWORK_RETRIES,
-            backoff_factor=self.NETWORK_BACKOFF_FACTOR,
-            status_forcelist=(429, 500, 502, 503, 504),
-            allowed_methods=frozenset(("GET", "HEAD")),
-            respect_retry_after_header=True,
-        )
+        retries = _make_retry(self.NETWORK_RETRIES, self.NETWORK_BACKOFF_FACTOR)
         app_name = __name__.split(".", maxsplit=1)[0]
 
         # Load configuration

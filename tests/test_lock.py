@@ -139,7 +139,7 @@ with open(lock_file, "w") as f:
                 stderr=subprocess.PIPE,
                 timeout=5,
             )
-            assert proc.returncode == 0
+            assert proc.returncode == 0, proc.stderr.decode(errors="replace")
 
             # Lock file should exist but process should be dead
             assert os.path.isfile(lock_file)
