@@ -54,6 +54,23 @@ jobs:
         with:
           name: nginx-module-security-headers.spec
           path: tests/nginx-module-security-headers.spec
+  py36-el7-deps:
+    # The EL7 RPM runs on distro python36-* packages, far older than what pip
+    # resolves for the py36 job above (3.6.18 crashed on EL7's urllib3 1.25).
+    runs-on: ubuntu-latest
+    container: python:3.6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies pinned to EL7 versions
+        run: |
+          python -m pip install --upgrade pip
+          pip install -c ci/constraints-el7.txt -e '.[tests]'
+          python -c "import urllib3, requests, cachecontrol, packaging; print(urllib3.__version__, requests.__version__, cachecontrol.__version__, packaging.__version__)"
+      - name: Test with pytest
+        run: pytest -v -n auto
+        env:
+          # Use custom token if available, otherwise fall back to GITHUB_TOKEN (for Dependabot PRs)
+          LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
   build:
 
     runs-on: ubuntu-latest

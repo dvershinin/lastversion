@@ -1,0 +1,9 @@
+# Oldest dependency versions lastversion must keep working with: the EL7 RPM
+# runs on distro python36-* packages (versions taken from the GetPageSpeed
+# builder, CentOS 7 + EPEL). requests is pinned to 2.22.0 rather than EL7's
+# 2.14.2 because pip's requests < 2.16 vendors its own urllib3, unlike the
+# unbundled distro package (EL8 ships 2.22.0 with the same urllib3 1.25 line).
+urllib3==1.25.6
+requests==2.22.0
+cachecontrol==0.12.6
+packaging==16.8

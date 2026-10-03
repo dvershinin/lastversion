@@ -51,8 +51,12 @@ def test_make_retry_falls_back_to_method_whitelist_on_old_urllib3():
     assert set(retries.status_forcelist) == {429, 500, 502, 503, 504}
 
 
-def test_make_retry_uses_allowed_methods_on_current_urllib3():
-    """Current urllib3 gets the policy via ``allowed_methods``."""
+def test_make_retry_limits_methods_on_installed_urllib3():
+    """The installed urllib3 (>= 1.26 or the EL7 1.25 line) gets the method policy."""
     retries = _make_retry(3, 0.1)
 
-    assert retries.allowed_methods == RETRY_METHODS
+    try:
+        methods = retries.allowed_methods
+    except AttributeError:
+        methods = retries.method_whitelist
+    assert methods == RETRY_METHODS
