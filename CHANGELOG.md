@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.18] - 2026-10-03
+### Fixed
+* `.spec` repo resolution now expands spec-defined `%global`/`%define` macros (plus `Name`/`Version`) in `URL`/`Source0`
+  - e.g. `URL: https://github.com/%{gitowner}/%{name}` previously queried the literal `%{gitowner}/%{name}`
+### Changed
+* Transient HTTP failures are retried through the cache adapter
+
 ## [3.6.12] - 2026-05-15
 ### Fixed
 * Fixed Docker image publish on release
