@@ -611,3 +611,36 @@ def test_update_spec_no_op_when_cached_current_version_is_str():
         lastversion_mod.update_spec("unused.spec", res, sem="any")
 
     assert exc.value.code == 2
+
+
+def test_spec_url_expands_custom_macros(tmp_path):
+    """URL with spec-defined macros resolves to the real repo (axel-rpm: %{gitowner}/%{name})."""
+    spec = tmp_path / "axel.spec"
+    spec.write_text(
+        "%global gitowner axel-download-accelerator\n"
+        "Name:       axel\n"
+        "Version:    2.17.14\n"
+        "URL:        https://github.com/%{gitowner}/%{name}\n"
+        "Source0:    https://github.com/axel-download-accelerator/axel/releases/download/"
+        "v%{version}/axel-%{version}.tar.gz\n"
+    )
+    repo_data = lastversion_mod.get_repo_data_from_spec(str(spec))
+    assert repo_data["repo"] == "https://github.com/axel-download-accelerator/axel"
+
+
+def test_spec_url_with_unknown_macro_falls_back_to_resolved_url(tmp_path):
+    spec = tmp_path / "foo.spec"
+    spec.write_text(
+        "Name: foo\n"
+        "Version: 1.0\n"
+        "URL: https://github.com/%{undefined_owner}/%{name}\n"
+        "Source0: https://github.com/owner/foo/archive/v%{version}/foo-%{version}.tar.gz\n"
+    )
+    repo_data = lastversion_mod.get_repo_data_from_spec(str(spec))
+    assert repo_data["repo"] == "https://github.com/owner/foo/archive/v1.0/foo-1.0.tar.gz"
+
+
+def test_expand_spec_macros_nested_and_self_referencing():
+    macros = {"a": "%{b}-x", "b": "y", "loop": "%{loop}"}
+    assert lastversion_mod.expand_spec_macros("%{a}/%{?b}/%unknown", macros) == "y-x/y/%unknown"
+    assert lastversion_mod.expand_spec_macros("%{loop}", macros) == "%{loop}"

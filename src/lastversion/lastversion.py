@@ -56,6 +56,24 @@ def find_preferred_url(spec_urls):
     return spec_urls[0] if spec_urls else None
 
 
+_SPEC_MACRO_DEF_RE = re.compile(r"^%(?:global|define)\s+(\w+)\s+(\S.*?)\s*$")
+_SPEC_MACRO_REF_RE = re.compile(r"%\{\??(\w+)\}|%(\w+)")
+
+
+def expand_spec_macros(value, macros):
+    """Expand %{macro} / %macro references using macros defined in the spec.
+
+    Unknown macros are left as-is. Nested definitions are resolved with a
+    bounded number of passes so self-referencing macros cannot loop forever.
+    """
+    for _ in range(10):
+        expanded = _SPEC_MACRO_REF_RE.sub(lambda m: macros.get(m.group(1) or m.group(2), m.group(0)), value)
+        if expanded == value:
+            break
+        value = expanded
+    return value
+
+
 def get_repo_data_from_spec(rpmspec_filename: str) -> dict:
     """Extract repo data and CLI args from a spec file.
 
@@ -80,7 +98,11 @@ def get_repo_data_from_spec(rpmspec_filename: str) -> dict:
         spec_repo = None
         spec_urls = []
         current_commit = None
+        macros = {}
         for line in f.readlines():
+            macro_def = _SPEC_MACRO_DEF_RE.match(line)
+            if macro_def:
+                macros[macro_def.group(1)] = macro_def.group(2)
             if line.startswith("%global lastversion_repo"):
                 spec_repo = shlex.split(line)[2].strip()
             elif line.startswith("%global upstream_github"):
@@ -93,6 +115,7 @@ def get_repo_data_from_spec(rpmspec_filename: str) -> dict:
                 repo_data["commit_based"] = True
             elif line.startswith("Name:"):
                 name = line.split("Name:")[1].strip()
+                macros["name"] = name
             elif line.startswith("URL:"):
                 # append to spec_urls
                 spec_urls.append(line.split("URL:")[1].strip())
@@ -107,6 +130,7 @@ def get_repo_data_from_spec(rpmspec_filename: str) -> dict:
                 repo_data["module_of"] = True
             elif line.startswith("Version:") and not current_version:
                 current_version = line.split("Version:")[1].strip()
+                macros.setdefault("version", current_version)
             elif line.startswith("%global lastversion_only"):
                 repo_data["only"] = shlex.split(line)[2].strip()
             elif line.startswith("%global lastversion_having_asset"):
@@ -160,7 +184,11 @@ def get_repo_data_from_spec(rpmspec_filename: str) -> dict:
             repo = spec_repo
             log.info("Discovered explicit repo %s from .spec file", repo)
         else:
-            repo = find_preferred_url(spec_urls)
+            # Expand spec-defined macros (e.g. URL: https://github.com/%{gitowner}/%{name}),
+            # and prefer URLs that fully resolved over ones still holding unknown macros
+            spec_urls = [expand_spec_macros(url, macros) for url in spec_urls]
+            resolved_urls = [url for url in spec_urls if not re.search(r"%\{|%[A-Za-z_]", url)]
+            repo = find_preferred_url(resolved_urls or spec_urls)
 
         if not repo:
             log.critical(
