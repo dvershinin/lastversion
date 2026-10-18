@@ -93,6 +93,21 @@ sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
 sudo yum -y install lastversion
 ```
 
+## Installation for Debian and Ubuntu
+
+Supported:
+
+* Ubuntu 20.04, 22.04, 24.04, 26.04
+* Debian 12, 13
+
+```bash
+curl -fsSL https://extras.getpagespeed.com/release-latest.deb \
+  -o /tmp/getpagespeed-extras-release.deb
+sudo apt-get install -y /tmp/getpagespeed-extras-release.deb
+sudo apt-get update
+sudo apt-get install -y lastversion
+```
+
 ## Installation for other systems
 
 Installing with `pip` is easiest:
