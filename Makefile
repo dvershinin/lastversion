@@ -1,10 +1,12 @@
+SECRETS_FILE ?= $(HOME)/.secrets
+
 test:
-	@if [ -f ~/.secrets ]; then \
-		echo "Sourcing ~/.secrets..."; \
-		. ~/.secrets; \
+	@if [ -f "$(SECRETS_FILE)" ]; then \
+		echo "Sourcing $(SECRETS_FILE)..."; \
+		. "$(SECRETS_FILE)"; \
 	fi; \
 	if [ -z "$$GITHUB_API_TOKEN" ]; then \
-		echo "Error: GITHUB_API_TOKEN is not set. Please set it in ~/.secrets or environment."; \
+		echo "Error: GITHUB_API_TOKEN is not set. Please set it in $(SECRETS_FILE) or environment."; \
 		exit 1; \
 	fi; \
 	if [ -f ${HOME}/.virtualenvs/lastversion/bin/python ]; then \
