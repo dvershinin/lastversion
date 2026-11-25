@@ -12,6 +12,7 @@ import sys
 import tarfile
 import tempfile
 import zipfile
+from copy import copy
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -345,50 +346,138 @@ def download_file(url, local_filename=None):
     return local_filename
 
 
-def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
-    """CVE-2007-4559"""
-    all_members = tar_file.getnames()
-    root_dir = Path(all_members[0]).parent.resolve()
-    for member in all_members:
-        member_path = Path(member).resolve()
-        # Check if the member path resolves within the root directory
-        if os.path.commonpath([member_path, root_dir]) != str(root_dir):
-            return False
+def _tar_members(tar_file):
+    """Map archive member names and hard link targets into the output layout.
+
+    Args:
+        tar_file (tarfile.TarFile): Open archive.
+
+    Yields:
+        tarfile.TarInfo: Member with its final relative output name.
+
+    Raises:
+        TarPathTraversalException: A member cannot be mapped inside the destination.
+    """
+    members = tar_file.getmembers()
+    assert members, "Empty TAR archive"
+    top = Path(members[0].name)
+    strip_top = (
+        members[0].isdir()
+        and not top.name.endswith(".app")
+        and all(top == Path(member.name) or top in Path(member.name).parents for member in members)
+    )
+    for member in members:
+        name = Path(member.name)
+        if name.anchor or ".." in name.parts:
+            raise TarPathTraversalException("Unsafe tar member name: {}".format(member.name))
+        if strip_top:
+            if name == top and member.isdir():
+                continue
+            member = copy(member)
+            member.name = str(name.relative_to(top))
+            if member.islnk():
+                try:
+                    member.linkname = str(Path(member.linkname).relative_to(top))
+                except ValueError as exc:
+                    raise TarPathTraversalException("Hard link outside the top directory") from exc
+        yield member
+
+
+def _check_tar_member(member, root):
+    """Check paths against the destination as it exists at extraction time.
+
+    Args:
+        member (tarfile.TarInfo): Member in the final output layout.
+        root (Path): Resolved extraction directory.
+
+    Raises:
+        TarPathTraversalException: A path leaves the destination or the type is unsafe.
+    """
+    path = root / member.name
+    if path == root and not member.isdir():
+        raise TarPathTraversalException("Only a directory may name the extraction root")
+    paths = [path, path.parent] if path != root else [root]
+    if member.issym() or member.islnk():
+        target = Path(member.linkname)
+        if target.anchor:
+            raise TarPathTraversalException("Absolute tar link: {}".format(member.name))
+        base = path.parent if member.issym() else root
+        paths.append(base / target)
+    elif not (member.isreg() or member.isdir()):
+        raise TarPathTraversalException("Unsupported tar member type: {}".format(member.name))
+
+    for candidate in paths:
+        try:
+            candidate.resolve().relative_to(root)
+        except (ValueError, RuntimeError, OSError) as exc:
+            raise TarPathTraversalException("Unsafe tar member: {}".format(member.name)) from exc
+
+
+def check_if_tar_safe(tar_file: tarfile.TarFile, to_dir=".") -> bool:
+    """Check archive metadata against the prospective extraction directory.
+
+    Args:
+        tar_file (tarfile.TarFile): Open archive.
+        to_dir (str or Path): Extraction directory.
+
+    Returns:
+        bool: Whether all member names, types and link targets pass validation.
+    """
+    root = Path(to_dir).resolve()
+    try:
+        for member in _tar_members(tar_file):
+            _check_tar_member(member, root)
+    except TarPathTraversalException:
+        return False
     return True
 
 
 def extract_tar(buffer: io.BytesIO, to_dir):
-    """Extract a tar/zip archive to dir.
-    If the archive has only one top dir, it will be stripped.
+    """Extract a tar archive, stripping a single outer directory except for app bundles.
+
+    Args:
+        buffer (io.BytesIO): Archive data positioned for reading.
+        to_dir (str or Path): Destination directory.
+
+    Raises:
+        TarPathTraversalException: An archive member is unsafe to extract.
     """
+    root = Path(to_dir).resolve()
+    with tarfile.open(fileobj=buffer, mode="r") as archive_file:
+        members = list(_tar_members(archive_file))
+        for member in members:
+            _check_tar_member(member, root)
 
-    archive_file: tarfile.TarFile
-    with tarfile.open(fileobj=buffer, mode="r") as archive_file:  # NOSONAR
-        if not check_if_tar_safe(archive_file):
-            raise TarPathTraversalException("Attempted Path Traversal in Tar File")
-
-        contents = archive_file.getmembers()
-        assert contents, "Empty TAR archive"
-        top_dir = Path(contents[0].name).resolve()
-        only_one_top_dir = True
-        # If the directory is .app, it's a macOS app bundle, don't strip it
-        if not contents[0].isdir() or top_dir.name.endswith(".app"):
-            only_one_top_dir = False
-        if only_one_top_dir:
-            for item in contents[1:]:
-                item_path = Path(item.name).resolve()
-                # Check if the item path resolves within the top directory
-                if os.path.commonpath([item_path, top_dir]) != str(top_dir):
-                    only_one_top_dir = False
-                    break
-
-        log.info("only one top dir: %s", only_one_top_dir)
-        if only_one_top_dir:
-            for item in contents[1:]:
-                item.path = str(Path(item.name).resolve().relative_to(top_dir))
-                archive_file.extract(item, to_dir)
-        else:
-            archive_file.extractall(path=to_dir)  # nosec B202 - trusted sources
+        has_data_filter = hasattr(tarfile, "data_filter")
+        for member in members:
+            # Earlier members may have changed what a path resolves to.
+            _check_tar_member(member, root)
+            path = root / member.name
+            if member.issym() or member.islnk():
+                # Create the checked link directly. tarfile can fall back to extracting
+                # another archive member whose metadata has not passed our checks.
+                path.parent.mkdir(parents=True, exist_ok=True)
+                if member.islnk():
+                    source = (root / member.linkname).resolve(strict=True)
+                    if path.exists() and path.samefile(source):
+                        continue
+                if os.path.lexists(str(path)):
+                    path.unlink()
+                if member.issym():
+                    os.symlink(member.linkname, str(path))
+                else:
+                    os.link(str(source), str(path))
+            elif has_data_filter:
+                archive_file.extract(member, str(root), filter="data")
+            elif member.isdir():
+                path.mkdir(parents=True, exist_ok=True)
+            else:
+                # Older tarfile versions have no data filter. Keep file data,
+                # timestamps and ordinary permissions without restoring ownership.
+                archive_file.extract(member, str(root), set_attrs=False)  # nosec B202 - checked regular file
+                mode = member.mode & (0o755 if member.mode & 0o100 else 0o644)
+                path.chmod(mode | 0o600)
+                os.utime(str(path), (member.mtime, member.mtime))
 
 
 def extract_zip(buffer: io.BytesIO, to_dir):
