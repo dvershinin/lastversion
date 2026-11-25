@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [3.6.20] - 2026-11-26
+### Security
+* `lastversion extract` now rejects tar entries and links that point outside the extraction directory. Safe links within the archive are preserved. [Issue #246](https://github.com/dvershinin/lastversion/issues/246)
+
+### Changed
+* Added type annotations to three GitHub tag classification helpers. [Issue #245](https://github.com/dvershinin/lastversion/issues/245)
+
 ## [3.6.19] - 2026-10-03
 ### Fixed
 * Fixed crash on urllib3 < 1.26 (EL7/EL8 system packages): `Retry() got an unexpected keyword argument 'allowed_methods'`
