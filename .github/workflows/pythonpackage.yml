@@ -73,7 +73,8 @@ jobs:
           LASTVERSION_GITHUB_API_TOKEN: ${{ secrets.LASTVERSION_GITHUB_API_TOKEN || github.token }}
   build:
 
-    runs-on: ubuntu-latest
+    # setup-python provides Python 3.9 for Ubuntu 24.04.
+    runs-on: ubuntu-24.04
     strategy:
       max-parallel: 7
       matrix:
