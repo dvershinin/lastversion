@@ -6,6 +6,7 @@ import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
+from typing import Iterable, Optional
 from urllib.parse import unquote
 
 import feedparser
@@ -105,18 +106,28 @@ class GitHubRepoSession(BaseProjectHolder):
     RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}/{name}-{tag}.{ext}"
     SHORT_RELEASE_URL_FORMAT = "https://{hostname}/{repo}/archive/{tag}.{ext}"
 
-    def is_update_style_tag(self, tag_name):
-        """Return True if tag name looks like an update-style tag (e.g., 8u462-b08)."""
+    def is_update_style_tag(self, tag_name: Optional[str]) -> bool:
+        """Check whether a tag name uses update-style versioning.
+
+        Args:
+            tag_name (Optional[str]): Tag name to check, such as ``8u462-b08``.
+
+        Returns:
+            bool: Whether the tag name contains an update-style version.
+        """
         try:
             return bool(re.search(r"(?i)\b\d{1,3}u\d{1,4}\b", tag_name or ""))
         except TypeError:
             return False
 
-    def detect_prefer_update_style(self, names):
-        """Decide whether update-style tags should be preferred for this repo.
+    def detect_prefer_update_style(self, names: Optional[Iterable[Optional[str]]]) -> bool:
+        """Prefer update-style tags when any provided name uses that style.
 
-        Preference is enabled if update-style tags are the majority among provided names
-        and there are at least 2 such tags to avoid flukes.
+        Args:
+            names (Optional[Iterable[Optional[str]]]): Tag names to inspect, ignoring empty names.
+
+        Returns:
+            bool: Whether any provided name contains an update-style version.
         """
         filtered = [n for n in (names or []) if n]
         if not filtered:
@@ -125,10 +136,15 @@ class GitHubRepoSession(BaseProjectHolder):
         # Prefer update-style if any such tags exist among recent names
         return update_count > 0
 
-    def detect_dominant_major_from_names(self, names, pre_ok=False):
+    def detect_dominant_major_from_names(self, names: Optional[Iterable[str]], pre_ok: bool = False) -> Optional[str]:
         """Detect the most frequent major version among provided tag names.
 
-        Returns the major as a string or None if it cannot be determined.
+        Args:
+            names (Optional[Iterable[str]]): Tag names to parse for major versions.
+            pre_ok (bool): Unused compatibility argument; parsing always allows prereleases.
+
+        Returns:
+            Optional[str]: Most frequent major version, or None if none can be parsed.
         """
         counts = {}
         for name in names or []:
